@@ -2,8 +2,6 @@
 #include <list>
 #include <gmpxx.h>
 
-#define BITSET_SIZE 64
-
 class DivisorGenerator {
 
 private:
