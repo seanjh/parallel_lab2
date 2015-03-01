@@ -1,28 +1,40 @@
 #include <iostream>
 #include <list>
-#include <stdlib.h>
 #include <gmpxx.h>
 using namespace std;
 
 int main(int argc, char* argv[])
 {
-  mpz_class a = atoi(argv[1]);
+  mpz_class a = mpz_class(argv[1], 10);
 
   list<mpz_class> results;
 
-  mpz_class square_a = sqrt(a) + 1;
-  mpz_class i;
-  for (i=2; i<square_a; i++) {
+  mpz_class square_a = sqrt(a);
+  string beginString = mpz_class(1).get_str();
+  string endString = mpz_class(square_a).get_str();
+
+  //cout<<"Begin String: "<<beginString<<endl;
+  //cout<<"End String: "<<endString<<endl;
+
+  mpz_class begin = mpz_class(beginString, 10);
+  mpz_class end = mpz_class(endString, 10);
+
+  for (mpz_class i = begin; i<=end; i++) {
     if (a % i == 0) {
-      cout << i << " is a divisor\n";
       results.push_back(i);
-      if (i != square_a) {
-        cout << a / i << " is a divisor\n";
-        results.push_back(a / i);
-      }
+      mpz_class other = a/i;
+      if (i != other)
+        results.push_back(other);
     }
   }
 
   results.sort();
+
+  list<mpz_class>::iterator iter;
   cout << a << " has " << results.size() << " total divisors.\n";
+  for(iter = results.begin(); 
+        iter != results.end();
+        iter++) {
+    cout << *iter << " is a divisor\n";
+  }
 }
