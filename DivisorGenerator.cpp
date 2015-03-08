@@ -15,6 +15,13 @@ DivisorGenerator::DivisorGenerator(mpz_class d, mpz_class f, int c):
 DivisorGenerator::DivisorGenerator(std::string d, std::string f, int c): 
 	DivisorGenerator(mpz_class(d, 10), mpz_class(f, 10), c) {}
 
+// DivisorGenerator::DivisorGenerator(std::string input): 
+// 	DivisorGenerator(mpz_class(d, 10), mpz_class(f, 10), c) 
+// {
+
+
+// }
+
 void DivisorGenerator::computeDivisors()
 {
 	for(int i=0; i<count; i++)
