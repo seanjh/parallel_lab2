@@ -11,10 +11,12 @@
 class DivisorApplication : public MW_API {
 public:
 	DivisorApplication(std::string &divisorString);
+	DivisorApplication(std::string &divisorString, mpz_class work_size);
 	virtual std::list<Work *> *work();
     virtual int results(std::list<Result *> *);
 private:
 	mpz_class divisor;
+	mpz_class work_size;
 };
 
 #endif
