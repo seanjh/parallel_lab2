@@ -16,7 +16,8 @@ class MW_Master : public MW_Process {
 public:
   // MW_Master()
   MW_Master(const int myid, const int sz, MW_API *app);
-  virtual void send_work(const int worker_id);
+  virtual void send_one(int worker_id);
+  virtual void send_work();
   virtual void receive_result();
 };
 

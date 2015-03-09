@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
   std::string inputString(argv[1]);
   DivisorApplication *app = new DivisorApplication(inputString);
 
-  runApp(app);
+  // runApp(app);
   MW_Run(argc, argv, app);
 
   delete app;

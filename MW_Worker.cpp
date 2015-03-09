@@ -9,6 +9,8 @@ MW_Worker::MW_Worker(const int myid, const int m_id)
   // Blanks lists for work and results
   workToDo = new std::list<Work *>();
   results = new std::list<Result *>();
+
+  std::cout << "" << std::endl;
 }
 
 void MW_Worker::receiveWork()
@@ -17,10 +19,12 @@ void MW_Worker::receiveWork()
     std::endl;
 
   MPI::Status status;
-  std::string message(1000, 0);
+  char *message = (char*)malloc(1000);
+  memset(message, 0, 1000);
+  // std::string message(1000, 0);
 
   MPI::COMM_WORLD.Recv(
-    (void *) message.data(),
+    (void *) message,
     1000,
     MPI::CHAR,
     master_id,
@@ -28,7 +32,10 @@ void MW_Worker::receiveWork()
     status
   );
 
-  Work *work = Work::deserialize(message);
+  std::string serializedObject = std::string(message, status.Get_count(MPI::CHAR));
+  free(message);
+
+  Work *work = Work::deserialize(serializedObject);
   workToDo->push_back(work);
 
   std::cout << "P:" << id << " finished receive from master P" << master_id << ". "

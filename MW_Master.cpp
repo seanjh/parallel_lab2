@@ -13,8 +13,8 @@ MW_Master::MW_Master(const int myid, const int sz, MW_API *app)
   app = app;
 
   workToDo = app->work();
-  // std::list<Work *> *doneWork = new std::list<Work *>();
   results = new std::list<Result *>();
+  std::cout << "Total work in master is " << workToDo->size() << std::endl;
 
   // Prepopulate the list of workers
   workers = new std::list<int>();
@@ -25,7 +25,7 @@ MW_Master::MW_Master(const int myid, const int sz, MW_API *app)
   }
 }
 
-void MW_Master::send_work(int worker_id)
+void MW_Master::send_one(int worker_id)
 {
   std::cout << "P:" << this->id << " sending work to process " << worker_id << std::endl;
 
@@ -35,8 +35,8 @@ void MW_Master::send_work(int worker_id)
   std::string *work_string = work->serialize();
   int count = (int) work_string->length();
 
-  std::cout << "P:" << id << " sending result with " << count <<
-    " total MPI::CHARs -- " << work_string << std::endl;
+  std::cout << "P:" << id << " sending work with " << count <<
+    " total MPI::CHARs -- " << *work_string << std::endl;
 
   MPI::COMM_WORLD.Send(
     (void *) work_string->data(),
@@ -53,6 +53,11 @@ void MW_Master::send_work(int worker_id)
   delete work_string;
 }
 
+void MW_Master::send_work()
+{
+  // TODO
+}
+
 // void MW_Master::result_probe()
 // {
 //   MPI::Status status;
@@ -64,14 +69,15 @@ void MW_Master::send_work(int worker_id)
 
 void MW_Master::receive_result()
 {
-  std::cout << "Executing receive" << std::endl;
+  std::cout << "P:" << id << " master waiting to receive" << std::endl;
 
   MPI::Status status;
   // std::string& message = new std::string(1000, 0);
-  std::string message(1000, 0);
+  char *message = (char*)malloc(1000);
+  memset(message, 0, 1000);
 
   MPI::COMM_WORLD.Recv(
-    (void *) message.data(),
+    (void *) message,
     1000,
     MPI::CHAR,
     MPI::ANY_SOURCE,
@@ -79,12 +85,16 @@ void MW_Master::receive_result()
     status
   );
 
+
+  std::string serializedObject = std::string(message,status.Get_count(MPI::CHAR));
+  free(message);
+
   int worker_id = status.Get_source();
   std::cout << "P:" << id << " Got data from process " <<
     worker_id << "of count " << status.Get_count(MPI::CHAR) <<
     std::endl;
 
-  Result *result = Result::deserialize(message);
+  Result *result = Result::deserialize(serializedObject);
   results->push_back(result);
 
   // Reinclude this working in the queue
