@@ -15,7 +15,7 @@ void runApp(MW_API *app)
   std::list<Work *> *workToDo = app->work();
   std::cout << "done work" << std::endl;
   std::list<Result *> *results = new std::list<Result *>();
-  
+
 
   std::cout << "created results" << std::endl;
   for(auto iter = workToDo->begin();
@@ -38,6 +38,7 @@ int main(int argc, char* argv[])
   DivisorApplication *app = new DivisorApplication(inputString);
 
   runApp(app);
+  MW_Run(argc, argv, app);
 
   delete app;
   return 0;

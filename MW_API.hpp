@@ -11,4 +11,6 @@ public:
     virtual int results(std::list<Result *> *) = 0;
 };
 
+void MW_Run(int argc, char* argv[], MW_API *app);
+
 #endif
