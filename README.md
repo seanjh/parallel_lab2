@@ -1,5 +1,5 @@
 # Parallel Lab 2
-## Setup Instructions on AWS
+## Configuring a new AWS cluster instance
 The CentOS 5 system configured for this course does not include the necessary C++ compiler. It is also missing several key libraries. The instructions below will configure a new AWS Centos 5 image to allow for this project to be compiled. To run the application on an machine already set up, skip to Execution instructions.
 
 ### Enable devtoolset-2
@@ -17,13 +17,8 @@ The version of GMP available through yum is not recent enough. Download and extr
     ./configure --enable-cxx --prefix=$HOME/gmplib
 
     make install
-
-###Update the LD_LIBRARY_PATY environment variable
-Update LD_LIBRARY_PATY in .bash_profile, or execute the following command.
-
-    export LD_LIBRARY_PATH=$HOME/gmplib/lib:$LD_LIBRARY_PATH
     
-## Execution instructions
+## Execution instructions on cofigured cluster
 
 ### Activate devtoolset-2 
     
@@ -40,6 +35,11 @@ make divisors_app
     cd ~/parallel_lab2
 
 Note, a valid hostname file is required in the directory below (..) the project directory.
+
+### Make certain that LD_LIBRARY_PATH is configured
+The LD_LIBRARY_PATH environment variable must include a reference to the custom gmp install.
+
+    export LD_LIBRARY_PATH=$HOME/gmplib/lib:$LD_LIBRARY_PATH
 
 ### Compile the executable
 This command links the objects to the custom GMP installation.
