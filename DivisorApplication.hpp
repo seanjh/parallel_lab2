@@ -15,6 +15,9 @@ public:
 	~DivisorApplication();
 	virtual std::list<Work *> *work();
     virtual int results(std::list<Result *> *);
+    virtual Work *workDeserializer(const std::string &);
+    virtual Result *resultDeserializer(const std::string &);
+    
 private:
 	mpz_class divisor;
 	mpz_class work_size;

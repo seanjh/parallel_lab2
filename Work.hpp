@@ -14,7 +14,7 @@ public:
 public:
     virtual Result *compute() = 0;
     virtual std::string *serialize() = 0;
-    static Work *deserialize(const std::string &){return NULL;}
+    //static Work *deserialize(const std::string &){return NULL;}
     // You could add more to the public interface, if you wanted to.
 private:
     // Private things for your implementation.  Probably will not need

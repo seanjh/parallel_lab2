@@ -13,7 +13,7 @@ void MW_API::MW_Run(int argc, char* argv[])
 
   // master creates work universe
   if (myid == 0) {
-    MW_Master *master = new MW_Master(myid, sz, work());
+    MW_Master *master = new MW_Master(myid, sz, work(), this);
     master->masterLoop();
 
     //all work is completed at this point
@@ -26,7 +26,7 @@ void MW_API::MW_Run(int argc, char* argv[])
     // proc->send_one(1);
     // proc->receive_result();
   } else {
-    MW_Worker *proc = new MW_Worker(myid, 0);
+    MW_Worker *proc = new MW_Worker(myid, 0, this);
     proc->workerLoop();
     // proc->receiveWork();
     // proc->sendResults();

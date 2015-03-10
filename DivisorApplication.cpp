@@ -102,3 +102,16 @@ int DivisorApplication::results(std::list<Result *> *listOfResults)
 
 	return 0;
 }
+
+
+Work *DivisorApplication::workDeserializer(const std::string &serializedObject)
+{
+	std::cout<<"In DivisorWork deserializer" <<std::endl;
+	return DivisorWork::deserialize(serializedObject);
+}
+Result *DivisorApplication::resultDeserializer(const std::string &serializedObject)
+{
+	std::cout<<"In result deserializer" <<std::endl;
+	return DivisorResult::deserialize(serializedObject);
+}
+

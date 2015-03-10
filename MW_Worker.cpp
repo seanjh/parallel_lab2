@@ -4,10 +4,11 @@
 
 
 
-MW_Worker::MW_Worker(const int myid, const int m_id)
+MW_Worker::MW_Worker(const int myid, const int m_id, MW_API *app)
 {
   id = myid;
   master_id = m_id;
+  app = app;
 
   // Blanks lists for work and results
   workToDo = new std::list<Work *>();
@@ -34,7 +35,6 @@ void MW_Worker::workerLoop()
     MW_Worker::WORK_TAG
   );
 
-
   char *doneMessage = (char*)malloc(MAX_MESSAGE_SIZE);
   memset(doneMessage, 0, MAX_MESSAGE_SIZE);
   //receive done
@@ -59,11 +59,19 @@ void MW_Worker::workerLoop()
 
       std::cout << "Got work Message" << std::endl;
       std::string serializedObject = std::string(workMessage, status.Get_count(MPI::CHAR));
-      std::cout << serializedObject << std::endl;
-      Work *work = Work::deserialize(serializedObject);
+      std::cout <<id << ": "<< serializedObject << std::endl;
 
+
+      Work *work = app->workDeserializer(serializedObject);
+      std::cout << work << std::endl;
+      std::cout << "deserialized " << *(work->serialize()) << std::endl;
+
+      std::cout << "computing results " << std::endl;
       Result *result = work->compute();
+      std::cout << "computed results " << std::endl;
       std::string *result_string = result->serialize();
+
+      std::cout << "produced results " << *result_string << std::endl;
 
       MPI::COMM_WORLD.Send(
         (void *) result_string->data(),

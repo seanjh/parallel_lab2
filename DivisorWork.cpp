@@ -32,6 +32,8 @@ DivisorWork::~DivisorWork(){}
 
 DivisorResult *DivisorWork::compute()
 {
+
+	std::cout << "In Compute" << std::endl;
 	std::list<mpz_class> divisors;
 	for(mpz_class i=0; i<count; i++)
 	{

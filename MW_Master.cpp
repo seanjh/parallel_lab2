@@ -7,10 +7,11 @@
 #include <mpi.h>
 #include <assert.h>
 
-MW_Master::MW_Master(const int myid, const int sz, std::list<Work *> *work)
+MW_Master::MW_Master(const int myid, const int sz, std::list<Work *> *work, MW_API *app)
 {
   id = myid;
   world_size = sz;
+  app = app;
 
   workToDo = new std::list<Work *>(*(work));
   results = new std::list<Result *>();
@@ -59,13 +60,28 @@ void MW_Master::masterLoop()
     if(workToDo->empty() && workers->size() == world_size)
     {
       //send done message
+      for(int i=1; i<world_size; i++)
+      {
+        char a = 'a';
+        MPI::COMM_WORLD.Send(
+          (void*)&a,
+          1,
+          MPI::CHAR,
+          i,
+          MW_Master::DONE_TAG
+        );
+      }
+
     }
     //if available workers and work
     //send work to worker
     else if( !workers->empty() && !workToDo->empty())
     {
+
       int worker_id = workers->front();
       workers->pop_front();
+
+      std::cout << "sending message to " << worker_id << std::endl;
 
       Work *work = workToDo->front();
       workToDo->pop_front();
@@ -88,7 +104,7 @@ void MW_Master::masterLoop()
         MAX_MESSAGE_SIZE,
         MPI::CHAR,
         id,
-        MW_Process::WORK_TAG
+        MW_Master::WORK_TAG
       );
     }
     //if no available workers and there is available work, wait for all workers
@@ -105,15 +121,16 @@ void MW_Master::masterLoop()
       std::cout << "Got result Message" << std::endl;
       std::string serializedObject = std::string(resultMessages[requestId], status.Get_count(MPI::CHAR));
       std::cout << serializedObject << std::endl;
-      Result *result = Result::deserialize(serializedObject);
+      Result *result = app->resultDeserializer(serializedObject);
       results->push_back(result);
 
       // Reinclude this working in the queue
-      workers->push_back(requestId);
+      workers->push_back(requestId+1);
     }
      
     else
     {
+      std::cout<<"Asserting"<<std::endl;
       assert(1);
     }
 
