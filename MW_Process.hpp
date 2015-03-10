@@ -3,11 +3,19 @@
 
 #include "mpi.h"
 
+// typedef enum WorkTag
+// {
+//   WORK_TAG  = 1;
+//   DONE_TAG  = 2;
+// } WorkTag;
+
 class MW_Process {
 public:
   static const int WORK_TAG = 1;
   static const int DONE_TAG = 2;
   // static const int BUFF_SIZE_BYTES = 1000;
+  // virtual WorkTag receive() = 0;
+  // virtual void send(int) = 0;
 protected:
   MW_Process() {}
 };
