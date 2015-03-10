@@ -9,8 +9,12 @@ class MW_API {
 public:
     virtual std::list<Work *> *work() = 0;
     virtual int results(std::list<Result *> *) = 0;
-};
+    void MW_Run(int argc, char* argv[]);
 
-void MW_Run(int argc, char* argv[], MW_API *app);
+private:
+	// std::list<Work *> *workToDo;
+	// std::list<Result *> *results;
+
+};
 
 #endif

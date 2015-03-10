@@ -34,7 +34,7 @@ WORKING_API_OBJ = $(patsubst %,$(ODIR)/%,$(_WORKING_API_OBJ))
 # _PROFILE_OBJ = mpi-profile.o
 # PROFILE_OBJ = $(patsubst %,$(ODIR)/%,$(_PROFILE_OBJ))
 
-_DIVISORS_APP_OBJ = gmp_factors_API.o DivisorApplication.o DivisorResult.o DivisorWork.o MW_API.o MW_Master.o MW_Worker.o
+_DIVISORS_APP_OBJ = gmp_factors_API.o DivisorApplication.o DivisorResult.o DivisorWork.o MW_API.o MW_Master.o MW_Worker.o Work.o Result.o
 DIVISORS_APP_OBJ = $(patsubst %,$(ODIR)/%,$(_DIVISORS_APP_OBJ))
 
 # _TEST_OBJ = test.o

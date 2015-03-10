@@ -3,7 +3,7 @@
 #include "MW_Worker.hpp"
 #include <mpi.h>
 
-void MW_Run(int argc, char* argv[], MW_API *app)
+void MW_API::MW_Run(int argc, char* argv[])
 {
   int sz, myid;
 
@@ -13,13 +13,23 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
   // master creates work universe
   if (myid == 0) {
-    MW_Master *proc = new MW_Master(myid, sz, app);
-    proc->send_one(1);
-    proc->receive_result();
+    MW_Master *master = new MW_Master(myid, sz, work());
+    master->masterLoop();
+
+    //all work is completed at this point
+
+
+
+
+
+
+    // proc->send_one(1);
+    // proc->receive_result();
   } else {
     MW_Worker *proc = new MW_Worker(myid, 0);
-    proc->receiveWork();
-    proc->sendResults();
+    proc->workerLoop();
+    // proc->receiveWork();
+    // proc->sendResults();
   }
 
   // master sends work

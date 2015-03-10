@@ -28,6 +28,8 @@ DivisorWork::DivisorWork(std::string serialObject)
 	count = mpz_class(countString, 10);
 }
 
+DivisorWork::~DivisorWork(){}
+
 DivisorResult *DivisorWork::compute()
 {
 	std::list<mpz_class> divisors;

@@ -10,27 +10,27 @@
 #include <string>
 #include <iostream>
 
-void runApp(MW_API *app)
-{
-  std::list<Work *> *workToDo = app->work();
-  std::cout << "done work" << std::endl;
-  std::list<Result *> *results = new std::list<Result *>();
+// void runApp(MW_API *app)
+// {
+//   std::list<Work *> *workToDo = app->work();
+//   std::cout << "done work" << std::endl;
+//   std::list<Result *> *results = new std::list<Result *>();
 
 
-  std::cout << "created results" << std::endl;
-  for(auto iter = workToDo->begin();
-      iter != workToDo->end();
-      iter++)
-  {
-    std::cout << "adding result" << std::endl;
-    Work *work = *iter;
-    results->push_back(work->compute());
-  }
+//   std::cout << "created results" << std::endl;
+//   for(auto iter = workToDo->begin();
+//       iter != workToDo->end();
+//       iter++)
+//   {
+//     std::cout << "adding result" << std::endl;
+//     Work *work = *iter;
+//     results->push_back(work->compute());
+//   }
 
-  std::cout << "propogating results" << std::endl;
-  app->results(results);
-  delete results;
-}
+//   std::cout << "propogating results" << std::endl;
+//   app->results(results);
+//   delete results;
+// }
 
 int main(int argc, char* argv[])
 {
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
   DivisorApplication *app = new DivisorApplication(inputString, 5);
 
   // runApp(app);
-  MW_Run(argc, argv, app);
+  app->MW_Run(argc, argv);
 
   delete app;
   return 0;

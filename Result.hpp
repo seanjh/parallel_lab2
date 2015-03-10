@@ -9,10 +9,8 @@ class Work;
     
 class Result {
 public:
-    // Must be present, even if it does nothing.
-    
-    //This needs to destroy all of its children to prevent memory leaks
-    // virtual ~Result();
+
+    virtual ~Result();
 public:
     virtual std::string *serialize() = 0;
     static Result *deserialize(const std::string &){return NULL;}

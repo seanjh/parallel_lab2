@@ -6,17 +6,8 @@
 
 DivisorApplication::DivisorApplication(std::string &divisorString, mpz_class ws) : divisor(mpz_class(divisorString, 10)), work_size(ws)
 {
-	
-}
+	workList = new std::list<Work *>();
 
-DivisorApplication::DivisorApplication(std::string &divisorString) : divisor(mpz_class(divisorString, 10)), work_size(100000)
-{
-	
-}
-
-std::list<Work *> *DivisorApplication::work()
-{
-	std::list<Work *> *retList = new std::list<Work *>();
 	mpz_class square_a = sqrt(divisor);
 	// std::cout << square_a.get_str() << std::endl;
 
@@ -32,15 +23,61 @@ std::list<Work *> *DivisorApplication::work()
 		mpz_class beginVal = (i * work_size) + 1;
 		// std::cout << i << ": " << beginVal.get_str() << ": " << work_size << std::endl;
 		DivisorWork *divWork = new DivisorWork(divisor, beginVal, work_size);
-		retList->push_back(divWork);
+		workList->push_back(divWork);
 	}
 
 	mpz_class beginVal = ((numberOfWork-1) * work_size) + 1;
 	// std::cout << numberOfWork-1 << ": " << beginVal.get_str() << ": " << lastWorkSize << std::endl;
 	DivisorWork *divWork = new DivisorWork(divisor, beginVal, lastWorkSize);
-	retList->push_back(divWork);
+	workList->push_back(divWork);
+}
 
-	return retList;
+DivisorApplication::DivisorApplication(std::string &divisorString) : DivisorApplication(divisorString, 100000)
+{
+	
+}
+
+DivisorApplication::~DivisorApplication()
+{
+	for (	auto iter = workList->begin();
+			iter != workList->end();
+			iter++)
+	{
+		Work *work = *iter;
+		delete work;
+	}
+
+	delete workList;
+
+}
+
+std::list<Work *> *DivisorApplication::work()
+{
+	// std::list<Work *> *retList = new std::list<Work *>();
+	// mpz_class square_a = sqrt(divisor);
+	// // std::cout << square_a.get_str() << std::endl;
+
+	// mpz_class numberOfWork = ((square_a / work_size) + 1);
+	// mpz_class firstWorkSize = work_size;
+	// mpz_class lastWorkSize = square_a % work_size;
+	// if(lastWorkSize == 0)
+	// 	lastWorkSize = work_size;
+
+
+	// for(mpz_class i=0; i<numberOfWork-1; i++)
+	// {
+	// 	mpz_class beginVal = (i * work_size) + 1;
+	// 	// std::cout << i << ": " << beginVal.get_str() << ": " << work_size << std::endl;
+	// 	DivisorWork *divWork = new DivisorWork(divisor, beginVal, work_size);
+	// 	retList->push_back(divWork);
+	// }
+
+	// mpz_class beginVal = ((numberOfWork-1) * work_size) + 1;
+	// // std::cout << numberOfWork-1 << ": " << beginVal.get_str() << ": " << lastWorkSize << std::endl;
+	// DivisorWork *divWork = new DivisorWork(divisor, beginVal, lastWorkSize);
+	// retList->push_back(divWork);
+
+	return workList;
 }
 
 int DivisorApplication::results(std::list<Result *> *listOfResults)

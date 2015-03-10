@@ -14,8 +14,11 @@ class MW_Worker : public MW_Process {
 
 public:
   MW_Worker(const int id, const int master);
-  virtual void receiveWork();
-  virtual void sendResults();
+  void workerLoop();
+
+// private:
+//   virtual void receiveWork();
+//   virtual void sendResults();
 };
 
 #endif /* defined(__MW__WORKER__) */
