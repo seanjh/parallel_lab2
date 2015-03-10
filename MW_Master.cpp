@@ -26,6 +26,20 @@ MW_Master::MW_Master(const int myid, const int sz, MW_API *a)
   }
 }
 
+// MW_Master::~MW_Master()
+// {
+//   delete workToDo;
+//   for ( auto iter = results->begin();
+//       iter != results->end();
+//       iter++)
+//   {
+//     Result *result = *iter;
+//     delete result;
+//   }
+//
+//   delete results;
+// }
+
 void MW_Master::send_done()
 {
   std::cout << "MASTER SENDING DONE MESSAGES\n";

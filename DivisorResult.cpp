@@ -1,5 +1,5 @@
 #include "DivisorResult.hpp"
-#include <sstream> 
+#include <sstream>
 
 
 DivisorResult::DivisorResult(const std::list<mpz_class> &divList)

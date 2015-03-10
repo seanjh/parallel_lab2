@@ -20,6 +20,7 @@ public:
   virtual void send_one(int worker_id);
   virtual void send_work();
   virtual void receive_result();
+  // ~MW_Master();
 };
 
 #endif /* defined(__MW__MASTER__) */

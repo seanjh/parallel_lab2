@@ -6,16 +6,17 @@
 
 
 class Work;
-    
+
 class Result {
 public:
     // Must be present, even if it does nothing.
-    
+
     //This needs to destroy all of its children to prevent memory leaks
     // virtual ~Result();
 public:
-    virtual std::string *serialize() = 0;
-    static Result *deserialize(const std::string &){return NULL;}
+
+  virtual std::string *serialize() = 0;
+  static Result *deserialize(const std::string &){return NULL;}
     // You could add more to the public interface, if you wanted to.
 private:
     // Private things for your implementation.  Probably will not need

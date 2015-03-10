@@ -35,12 +35,15 @@ DivisorWork::DivisorWork(std::string serialObject)
 	std::cout << "DivisorWork::DivisorWork divisor is " << dividend.get_str() << std::endl;
 	std::cout << "DivisorWork::DivisorWork firstVal is " << firstValueToTest.get_str() << std::endl;
 	std::cout << "DivisorWork::DivisorWork count is " << count.get_str() << std::endl;
+
 }
+
+// DivisorWork::~DivisorWork(){}
 
 DivisorResult *DivisorWork::compute()
 {
 	std::list<mpz_class> divisors;
-	for(int i=0; i<count; i++)
+	for(mpz_class i=0; i<count; i++)
 	{
 		mpz_class ithValue = firstValueToTest + i;
 		// std::cout<<"Testing " << ithValue << std::endl;

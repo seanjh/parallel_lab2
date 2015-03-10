@@ -4,7 +4,12 @@
 #include <iostream>
 #include "DivisorApplication.hpp"
 
-DivisorApplication::DivisorApplication(std::string &divisorString) : divisor(mpz_class(divisorString, 10))
+DivisorApplication::DivisorApplication(std::string &divisorString, mpz_class ws) : divisor(mpz_class(divisorString, 10)), work_size(ws)
+{
+	
+}
+
+DivisorApplication::DivisorApplication(std::string &divisorString) : divisor(mpz_class(divisorString, 10)), work_size(100000)
 {
 
 }
@@ -12,17 +17,29 @@ DivisorApplication::DivisorApplication(std::string &divisorString) : divisor(mpz
 std::list<Work *> *DivisorApplication::work()
 {
 	std::list<Work *> *retList = new std::list<Work *>();
-
 	mpz_class square_a = sqrt(divisor);
-	mpz_class begin = mpz_class(1);
-	mpz_class count1 = mpz_class(((square_a/2)-1)+1);
-	DivisorWork *divWork1 = new DivisorWork(divisor, begin, count1);
-	retList->push_back(divWork1);
 
-	mpz_class begin2 = mpz_class(square_a/2+1);
-	mpz_class count2 = mpz_class(((square_a)-(square_a/2+1))+1);
-	DivisorWork *divWork2 = new DivisorWork(divisor, begin2, count2);
-	retList->push_back(divWork2);
+	// std::cout << square_a.get_str() << std::endl;
+
+	mpz_class numberOfWork = ((square_a / work_size) + 1);
+	mpz_class firstWorkSize = work_size;
+	mpz_class lastWorkSize = square_a % work_size;
+	if(lastWorkSize == 0)
+		lastWorkSize = work_size;
+
+
+	for(mpz_class i=0; i<numberOfWork-1; i++)
+	{
+		mpz_class beginVal = (i * work_size) + 1;
+		// std::cout << i << ": " << beginVal.get_str() << ": " << work_size << std::endl;
+		DivisorWork *divWork = new DivisorWork(divisor, beginVal, work_size);
+		retList->push_back(divWork);
+	}
+
+	mpz_class beginVal = ((numberOfWork-1) * work_size) + 1;
+	// std::cout << numberOfWork-1 << ": " << beginVal.get_str() << ": " << lastWorkSize << std::endl;
+	DivisorWork *divWork = new DivisorWork(divisor, beginVal, lastWorkSize);
+	retList->push_back(divWork);
 
 	return retList;
 }
