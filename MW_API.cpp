@@ -57,8 +57,11 @@ void MW_Run(int argc, char* argv[], MW_API *app)
   sz = MPI::COMM_WORLD.Get_size();
   myid = MPI::COMM_WORLD.Get_rank();
 
+  double starttime, endtime;
+
   MPI::COMM_WORLD.Barrier();
   if (myid == MASTER_PROCESS_ID) {
+    starttime = MPI::Wtime();
 
     int worker_id;
     MW_Master *proc = new MW_Master(myid, sz, app);
@@ -79,6 +82,8 @@ void MW_Run(int argc, char* argv[], MW_API *app)
         if (hasAllWorkers(proc, sz)) {
           // std::cout << "MASTER IS DONE\n";
           proc->send_done();
+
+          endtime = MPI::Wtime();
           break;
         } else {
           proc->receive_result();
@@ -112,6 +117,11 @@ void MW_Run(int argc, char* argv[], MW_API *app)
         break;
       }
     }
+  }
+
+  if (myid == MASTER_PROCESS_ID) {
+    double elapsed = endtime - starttime;
+    std::cout << "Completed in " << elapsed * 1000 << " ms\n";
   }
 
   MPI::Finalize ();
