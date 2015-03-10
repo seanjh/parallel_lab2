@@ -72,6 +72,9 @@ void MW_Run(int argc, char* argv[], MW_API *app)
       }
 
     }
+
+    app->results(proc->results);
+
   } else {
     MW_Worker *proc = new MW_Worker(myid, 0, app);
     int message_tag;

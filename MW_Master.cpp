@@ -105,12 +105,12 @@ void MW_Master::receive_result()
 
   MPI::Status status;
   // std::string& message = new std::string(1000, 0);
-  char *message = (char*)malloc(1000);
-  memset(message, 0, 1000);
+  char *message = (char*)malloc(MAX_MESSAGE_SIZE);
+  memset(message, 0, MAX_MESSAGE_SIZE);
 
   MPI::COMM_WORLD.Recv(
     (void *) message,
-    1000,
+    MAX_MESSAGE_SIZE,
     MPI::CHAR,
     MPI::ANY_SOURCE,
     MW_Master::WORK_TAG,
