@@ -1,4 +1,5 @@
 #include "MW_API.hpp"
+#include "MW_Process.hpp"
 #include "MW_Master.hpp"
 #include "MW_Worker.hpp"
 #include <mpi.h>
@@ -30,6 +31,22 @@ bool noWorkersNoWork(MW_Master *master)
 bool hasAllWorkers(MW_Master *master, int world_size)
 {
   return master->workers->size() == world_size - 1;  // exclude self (master)
+}
+
+Result *doSomeWork(MW_Worker *worker)
+{
+  std::cout << "P:" << worker->id << " Grabbing some workToDo\n";
+  Work *work = worker->workToDo->front();
+  assert(work != NULL);
+  std::cout << "P:" << worker->id << " Work object is (" << work << ") \"" << work->serialize() << "\"\n";
+  worker->workToDo->pop_front();
+
+  std::cout << "P:" << worker->id << " Computing results.\n";
+  Result *one_result = work->compute();
+  assert(one_result != NULL);
+  std::cout << "P:" << worker->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
+
+  return one_result;
 }
 
 void MW_Run(int argc, char* argv[], MW_API *app)
@@ -74,24 +91,16 @@ void MW_Run(int argc, char* argv[], MW_API *app)
     }
   } else {
     MW_Worker *proc = new MW_Worker(myid, 0, app);
+    Result *result;
     int message_tag;
     while (1) {
       message_tag = proc->receiveWork();
 
       if (message_tag == MW_Process::WORK_TAG) {
         // do stuff with the work
-        std::cout << "P:" << proc->id << " Grabbing some workToDo\n";
-        Work *work = proc->workToDo->front();
-        assert(work != NULL);
-        std::cout << "P:" << proc->id << " Work object is (" << work << ") \"" << work->serialize() << "\"\n";
-        proc->workToDo->pop_front();
+        result = doSomeWork(proc);
 
-        std::cout << "P:" << proc->id << " Computing results.\n";
-        Result *one_result = work->compute();
-        assert(one_result != NULL);
-        std::cout << "P:" << proc->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
-
-        proc->results->push_back(one_result);
+        proc->results->push_back(result);
 
         proc->sendResults();
 
@@ -101,32 +110,6 @@ void MW_Run(int argc, char* argv[], MW_API *app)
       }
     }
   }
-
-
-  // if (myid == 0) {
-  //   MW_Master *proc = new MW_Master(myid, sz, app);
-  //   proc->send_one(1);
-  //   proc->receive_result();
-  // } else {
-  //   MW_Worker *proc = new MW_Worker(myid, 0, app);
-  //   proc->receiveWork();
-  //
-  //   // do stuff with the work
-  //   std::cout << "P:" << proc->id << " Grabbing some workToDo\n";
-  //   Work *work = proc->workToDo->front();
-  //   assert(work != NULL);
-  //   std::cout << "P:" << proc->id << " Work object is (" << work << ") \"" << work->serialize() << "\"\n";
-  //   proc->workToDo->pop_front();
-  //
-  //   std::cout << "P:" << proc->id << " Computing results.\n";
-  //   Result *one_result = work->compute();
-  //   assert(one_result != NULL);
-  //   std::cout << "P:" << proc->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
-  //
-  //   proc->results->push_back(one_result);
-  //   proc->sendResults();
-  //
-  // }
 
   MPI::Finalize ();
 }
