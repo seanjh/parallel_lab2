@@ -18,8 +18,8 @@ public:
 
 	//DivisorResult();
 	DivisorResult(const std::list<mpz_class> &);
-	DivisorResult(std::string serialObject);
-	// DivisorResult(const std::string &);
+	// DivisorResult(std::string serialObject);
+	DivisorResult(const std::string &);
 
 public:
 	//void addDivisor(mpz_class);
