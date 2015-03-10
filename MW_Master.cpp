@@ -5,6 +5,7 @@
 #include <list>
 #include <string>
 #include <mpi.h>
+#include <assert.h>
 
 MW_Master::MW_Master(const int myid, const int sz, MW_API *app)
 {
@@ -21,6 +22,23 @@ MW_Master::MW_Master(const int myid, const int sz, MW_API *app)
   for (int i=0; i<world_size; i++) {
     if (i != id) {
       workers->push_back(i);
+    }
+  }
+}
+
+void MW_Master::send_done()
+{
+  std::cout << "MASTER SENDING DONE MESSAGES\n";
+  for (int process_id=0; process_id<world_size; process_id++) {
+    if (process_id != id) {
+      std::cout << "MASTER SENDING DONE to PROCESS" << process_id << " \n";
+      MPI::COMM_WORLD.Send(
+        0,
+        0,
+        MPI::CHAR,
+        process_id,
+        MW_Master::DONE_TAG
+      );
     }
   }
 }
@@ -85,18 +103,21 @@ void MW_Master::receive_result()
     status
   );
 
-
-  std::string serializedObject = std::string(message,status.Get_count(MPI::CHAR));
-  free(message);
-
   int worker_id = status.Get_source();
-  std::cout << "P:" << id << " Got data from process " <<
-    worker_id << "of count " << status.Get_count(MPI::CHAR) <<
-    std::endl;
+  int count = status.Get_count(MPI::CHAR);
+  if (count != 0) {
+    std::string serializedObject = std::string(message, count);
+    std::cout << "P:" << id << " Received from process " << worker_id <<
+      " message of length "<< count << " \"" << serializedObject << "\"\n";
 
-  Result *result = Result::deserialize(serializedObject);
-  results->push_back(result);
+    Result *result = app->resultDeserializer(serializedObject);
+    std::cout << "P:" << id << " received results (" << result << ") from process " << worker_id << ". " << std::endl;
+    assert(result != NULL);
+    results->push_back(result);
+    std::cout << "results size is " << results->size() << std::endl;
+  }
 
+  free(message);
   // Reinclude this working in the queue
   workers->push_back(worker_id);
 }

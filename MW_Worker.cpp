@@ -1,10 +1,12 @@
 #include "MW_Worker.hpp"
 #include <mpi.h>
+#include <assert.h>
 
-MW_Worker::MW_Worker(const int myid, const int m_id)
+MW_Worker::MW_Worker(const int myid, const int m_id, MW_API *mwapp)
 {
   id = myid;
   master_id = m_id;
+  app = mwapp;
 
   // Blanks lists for work and results
   workToDo = new std::list<Work *>();
@@ -13,10 +15,9 @@ MW_Worker::MW_Worker(const int myid, const int m_id)
   std::cout << "" << std::endl;
 }
 
-void MW_Worker::receiveWork()
+int MW_Worker::receiveWork()
 {
-  std::cout << "P:" << id << " waiting to receive work from master." <<
-    std::endl;
+  std::cout << "P:" << id << " waiting to receive work from master." << std::endl;
 
   MPI::Status status;
   char *message = (char*)malloc(1000);
@@ -28,24 +29,38 @@ void MW_Worker::receiveWork()
     1000,
     MPI::CHAR,
     master_id,
-    MW_Worker::WORK_TAG,
+    MPI::ANY_TAG,
+    // MW_Worker::WORK_TAG,
     status
   );
 
-  std::string serializedObject = std::string(message, status.Get_count(MPI::CHAR));
+  int message_tag = status.Get_tag();
+
+  if (message_tag == MW_Worker::WORK_TAG) {
+    std::string serializedObject = std::string(message, status.Get_count(MPI::CHAR));
+    std::cout << "P:" << id << " Received from master P" << master_id << " message \"" << serializedObject << "\"\n";
+
+    Work *work = app->workDeserializer(serializedObject);
+    assert(work != NULL);
+    std::cout << "P:" << id << " Recreated work object (" << work << ") \"" << *work->serialize() << "\"\n" ;
+
+    workToDo->push_back(work);
+    std::cout << "P:" << id << " WorkToDo size is " << workToDo->size() << std::endl;
+
+  }
+
   free(message);
-
-  Work *work = Work::deserialize(serializedObject);
-  workToDo->push_back(work);
-
-  std::cout << "P:" << id << " finished receive from master P" << master_id << ". "
-    << "WorkToDo size is " << workToDo->size() << std::endl;
+  return message_tag;
 }
 
 void MW_Worker::sendResults()
 {
+  std::cout << "P:" << id << " Beginning send to master P" << master_id << std::endl;
   Result *result = results->front();
+  assert(result != NULL);
   results->pop_front();
+
+  std::cout << " Popped result (" << result << ") from list\n";
 
   std::string *result_string = result->serialize();
   int count = (int) result_string->length();

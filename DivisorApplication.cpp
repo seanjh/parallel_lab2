@@ -6,7 +6,7 @@
 
 DivisorApplication::DivisorApplication(std::string &divisorString) : divisor(mpz_class(divisorString, 10))
 {
-	
+
 }
 
 std::list<Work *> *DivisorApplication::work()
@@ -41,11 +41,35 @@ int DivisorApplication::results(std::list<Result *> *listOfResults)
 	}
 
 	std::cout << divisor << " has " << results.size() << " total divisors.\n";
-	for(auto iter = results.begin(); 
+	for(auto iter = results.begin();
 	    iter != results.end();
 	    iter++) {
 	std::cout << *iter << " is a divisor\n";
 	}
 
 	return 0;
+}
+
+std::string *DivisorApplication::workSerializer(Work &objectToSerialize)
+{
+	std::cout<<"In DivisorWork serializer" <<std::endl;
+	return objectToSerialize.serialize();
+}
+
+Work *DivisorApplication::workDeserializer(const std::string &serializedObject)
+{
+	std::cout<<"In DivisorWork deserializer" <<std::endl;
+	return DivisorWork::deserialize(serializedObject);
+}
+
+std::string *DivisorApplication::resultSerializer(Result &objectToSerialize)
+{
+	std::cout<<"In DivisorResult deserializer" <<std::endl;
+	return objectToSerialize.serialize();
+}
+
+Result *DivisorApplication::resultDeserializer(const std::string &serializedObject)
+{
+	std::cout<<"In result deserializer" <<std::endl;
+	return DivisorResult::deserialize(serializedObject);
 }
