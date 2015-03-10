@@ -25,23 +25,26 @@ Update LD_LIBRARY_PATY in .bash_profile, or execute the following command.
     
 ## Execution instructions
 
-### Login as cluster
-
-    su cluster
-    cd ~
-
-Clone the repo, if necessary, and navigate inside the project directory. Note, a valid hostname file is required in the directory below (..) the project directory.
-
 ### Activate devtoolset-2 
     
     scl enable devtoolset-2 bash
 
-### Compile the project
+### Compile as root
 
-    make divisors_app
+cd /home/cluster/parallel_lab2
+make divisors_app
+
+### Switch to the cluster user
+
+    su cluster
+    cd ~/parallel_lab2
+
+Note, a valid hostname file is required in the directory below (..) the project directory.
+
+### Compile the executable
+This command links the objects to the custom GMP installation.
 
     mpic++ -std=c++11 -o divisors_app obj/gmp_factors_API.o obj/DivisorApplication.o obj/DivisorResult.o obj/DivisorWork.o obj/MW_API.o obj/MW_Master.o obj/MW_Worker.o -I/home/cluster/gmplib/include -L/home/cluster/gmplib/lib -lgmpxx -lgmp
-
 
 ### Execute the program
 
