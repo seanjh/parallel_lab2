@@ -9,6 +9,9 @@
 //   DONE_TAG  = 2;
 // } WorkTag;
 
+#define MAX_MESSAGE_SIZE 4096
+
+
 class MW_Process {
 public:
   static const int WORK_TAG = 1;

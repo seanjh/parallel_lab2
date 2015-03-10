@@ -21,13 +21,13 @@ int MW_Worker::receiveWork()
   std::cout << "P:" << id << " waiting to receive work from master." << std::endl;
 
   MPI::Status status;
-  char *message = (char*)malloc(1000);
-  memset(message, 0, 1000);
+  char *message = (char*)malloc(MAX_MESSAGE_SIZE);
+  memset(message, 0, MAX_MESSAGE_SIZE);
   // std::string message(1000, 0);
 
   MPI::COMM_WORLD.Recv(
     (void *) message,
-    1000,
+    MAX_MESSAGE_SIZE,
     MPI::CHAR,
     master_id,
     MPI::ANY_TAG,
