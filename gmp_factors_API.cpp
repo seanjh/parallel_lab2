@@ -1,7 +1,7 @@
 
 
 //#include <list>
-//#include <gmpxx.h>
+#include <gmpxx.h>
 #include "Work.hpp"
 #include "Result.hpp"
 #include "MW_API.hpp"
@@ -35,7 +35,7 @@ void runApp(MW_API *app)
 int main(int argc, char* argv[])
 {
   std::string inputString(argv[1]);
-  DivisorApplication *app = new DivisorApplication(inputString);
+  DivisorApplication *app = new DivisorApplication(inputString, 5);
 
   // runApp(app);
   MW_Run(argc, argv, app);
