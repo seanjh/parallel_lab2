@@ -35,16 +35,16 @@ bool hasAllWorkers(MW_Master *master, int world_size)
 
 Result *doSomeWork(MW_Worker *worker)
 {
-  std::cout << "P:" << worker->id << " Grabbing some workToDo\n";
+  // std::cout << "P:" << worker->id << " Grabbing some workToDo\n";
   Work *work = worker->workToDo->front();
   assert(work != NULL);
-  std::cout << "P:" << worker->id << " Work object is (" << work << ") \"" << work->serialize() << "\"\n";
+  // std::cout << "P:" << worker->id << " Work object is (" << work << ") \"" << work->serialize() << "\"\n";
   worker->workToDo->pop_front();
 
-  std::cout << "P:" << worker->id << " Computing results.\n";
+  // std::cout << "P:" << worker->id << " Computing results.\n";
   Result *one_result = work->compute();
   assert(one_result != NULL);
-  std::cout << "P:" << worker->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
+  // std::cout << "P:" << worker->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
 
   return one_result;
 }
@@ -64,7 +64,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
     MW_Master *proc = new MW_Master(myid, sz, app);
     while (1) {
       if (hasWorkersHasWork(proc)) {
-        std::cout << "MASTER IS SENDING\n";
+        // std::cout << "MASTER IS SENDING\n";
         worker_id = proc->workers->front();
         assert(worker_id != 0);
         proc->workers->pop_front();
@@ -72,12 +72,12 @@ void MW_Run(int argc, char* argv[], MW_API *app)
         proc->send_one(worker_id);
 
       } else if (noWorkersHasWork(proc) || noWorkersNoWork(proc)) {
-        std::cout << "MASTER IS WAITING FOR A RESULT\n";
+        // std::cout << "MASTER IS WAITING FOR A RESULT\n";
         proc->receive_result();
 
       } else if (hasWorkersNoWork(proc)) {
         if (hasAllWorkers(proc, sz)) {
-          std::cout << "MASTER IS DONE\n";
+          // std::cout << "MASTER IS DONE\n";
           proc->send_done();
           break;
         } else {
@@ -108,7 +108,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
         proc->sendResults();
 
       } else {
-        std::cout << "P:" << proc->id << " IS DONE\n";
+        // std::cout << "P:" << proc->id << " IS DONE\n";
         break;
       }
     }

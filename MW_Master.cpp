@@ -59,7 +59,7 @@ void MW_Master::send_done()
 
 void MW_Master::send_one(int worker_id)
 {
-  std::cout << "P:" << this->id << " sending work to process " << worker_id << std::endl;
+  // std::cout << "P:" << this->id << " sending work to process " << worker_id << std::endl;
 
   Work *work = workToDo->front();
   workToDo->pop_front();
@@ -67,8 +67,8 @@ void MW_Master::send_one(int worker_id)
   std::string *work_string = work->serialize();
   int count = (int) work_string->length();
 
-  std::cout << "P:" << id << " sending work with " << count <<
-    " total MPI::CHARs -- " << *work_string << std::endl;
+  // std::cout << "P:" << id << " sending work with " << count <<
+  //   " total MPI::CHARs -- " << *work_string << std::endl;
 
   MPI::COMM_WORLD.Send(
     (void *) work_string->data(),
@@ -78,8 +78,8 @@ void MW_Master::send_one(int worker_id)
     MW_Master::WORK_TAG
   );
 
-  std::cout << "P:" << id << " finished send to P" << worker_id << ". " <<
-    workToDo->size() << " work items remaining" << std::endl;
+  // std::cout << "P:" << id << " finished send to P" << worker_id << ". " <<
+  //   workToDo->size() << " work items remaining" << std::endl;
 
   // delete work;
   delete work_string;
@@ -101,7 +101,7 @@ void MW_Master::send_work()
 
 void MW_Master::receive_result()
 {
-  std::cout << "P:" << id << " master waiting to receive" << std::endl;
+  // std::cout << "P:" << id << " master waiting to receive" << std::endl;
 
   MPI::Status status;
   // std::string& message = new std::string(1000, 0);
@@ -121,15 +121,15 @@ void MW_Master::receive_result()
   int count = status.Get_count(MPI::CHAR);
   if (count != 0) {
     std::string serializedObject = std::string(message, count);
-    std::cout << "P:" << id << " Received from process " << worker_id <<
-      " message of length "<< count << " \"" << serializedObject << "\"\n";
+    // std::cout << "P:" << id << " Received from process " << worker_id <<
+    //   " message of length "<< count << " \"" << serializedObject << "\"\n";
 
-    std::cout << "App is: " << app << std::endl;
+    // std::cout << "App is: " << app << std::endl;
     Result *result = app->resultDeserializer(serializedObject);
-    std::cout << "P:" << id << " received results (" << result << ") from process " << worker_id << ". " << std::endl;
+    // std::cout << "P:" << id << " received results (" << result << ") from process " << worker_id << ". " << std::endl;
     assert(result != NULL);
     results->push_back(result);
-    std::cout << "results size is " << results->size() << std::endl;
+    // std::cout << "results size is " << results->size() << std::endl;
   }
 
   free(message);
