@@ -34,6 +34,8 @@ DivisorWork::DivisorWork(std::string serialObject)
 	count = stoi(countString);
 }
 
+// DivisorWork::~DivisorWork(){}
+
 DivisorResult *DivisorWork::compute()
 {
 	std::list<mpz_class> divisors;

@@ -9,12 +9,13 @@
 #include "Work.hpp"
 
 class DivisorResult;
-    
+
 class DivisorWork : public Work {
 public:
     DivisorWork(mpz_class d, mpz_class f, int c);
 	DivisorWork(std::string d, std::string f, int c);
 	DivisorWork(std::string serialObject);
+  // ~DivisorWork();
 	//const std::list<mpz_class> &getDivisors();
 	//const std::string &getDivisorsCSV();
 	//std::list<mpz_class>::const_iterator getIterator();

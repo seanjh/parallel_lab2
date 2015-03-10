@@ -6,11 +6,11 @@
 
 
 class Result;
-    
+
 class Work {
 public:
     // Must be present, even if it does nothing.
-    
+
     //This needs to destroy all of its children to prevent memory leaks
     // virtual ~Work();
 public:
