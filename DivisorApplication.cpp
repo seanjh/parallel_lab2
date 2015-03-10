@@ -14,14 +14,14 @@ std::list<Work *> *DivisorApplication::work()
 	std::list<Work *> *retList = new std::list<Work *>();
 
 	mpz_class square_a = sqrt(divisor);
-	std::string beginString1 = mpz_class(1).get_str();
-	const int count1 = mpz_class(((square_a/2)-1)+1).get_si();
-	DivisorWork *divWork1 = new DivisorWork(divisor.get_str(), beginString1, count1);
+	mpz_class begin = mpz_class(1);
+	mpz_class count1 = mpz_class(((square_a/2)-1)+1);
+	DivisorWork *divWork1 = new DivisorWork(divisor, begin, count1);
 	retList->push_back(divWork1);
 
-	std::string beginString2 = mpz_class(square_a/2+1).get_str();
-	const int count2 = mpz_class(((square_a)-(square_a/2+1))+1).get_si();
-	DivisorWork *divWork2 = new DivisorWork(divisor.get_str(), beginString2, count2);
+	mpz_class begin2 = mpz_class(square_a/2+1);
+	mpz_class count2 = mpz_class(((square_a)-(square_a/2+1))+1);
+	DivisorWork *divWork2 = new DivisorWork(divisor, begin2, count2);
 	retList->push_back(divWork2);
 
 	return retList;

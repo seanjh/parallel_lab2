@@ -7,11 +7,11 @@
 #include <mpi.h>
 #include <assert.h>
 
-MW_Master::MW_Master(const int myid, const int sz, MW_API *app)
+MW_Master::MW_Master(const int myid, const int sz, MW_API *a)
 {
   id = myid;
   world_size = sz;
-  app = app;
+  app = a;
 
   workToDo = app->work();
   results = new std::list<Result *>();
@@ -110,6 +110,7 @@ void MW_Master::receive_result()
     std::cout << "P:" << id << " Received from process " << worker_id <<
       " message of length "<< count << " \"" << serializedObject << "\"\n";
 
+    std::cout << "App is: " << app << std::endl;
     Result *result = app->resultDeserializer(serializedObject);
     std::cout << "P:" << id << " received results (" << result << ") from process " << worker_id << ". " << std::endl;
     assert(result != NULL);

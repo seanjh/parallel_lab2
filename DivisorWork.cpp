@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <sstream>
 
-DivisorWork::DivisorWork(mpz_class d, mpz_class f, int c):
+DivisorWork::DivisorWork(mpz_class d, mpz_class f, mpz_class c):
 		dividend(d),
 		firstValueToTest(f),
 		count(c)
@@ -10,8 +10,8 @@ DivisorWork::DivisorWork(mpz_class d, mpz_class f, int c):
 	assert(count > 0);
 }
 
-DivisorWork::DivisorWork(std::string d, std::string f, int c):
-	DivisorWork(mpz_class(d, 10), mpz_class(f, 10), c) {}
+DivisorWork::DivisorWork(std::string d, std::string f, std::string c):
+	DivisorWork(mpz_class(d, 10), mpz_class(f, 10), mpz_class(c, 10)) {}
 
 DivisorWork::DivisorWork(std::string serialObject)
 {
@@ -19,7 +19,6 @@ DivisorWork::DivisorWork(std::string serialObject)
 	std::string divString;
 	std::string firstValString;
 	std::string countString;
-	int count;
 	std::istringstream iss(serialObject);
 	std::getline(iss,divString,',');
 	std::getline(iss,firstValString,',');
@@ -31,7 +30,11 @@ DivisorWork::DivisorWork(std::string serialObject)
 
 	dividend = mpz_class(divString, 10);
 	firstValueToTest = mpz_class(firstValString, 10);
-	count = stoi(countString);
+	count = mpz_class(countString, 10);
+
+	std::cout << "DivisorWork::DivisorWork divisor is " << dividend.get_str() << std::endl;
+	std::cout << "DivisorWork::DivisorWork firstVal is " << firstValueToTest.get_str() << std::endl;
+	std::cout << "DivisorWork::DivisorWork count is " << count.get_str() << std::endl;
 }
 
 DivisorResult *DivisorWork::compute()
@@ -61,5 +64,5 @@ std::string *DivisorWork::serialize()
 {
 	return new std::string(dividend.get_str() + ',' +
 						firstValueToTest.get_str() + ',' +
-						std::to_string(count));
+						count.get_str());
 }

@@ -3,6 +3,7 @@
 #include "MW_Worker.hpp"
 #include <mpi.h>
 #include <assert.h>
+#include <iostream>
 
 #define MASTER_PROCESS_ID 0
 

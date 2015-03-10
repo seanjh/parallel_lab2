@@ -12,6 +12,7 @@ DivisorResult::DivisorResult(const std::string &serialObject)
 	std::istringstream iss (serialObject);
 	std::string divString;
 
+	std::cout << "Serialized result object: " <<serialObject<<std::endl;
 	while(std::getline(iss,divString,','))
     {
         divisors.push_back(mpz_class(divString, 10));

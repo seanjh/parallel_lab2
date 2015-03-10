@@ -1,6 +1,7 @@
 #include "MW_Worker.hpp"
 #include <mpi.h>
 #include <assert.h>
+#include <iostream>
 
 MW_Worker::MW_Worker(const int myid, const int m_id, MW_API *mwapp)
 {
