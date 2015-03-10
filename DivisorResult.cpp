@@ -4,7 +4,11 @@
 
 DivisorResult::DivisorResult(const std::list<mpz_class> &divList)
 {
-	divisors = divList;
+	divisors = std::list<mpz_class>();
+	for (auto iter = divList.begin();
+		iter != divList.end();
+		iter++)
+		divisors.push_back(*iter);
 }
 
 DivisorResult::DivisorResult(const std::string &serialObject)
@@ -20,6 +24,7 @@ DivisorResult::DivisorResult(const std::string &serialObject)
 
 std::string *DivisorResult::serialize()
 {
+	//std::cout << "In Serialize Method" << std::endl;
 	std::string divisorsString;
 	std::list<mpz_class>::const_iterator divIter = divisors.cbegin();
 	if(divIter!=divisors.cend())

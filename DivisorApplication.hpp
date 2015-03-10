@@ -13,15 +13,17 @@ public:
 	DivisorApplication(std::string &divisorString);
 	DivisorApplication(std::string &divisorString, mpz_class work_size);
 	~DivisorApplication();
-	virtual std::list<Work *> *work();
+	virtual const std::list<Work *> &work();
     virtual int results(std::list<Result *> *);
+    virtual std::string *workSerializer(Work &);
     virtual Work *workDeserializer(const std::string &);
+    virtual std::string *resultSerializer(Result &);
     virtual Result *resultDeserializer(const std::string &);
     
 private:
 	mpz_class divisor;
 	mpz_class work_size;
-	std::list<Work *> *workList;
+	std::list<Work *> workList;
 };
 
 #endif

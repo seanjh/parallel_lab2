@@ -7,37 +7,54 @@
 #include <mpi.h>
 #include <assert.h>
 
-MW_Master::MW_Master(const int myid, const int sz, std::list<Work *> *work, MW_API *app)
+MW_Master::MW_Master(const int myid, const int sz, const std::list<Work *> &work, MW_API *a)
 {
   id = myid;
   world_size = sz;
-  app = app;
+  app = a;
 
-  workToDo = new std::list<Work *>(*(work));
-  results = new std::list<Result *>();
-  std::cout << "Total work in master is " << workToDo->size() << std::endl;
+  std::cout << "In master constructor" << std::endl;
+  //workToDo = std::list<Work *>();
+  std::cout << &work << std::endl;
+  std::cout << a << std::endl;
+
+  
+  // Work *pieceOfWork = work.front();
+  // std::cout<<pieceOfWork <<std::endl;
+  // std::cout<<pieceOfWork->serialize() <<std::endl;
+  // std::cout << *(a->workSerializer(*pieceOfWork)) <<std::endl;
+  for (auto iter = work.begin();
+    iter != work.end();
+    iter++)
+  {
+    Work *pieceOfWork;
+    std::cout<<"Work Pushing " << *(a->workSerializer(**iter)) << std::endl;
+    workToDo.push_back(*iter);
+  }
+  //results = std::list<Result *>();
+  std::cout << "Total work in master is " << workToDo.size() << std::endl;
 
   // Prepopulate the list of workers
-  workers = new std::list<int>();
+  //workers = std::list<int>();
   for (int i=0; i<world_size; i++) {
     if (i != id) {
-      workers->push_back(i);
+      std::cout<<"Worker Pushing " << i << std::endl;
+      workers.push_back(i);
     }
   }
+  //std::cout <<"Number of workers: " << workers->size() << std::endl;
 }
 
 MW_Master::~MW_Master()
 {
-  delete workToDo;
-  for ( auto iter = results->begin();
-      iter != results->end();
+  for ( auto iter = results.begin();
+      iter != results.end();
       iter++)
   {
     Result *result = *iter;
     delete result;
   }
 
-  delete results;
 }
 
 void MW_Master::masterLoop()
@@ -55,11 +72,14 @@ void MW_Master::masterLoop()
   while(1)
   {
 
+    std::cout << "At top of master loop" << std::endl;
+    std::cout <<"Number of workers: " << workers.size() << std::endl;
     //if no more work and we have received messages from all of our workers
     //send done message
-    if(workToDo->empty() && workers->size() == world_size)
+    if(workToDo.empty() && workers.size() == world_size-1)
     {
       //send done message
+      std::cout << "sending done messages " << std::endl;
       for(int i=1; i<world_size; i++)
       {
         char a = 'a';
@@ -71,24 +91,37 @@ void MW_Master::masterLoop()
           MW_Master::DONE_TAG
         );
       }
+      break;
 
     }
     //if available workers and work
     //send work to worker
-    else if( !workers->empty() && !workToDo->empty())
+    else if( !workers.empty() && !workToDo.empty())
     {
 
-      int worker_id = workers->front();
-      workers->pop_front();
+      int worker_id = workers.front();
+      workers.pop_front();
 
       std::cout << "sending message to " << worker_id << std::endl;
 
-      Work *work = workToDo->front();
-      workToDo->pop_front();
+      Work *work = workToDo.front();
+      workToDo.pop_front();
 
       std::string *work_string = work->serialize();
 
+
       //send serialized work to worker
+      // std::cout << std::endl;
+      // std::cout << std::endl;
+      // std::cout << std::endl;
+      // std::cout << std::endl;
+      // std::cout << std::endl;
+      // std::cout << *work_string << std::endl;
+      // std::cout << std::endl;
+      // std::cout << std::endl;
+      // std::cout << std::endl;
+      // std::cout << std::endl;
+      // std::cout << std::endl;
       MPI::COMM_WORLD.Send(
         (void *) work_string->data(),
         work_string->length(),
@@ -97,35 +130,42 @@ void MW_Master::masterLoop()
         MW_Master::WORK_TAG
       );
 
+      std::cout << "message sent to " << worker_id << std::endl;
       //setup receive for worker
       memset(resultMessages[worker_id-1], 0, MAX_MESSAGE_SIZE);
+      std::cout << " receiving from " << worker_id << std::endl;
       requestArray[worker_id-1] = MPI::COMM_WORLD.Irecv(
         (void *) resultMessages[worker_id-1],
         MAX_MESSAGE_SIZE,
         MPI::CHAR,
-        id,
+        worker_id,
         MW_Master::WORK_TAG
       );
+
+      std::cout << "initiated receive from " << worker_id << std::endl;
     }
     //if no available workers and there is available work, wait for all workers
     //receive results
 
     //if available workers and no work, wait for rest of workers to respond before
 
-    else if ((workers->empty() && !workToDo->empty()) || workToDo->empty())
+    else if ((workers.empty() && !workToDo.empty()) || workToDo.empty())
     {
       //requestId will specify the request id of the message returned
       MPI::Status status;
       int requestId =  MPI::Request::Waitany(world_size-1, requestArray, status);
-
-      std::cout << "Got result Message" << std::endl;
+      assert(requestId >= 0 && requestId < world_size);
+      std::cout << "Got result Message from " << requestId+1 << std::endl;
+      std::cout << "string length " << status.Get_count(MPI::CHAR) <<std::endl;
       std::string serializedObject = std::string(resultMessages[requestId], status.Get_count(MPI::CHAR));
       std::cout << serializedObject << std::endl;
       Result *result = app->resultDeserializer(serializedObject);
-      results->push_back(result);
+      std::cout << result->serialize() << std::endl;
+      results.push_back(result);
 
       // Reinclude this working in the queue
-      workers->push_back(requestId+1);
+      std::cout << "Adding working to back of queue " << requestId+1 << std::endl;
+      workers.push_back(requestId+1);
     }
      
     else
@@ -136,6 +176,14 @@ void MW_Master::masterLoop()
 
 
   }
+
+  std::cout<<"Deleting a bunch of stuff"<<std::endl;
+  delete requestArray[world_size-1];
+ 
+  for(int i=0; i<world_size-1; i++)
+    free(resultMessages[i]);
+
+
 
 }
 
@@ -163,7 +211,7 @@ void MW_Master::masterLoop()
 //   std::cout << "P:" << id << " finished send to P" << worker_id << ". " <<
 //     workToDo->size() << " work items remaining" << std::endl;
 
-//   // delete work;
+//   // deletedelete work;
 //   delete work_string;
 // }
 

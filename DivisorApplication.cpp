@@ -6,7 +6,6 @@
 
 DivisorApplication::DivisorApplication(std::string &divisorString, mpz_class ws) : divisor(mpz_class(divisorString, 10)), work_size(ws)
 {
-	workList = new std::list<Work *>();
 
 	mpz_class square_a = sqrt(divisor);
 	// std::cout << square_a.get_str() << std::endl;
@@ -21,15 +20,19 @@ DivisorApplication::DivisorApplication(std::string &divisorString, mpz_class ws)
 	for(mpz_class i=0; i<numberOfWork-1; i++)
 	{
 		mpz_class beginVal = (i * work_size) + 1;
-		// std::cout << i << ": " << beginVal.get_str() << ": " << work_size << std::endl;
+		std::cout << i << ": " << beginVal.get_str() << ": " << work_size << std::endl;
 		DivisorWork *divWork = new DivisorWork(divisor, beginVal, work_size);
-		workList->push_back(divWork);
+		workList.push_back(divWork);
 	}
 
 	mpz_class beginVal = ((numberOfWork-1) * work_size) + 1;
-	// std::cout << numberOfWork-1 << ": " << beginVal.get_str() << ": " << lastWorkSize << std::endl;
+	std::cout << numberOfWork-1 << ": " << beginVal.get_str() << ": " << lastWorkSize << std::endl;
 	DivisorWork *divWork = new DivisorWork(divisor, beginVal, lastWorkSize);
-	workList->push_back(divWork);
+	workList.push_back(divWork);
+
+	Work *pieceOfWork = workList.front();
+	std::cout<<pieceOfWork<<std::endl;
+	//std::cout<<*(workSerializer(*pieceOfWork))<<std::endl;
 }
 
 DivisorApplication::DivisorApplication(std::string &divisorString) : DivisorApplication(divisorString, 100000)
@@ -39,19 +42,20 @@ DivisorApplication::DivisorApplication(std::string &divisorString) : DivisorAppl
 
 DivisorApplication::~DivisorApplication()
 {
-	for (	auto iter = workList->begin();
-			iter != workList->end();
+	std::cout<<"Divisor Application Destructor!!" << std::endl;
+	for (	auto iter = workList.begin();
+			iter != workList.end();
 			iter++)
 	{
 		Work *work = *iter;
 		delete work;
 	}
 
-	delete workList;
+	// delete workList;
 
 }
 
-std::list<Work *> *DivisorApplication::work()
+const std::list<Work *> &DivisorApplication::work()
 {
 	// std::list<Work *> *retList = new std::list<Work *>();
 	// mpz_class square_a = sqrt(divisor);
@@ -77,6 +81,16 @@ std::list<Work *> *DivisorApplication::work()
 	// DivisorWork *divWork = new DivisorWork(divisor, beginVal, lastWorkSize);
 	// retList->push_back(divWork);
 
+	std::cout << "Returning worklist" <<std::endl;
+	// for(auto iter = workList.end();
+	// 	iter != workList.begin();
+	// 	iter--)
+	// 	std::cout<<*iter<<std::endl;
+
+	std::cout <<workList.size()<<std::endl;
+	Work *pieceOfWork = workList.back();
+	std::cout << pieceOfWork << std::endl;
+	std::cout << *(workSerializer(*pieceOfWork)) << std::endl;
 	return workList;
 }
 
@@ -106,12 +120,25 @@ int DivisorApplication::results(std::list<Result *> *listOfResults)
 
 Work *DivisorApplication::workDeserializer(const std::string &serializedObject)
 {
-	std::cout<<"In DivisorWork deserializer" <<std::endl;
+	//std::cout<<"In DivisorWork deserializer" <<std::endl;
 	return DivisorWork::deserialize(serializedObject);
 }
+
+std::string *DivisorApplication::workSerializer(Work &objectToSerialize)
+{
+	std::cout<<"In DivisorWork serializer" <<std::endl;
+	return objectToSerialize.serialize();
+}
+
 Result *DivisorApplication::resultDeserializer(const std::string &serializedObject)
 {
 	std::cout<<"In result deserializer" <<std::endl;
 	return DivisorResult::deserialize(serializedObject);
+}
+
+std::string *DivisorApplication::resultSerializer(Result &objectToSerialize)
+{
+	std::cout<<"In DivisorResult deserializer" <<std::endl;
+	return objectToSerialize.serialize();
 }
 

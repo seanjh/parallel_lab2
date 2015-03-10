@@ -26,7 +26,7 @@ public:
     // static DivisorResult *deserialize(const std::string &);
     // You could add more to the public interface, if you wanted to.
 	//const std::string &getDivisorsCSV();
-    virtual std::string *serialize();
+    std::string *serialize();
     static DivisorResult *deserialize(const std::string &serialObject){return new DivisorResult(serialObject);}
     const std::list<mpz_class> &getDivisors();
 private:

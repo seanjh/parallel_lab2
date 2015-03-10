@@ -11,8 +11,8 @@ class MW_Worker : public MW_Process {
   int id;
   int master_id;
   MW_API *app;
-  std::list<Work *> *workToDo;
-  std::list<Result *> *results;
+  std::list<Work *> workToDo;
+  std::list<Result *> results;
 
 public:
   MW_Worker(const int id, const int master, MW_API *app);

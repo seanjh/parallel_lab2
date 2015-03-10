@@ -23,8 +23,8 @@ public:
 //Work Interface
 public:
     // Result *compute();
-    virtual DivisorResult *compute();
-    virtual std::string *serialize();
+    DivisorResult *compute();
+    std::string *serialize();
     static DivisorWork *deserialize(const std::string &serialObject){return new DivisorWork(serialObject);}
 
 private:

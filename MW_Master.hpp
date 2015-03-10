@@ -10,13 +10,13 @@ class MW_Master : public MW_Process {
   int id;
   int world_size;
   MW_API *app;
-  std::list<Work *> *workToDo;
-  std::list<Result *> *results;
-  std::list<int> *workers;
+  std::list<Work *> workToDo;
+  std::list<Result *> results;
+  std::list<int> workers;
 
 public:
   // MW_Master()
-  MW_Master(const int myid, const int sz, std::list<Work *> *workToDo, MW_API *app);
+  MW_Master(const int myid, const int sz, const std::list<Work *> &workToDo, MW_API *app);
   void masterLoop();
   ~MW_Master();
 private:

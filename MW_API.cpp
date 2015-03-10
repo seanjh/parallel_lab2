@@ -2,6 +2,7 @@
 #include "MW_Master.hpp"
 #include "MW_Worker.hpp"
 #include <mpi.h>
+#include <iostream>
 
 void MW_API::MW_Run(int argc, char* argv[])
 {
@@ -13,7 +14,15 @@ void MW_API::MW_Run(int argc, char* argv[])
 
   // master creates work universe
   if (myid == 0) {
-    MW_Master *master = new MW_Master(myid, sz, work(), this);
+
+    // std::cout<<"top of list" << std::endl;
+    const std::list<Work *> &work = this->work();
+    // Work *pieceOfWork = work.front();
+    // std::cout<<pieceOfWork <<std::endl;
+    // std::cout << this->workSerializer(*pieceOfWork) <<std::endl;
+
+    // std::cout<<"creating master" << std::endl;
+    MW_Master *master = new MW_Master(myid, sz, work, this);
     master->masterLoop();
 
     //all work is completed at this point
@@ -26,8 +35,8 @@ void MW_API::MW_Run(int argc, char* argv[])
     // proc->send_one(1);
     // proc->receive_result();
   } else {
-    MW_Worker *proc = new MW_Worker(myid, 0, this);
-    proc->workerLoop();
+    // MW_Worker *proc = new MW_Worker(myid, 0, this);
+    // proc->workerLoop();
     // proc->receiveWork();
     // proc->sendResults();
   }

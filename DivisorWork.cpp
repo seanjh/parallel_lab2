@@ -7,6 +7,8 @@ DivisorWork::DivisorWork(mpz_class d, mpz_class f, mpz_class c):
 		firstValueToTest(f),
 		count(c)
 {
+	// std::cout<<"In divisor work constructor: " <<d.get_str() << \
+	// " : "<<f.get_str() << " : "<<c.get_str() << std::endl;
 	assert(count > 0);
 }
 
@@ -33,7 +35,7 @@ DivisorWork::~DivisorWork(){}
 DivisorResult *DivisorWork::compute()
 {
 
-	std::cout << "In Compute" << std::endl;
+	//std::cout << "In Compute" << std::endl;
 	std::list<mpz_class> divisors;
 	for(mpz_class i=0; i<count; i++)
 	{
@@ -52,12 +54,22 @@ DivisorResult *DivisorWork::compute()
 		}
 	}
 	divisors.sort();
+	//std::cout << "completed Compute" << std::endl;
 	return new DivisorResult(divisors);
 }
 
 std::string *DivisorWork::serialize()
 {
-	return new std::string(dividend.get_str() + ',' + 
+	std::string *retString = new std::string(dividend.get_str() + ',' + 
 						firstValueToTest.get_str() + ',' + 
 						count.get_str());
+	// std::cout <<dividend.get_str() + ',' + 
+	// 					firstValueToTest.get_str() + ',' + 
+	// 					count.get_str() << std::endl;
+	//std::cout << *retString << std::endl;
+	return retString;
+	// std::cout << dividend.get_str() << std::endl;
+	// std::cout << firstValueToTest.get_str() << std::endl;
+	// std::cout << count.get_str() << std::endl;
+	// return NULL;				
 }

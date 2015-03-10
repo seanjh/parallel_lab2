@@ -4,17 +4,17 @@
 
 
 
-MW_Worker::MW_Worker(const int myid, const int m_id, MW_API *app)
+MW_Worker::MW_Worker(const int myid, const int m_id, MW_API *a)
 {
   id = myid;
   master_id = m_id;
-  app = app;
+  app = a;
 
   // Blanks lists for work and results
-  workToDo = new std::list<Work *>();
-  results = new std::list<Result *>();
+  // workToDo = std::list<Work *>();
+  // results = new std::list<Result *>();
 
-  std::cout << "" << std::endl;
+  std::cout << "completed worker construction" << std::endl;
 }
 
 void MW_Worker::workerLoop()
@@ -27,6 +27,7 @@ void MW_Worker::workerLoop()
   MPI::Request requestArray[2];
 
   //receive work
+  std::cout << "Receiving work" << std::endl;
   requestArray[0] = MPI::COMM_WORLD.Irecv(
     (void *) workMessage,
     MAX_MESSAGE_SIZE,
@@ -38,6 +39,7 @@ void MW_Worker::workerLoop()
   char *doneMessage = (char*)malloc(MAX_MESSAGE_SIZE);
   memset(doneMessage, 0, MAX_MESSAGE_SIZE);
   //receive done
+  std::cout << "Receiving done" << std::endl;
   requestArray[1] = MPI::COMM_WORLD.Irecv(
     (void *) doneMessage,
     MAX_MESSAGE_SIZE,
@@ -49,30 +51,33 @@ void MW_Worker::workerLoop()
   while(1)
   {
 
-    std::cout << "In worker loop" << std::endl;
+    std::cout << "At top of worker loop" << std::endl;
     //requestId will specify the request id of the message returned
     int requestId =  MPI::Request::Waitany(2, requestArray, status);
-    
+    //std::cout << "Received Message " << requestId << std::endl;
     //work message received
     if(requestId == 0)
     {
 
       std::cout << "Got work Message" << std::endl;
       std::string serializedObject = std::string(workMessage, status.Get_count(MPI::CHAR));
-      std::cout <<id << ": "<< serializedObject << std::endl;
+      //std::cout <<id << ": "<< serializedObject << std::endl;
 
 
+      std::cout << app << std::endl;
       Work *work = app->workDeserializer(serializedObject);
+      //std::cout << "deserialized completed" << std::endl;
       std::cout << work << std::endl;
-      std::cout << "deserialized " << *(work->serialize()) << std::endl;
+      //std::cout << "deserialized " << *(work->serialize()) << std::endl;
 
-      std::cout << "computing results " << std::endl;
+      //std::cout << "computing results " << std::endl;
       Result *result = work->compute();
-      std::cout << "computed results " << std::endl;
+      //std::cout << "computed results " <<result<< std::endl;
       std::string *result_string = result->serialize();
 
       std::cout << "produced results " << *result_string << std::endl;
 
+      std::cout << "string length " << result_string->length() <<std::endl;
       MPI::COMM_WORLD.Send(
         (void *) result_string->data(),
         result_string->length(),
@@ -81,10 +86,7 @@ void MW_Worker::workerLoop()
         MW_Worker::WORK_TAG
       );
 
-      //free objects
-      delete(work);
-      delete(result);
-      delete(result_string);
+      //std::cout << "Results Sent " << std::endl;
 
       //set the receive back up
       memset(workMessage, 0, MAX_MESSAGE_SIZE);
@@ -95,6 +97,15 @@ void MW_Worker::workerLoop()
         master_id,
         MW_Worker::WORK_TAG
       );
+
+
+
+      //free objects
+      delete(work);
+      delete(result);
+      delete(result_string);
+
+      //std::cout << "new receive performed " << std::endl;
     }
     //done message received
     else if(requestId == 1)
