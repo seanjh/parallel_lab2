@@ -25,8 +25,15 @@ Update LD_LIBRARY_PATY in .bash_profile, or execute the following command.
     
 ## Execution instructions
 
+### Login as cluster
+
+    su cluster
+    cd ~
+
+Clone the repo, if necessary, and navigate inside the project directory. Note, a valid hostname file is required in the directory below (..) the project directory.
 
 ### Activate devtoolset-2 
+    
     scl enable devtoolset-2 bash
 
 ### Compile the project
