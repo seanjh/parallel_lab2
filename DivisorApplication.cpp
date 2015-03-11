@@ -14,7 +14,7 @@ DivisorApplication::DivisorApplication(std::string &divisorString) : divisor(mpz
 
 }
 
-DivisorApplication::DivisorApplication(std::string &divisorString, std::string &workSizeString) : divisor(mpz_class(divisorString, 10)), work_size(stoi(workSizeString))
+DivisorApplication::DivisorApplication(std::string &divisorString, std::string &workSizeString) : divisor(mpz_class(divisorString, 10)), work_size(mpz_class(workSizeString, 10))
 {
 
 }

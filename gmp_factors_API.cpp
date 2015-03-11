@@ -34,12 +34,14 @@
 
 int main(int argc, char* argv[])
 {
-  std::string valueString(argv[1]);
-  std::string workSizeString(argv[2]);
+  //std::cout <<argc << std::endl;
   DivisorApplication *app;
-  if (!workSizeString.empty()) {
-     app = new DivisorApplication(valueString, workSizeString);
+  if (argc > 2) {
+    std::string valueString(argv[1]);
+    std::string workSizeString(argv[2]);
+    app = new DivisorApplication(valueString, workSizeString);
   } else {
+    std::string valueString(argv[1]);
     app = new DivisorApplication(valueString);
   }
 
