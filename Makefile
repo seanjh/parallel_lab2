@@ -77,7 +77,7 @@ working_api: $(WORKING_API_OBJ)
 	$(CXX) -std=c++11 -o $@ $^ $(LIBS)
 
 divisors_app: $(DIVISORS_APP_OBJ)
-	$(CXX) -std=c++11 -o $@ $^ $(LIBS)
+	$(CXX) -std=c++11 -o $@ $^ -L../gmplib/lib $(LIBS)
 
 # profile: $(PROFILE_OBJ)
 # 	$(CXX) -o $@ $^
