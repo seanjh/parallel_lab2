@@ -69,6 +69,7 @@ void MW_Worker::sendResults()
   // std::cout << "P:" << id << " sending result with " << count <<
   //   " total MPI::CHARs -- " << result_string << std::endl;
 
+  assert(count < MAX_MESSAGE_SIZE);
   MPI::COMM_WORLD.Send(
     (void *) result_string->data(),
     count,

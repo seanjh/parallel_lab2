@@ -15,7 +15,7 @@ MW_Master::MW_Master(const int myid, const int sz, MW_API *a)
 
   workToDo = app->work();
   results = new std::list<Result *>();
-  std::cout << "Total work in master is " << workToDo->size() << std::endl;
+  //std::cout << "Total work in master is " << workToDo->size() << std::endl;
 
   // Prepopulate the list of workers
   workers = new std::list<int>();
@@ -42,10 +42,10 @@ MW_Master::MW_Master(const int myid, const int sz, MW_API *a)
 
 void MW_Master::send_done()
 {
-  std::cout << "MASTER SENDING DONE MESSAGES\n";
+  //std::cout << "MASTER SENDING DONE MESSAGES\n";
   for (int process_id=0; process_id<world_size; process_id++) {
     if (process_id != id) {
-      std::cout << "MASTER SENDING DONE to PROCESS" << process_id << " \n";
+      //std::cout << "MASTER SENDING DONE to PROCESS" << process_id << " \n";
       MPI::COMM_WORLD.Send(
         0,
         0,

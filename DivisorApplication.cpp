@@ -62,12 +62,14 @@ int DivisorApplication::results(std::list<Result *> *listOfResults)
 		results.merge(divisorList);
 	}
 
-	std::cout << divisor << " has " << results.size() << " total divisors.\n";
-	for(auto iter = results.begin();
-	    iter != results.end();
-	    iter++) {
-	std::cout << *iter << " is a divisor\n";
-	}
+
+	std::cout<< "Dividend: " <<divisor<<" Work Size: "<<work_size<<" ";
+	// std::cout << divisor << " has " << results.size() << " total divisors.\n";
+	// for(auto iter = results.begin();
+	//     iter != results.end();
+	//     iter++) {
+	// std::cout << *iter << " is a divisor\n";
+	// }
 
 	return 0;
 }

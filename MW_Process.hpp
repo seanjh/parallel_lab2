@@ -9,7 +9,7 @@
 //   DONE_TAG  = 2;
 // } WorkTag;
 
-#define MAX_MESSAGE_SIZE 4096
+#define MAX_MESSAGE_SIZE 8092
 
 
 class MW_Process {
