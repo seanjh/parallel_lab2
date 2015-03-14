@@ -32,3 +32,6 @@ serial
 partial_api
 working_api
 divisors_app
+
+# NetBeans
+nbproject*

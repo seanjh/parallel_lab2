@@ -1,53 +1,13 @@
+#include <assert.h>
+#include <iostream>
+#include <mpi.h>
+
 #include "MW_API.hpp"
 #include "MW_Process.hpp"
 #include "MW_Master.hpp"
 #include "MW_Worker.hpp"
-#include <mpi.h>
-#include <assert.h>
-#include <iostream>
 
 #define MASTER_PROCESS_ID 0
-
-bool hasWorkersHasWork(MW_Master *master)
-{
-  return !master->workers->empty() && !master->workToDo->empty();
-}
-
-bool hasWorkersNoWork(MW_Master *master)
-{
-  return !master->workers->empty() && master->workToDo->empty();
-}
-
-bool noWorkersHasWork(MW_Master *master)
-{
-  return master->workers->empty() && !master->workToDo->empty();
-}
-
-bool noWorkersNoWork(MW_Master *master)
-{
-  return master->workers->empty() && master->workToDo->empty();
-}
-
-bool hasAllWorkers(MW_Master *master, int world_size)
-{
-  return master->workers->size() == world_size - 1;  // exclude self (master)
-}
-
-Result *doSomeWork(MW_Worker *worker)
-{
-  // std::cout << "P:" << worker->id << " Grabbing some workToDo\n";
-  Work *work = worker->workToDo->front();
-  assert(work != NULL);
-  // std::cout << "P:" << worker->id << " Work object is (" << work << ") \"" << work->serialize() << "\"\n";
-  worker->workToDo->pop_front();
-
-  // std::cout << "P:" << worker->id << " Computing results.\n";
-  Result *one_result = work->compute();
-  assert(one_result != NULL);
-  // std::cout << "P:" << worker->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
-
-  return one_result;
-}
 
 void MW_Run(int argc, char* argv[], MW_API *app)
 {
@@ -60,33 +20,34 @@ void MW_Run(int argc, char* argv[], MW_API *app)
   double starttime, endtime;
 
   MPI::COMM_WORLD.Barrier();
+
   if (myid == MASTER_PROCESS_ID) {
     starttime = MPI::Wtime();
 
     int worker_id;
-    MW_Master *proc = new MW_Master(myid, sz, app);
+    MW_Master *proc = new MW_Master(myid, sz, app->work());
+
     while (1) {
-      if (hasWorkersHasWork(proc)) {
+      if (proc->hasWorkersHasWork()) {
+
         // std::cout << "MASTER IS SENDING\n";
-        worker_id = proc->workers->front();
-        assert(worker_id != 0);
-        proc->workers->pop_front();
+        worker_id = proc->nextWorker();
+        proc->send(worker_id);
 
-        proc->send_one(worker_id);
+      } else if (proc->noWorkersHasWork() || proc->noWorkersNoWork()) {
 
-      } else if (noWorkersHasWork(proc) || noWorkersNoWork(proc)) {
         // std::cout << "MASTER IS WAITING FOR A RESULT\n";
-        proc->receive_result();
+        proc->receive();
 
-      } else if (hasWorkersNoWork(proc)) {
-        if (hasAllWorkers(proc, sz)) {
+      } else if (proc->hasWorkersNoWork()) {
+        if (proc->hasAllWorkers()) {
           // std::cout << "MASTER IS DONE\n";
           proc->send_done();
 
           endtime = MPI::Wtime();
           break;
         } else {
-          proc->receive_result();
+          proc->receive();
         }
       } else {
         std::cout << "WTF happened here\n";
@@ -95,28 +56,34 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
     }
 
-    app->results(proc->results);
+    app->results(proc->getResults());
+
+    delete proc;
 
   } else {
-    MW_Worker *proc = new MW_Worker(myid, 0, app);
+    MW_Worker *proc = new MW_Worker(myid, 0);
+
     Result *result;
-    int message_tag;
+    enum MwTag message_tag;
     while (1) {
-      message_tag = proc->receiveWork();
 
-      if (message_tag == MW_Process::WORK_TAG) {
-        // do stuff with the work
-        result = doSomeWork(proc);
+      message_tag = proc->receive();
 
-        proc->results->push_back(result);
+      if (message_tag == WORK_TAG) {
 
-        proc->sendResults();
+        proc->doWork();
+        proc->send();
 
-      } else {
+      } else if (message_tag == DONE_TAG) {
         // std::cout << "P:" << proc->id << " IS DONE\n";
         break;
+      } else {
+        std::cout << "WTF happened here\n";
+        assert(0);
       }
     }
+
+    delete proc;
   }
 
   if (myid == MASTER_PROCESS_ID) {
@@ -124,5 +91,5 @@ void MW_Run(int argc, char* argv[], MW_API *app)
     std::cout << "Completed in " << elapsed * 1000 << " ms\n";
   }
 
-  MPI::Finalize ();
+  MPI::Finalize();
 }
