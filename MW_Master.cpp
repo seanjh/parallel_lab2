@@ -72,6 +72,37 @@ void MW_Master::send(int worker_id)
   delete work_string;
 }
 
+void MW_Master::workLoop()
+{
+  int worker_id;
+  while (1) {
+    if (hasWorkersHasWork()) {
+
+      // std::cout << "MASTER IS SENDING\n";
+      worker_id = nextWorker();
+      send(worker_id);
+
+    } else if (noWorkersHasWork() || noWorkersNoWork()) {
+
+      // std::cout << "MASTER IS WAITING FOR A RESULT\n";
+      receive();
+
+    } else if (hasWorkersNoWork()) {
+      if (hasAllWorkers()) {
+        // std::cout << "MASTER IS DONE\n";
+        send_done();
+
+        break;
+      } else {
+        receive();
+      }
+    } else {
+      std::cout << "WTF happened here\n";
+      assert(0);
+    }
+  }
+}
+
 
 enum MwTag MW_Master::receive()
 {

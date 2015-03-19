@@ -22,39 +22,13 @@ void MW_Run(int argc, char* argv[], MW_API *app)
   MPI::COMM_WORLD.Barrier();
 
   if (myid == MASTER_PROCESS_ID) {
-    starttime = MPI::Wtime();
 
-    int worker_id;
+
     MW_Master *proc = new MW_Master(myid, sz, app->work());
 
-    while (1) {
-      if (proc->hasWorkersHasWork()) {
-
-        // std::cout << "MASTER IS SENDING\n";
-        worker_id = proc->nextWorker();
-        proc->send(worker_id);
-
-      } else if (proc->noWorkersHasWork() || proc->noWorkersNoWork()) {
-
-        // std::cout << "MASTER IS WAITING FOR A RESULT\n";
-        proc->receive();
-
-      } else if (proc->hasWorkersNoWork()) {
-        if (proc->hasAllWorkers()) {
-          // std::cout << "MASTER IS DONE\n";
-          proc->send_done();
-
-          endtime = MPI::Wtime();
-          break;
-        } else {
-          proc->receive();
-        }
-      } else {
-        std::cout << "WTF happened here\n";
-        assert(0);
-      }
-
-    }
+    starttime = MPI::Wtime();
+    proc->workLoop();
+    endtime = MPI::Wtime();
 
     app->results(proc->getResults());
 

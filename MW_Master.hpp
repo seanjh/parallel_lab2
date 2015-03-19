@@ -13,6 +13,7 @@ public:
   void send_done();
   void send(int);
   enum MwTag receive();
+  void workLoop();
   bool hasWorkersHasWork();
   bool hasWorkersNoWork();
   bool noWorkersHasWork();
