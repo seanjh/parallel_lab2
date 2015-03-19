@@ -10,16 +10,7 @@
 class MW_Master : public MW_Process {
 public:
   MW_Master(const int, const int, std::list<Work *> *);
-  void send_done();
-  void send(int);
-  enum MwTag receive();
-  void workLoop();
-  bool hasWorkersHasWork();
-  bool hasWorkersNoWork();
-  bool noWorkersHasWork();
-  bool noWorkersNoWork();
-  bool hasAllWorkers();
-  int nextWorker();
+  void master_loop();
   std::list<Result *> *getResults() { return results; };
   ~MW_Master();
 
@@ -29,6 +20,16 @@ private:
   std::list<Work *> *workToDo;
   std::list<Result *> *results;
   std::list<int> *workers;
+
+  int nextWorker();
+  void send_done();
+  void send(int);
+  enum MwTag receive();
+  bool hasWorkersHasWork();
+  bool hasWorkersNoWork();
+  bool noWorkersHasWork();
+  bool noWorkersNoWork();
+  bool hasAllWorkers();
 };
 
 #endif /* defined(__MW__MASTER__) */

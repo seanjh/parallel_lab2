@@ -72,7 +72,7 @@ void MW_Master::send(int worker_id)
   delete work_string;
 }
 
-void MW_Master::workLoop()
+void MW_Master::master_loop()
 {
   int worker_id;
   while (1) {

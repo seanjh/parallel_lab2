@@ -22,12 +22,12 @@ void MW_Run(int argc, char* argv[], MW_API *app)
   MPI::COMM_WORLD.Barrier();
 
   if (myid == MASTER_PROCESS_ID) {
-
-
     MW_Master *proc = new MW_Master(myid, sz, app->work());
 
     starttime = MPI::Wtime();
-    proc->workLoop();
+
+    proc->master_loop();
+
     endtime = MPI::Wtime();
 
     app->results(proc->getResults());
@@ -38,26 +38,6 @@ void MW_Run(int argc, char* argv[], MW_API *app)
     MW_Worker *proc = new MW_Worker(myid, 0);
 
     proc->worker_loop();
-
-    // Result *result;
-    // enum MwTag message_tag;
-    // while (1) {
-
-    //   message_tag = proc->receive();
-
-    //   if (message_tag == WORK_TAG) {
-
-    //     proc->doWork();
-    //     proc->send();
-
-    //   } else if (message_tag == DONE_TAG) {
-    //     // std::cout << "P:" << proc->id << " IS DONE\n";
-    //     break;
-    //   } else {
-    //     std::cout << "WTF happened here\n";
-    //     assert(0);
-    //   }
-    // }
 
     delete proc;
   }
