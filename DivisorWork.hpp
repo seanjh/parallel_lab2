@@ -7,6 +7,8 @@
 #include <list>
 #include <gmpxx.h>
 #include "Work.hpp"
+#include "MW_Semaphore.hpp"
+#include "MW_API_Types.hpp"
 
 class DivisorResult;
 
@@ -15,7 +17,7 @@ public:
     DivisorWork(mpz_class d, mpz_class f, mpz_class c);
 	DivisorWork(std::string d, std::string f, std::string c);
 	DivisorWork(std::string serialObject);
-  // ~DivisorWork();
+  	~DivisorWork();
 	//const std::list<mpz_class> &getDivisors();
 	//const std::string &getDivisorsCSV();
 	//std::list<mpz_class>::const_iterator getIterator();
@@ -23,7 +25,8 @@ public:
 //Work Interface
 public:
     // Result *compute();
-    virtual DivisorResult *compute();
+    virtual MW_API_STATUS_CODE compute(const MW_Semaphore &);
+    virtual DivisorResult *result();
     virtual std::string *serialize();
     static DivisorWork *deserialize(const std::string &serialObject){return new DivisorWork(serialObject);}
 
@@ -33,6 +36,9 @@ private:
 	mpz_class dividend;
 	mpz_class firstValueToTest;
 	mpz_class count;
+	std::list<mpz_class> tmpDivisors;
+	DivisorResult *divisorResult;
+	mpz_class iterator;
 	// void computeDivisors();
 	// void computeDivisorsCSV();
 };

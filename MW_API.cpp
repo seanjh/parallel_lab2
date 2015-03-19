@@ -37,25 +37,27 @@ void MW_Run(int argc, char* argv[], MW_API *app)
   } else {
     MW_Worker *proc = new MW_Worker(myid, 0);
 
-    Result *result;
-    enum MwTag message_tag;
-    while (1) {
+    proc->worker_loop();
 
-      message_tag = proc->receive();
+    // Result *result;
+    // enum MwTag message_tag;
+    // while (1) {
 
-      if (message_tag == WORK_TAG) {
+    //   message_tag = proc->receive();
 
-        proc->doWork();
-        proc->send();
+    //   if (message_tag == WORK_TAG) {
 
-      } else if (message_tag == DONE_TAG) {
-        // std::cout << "P:" << proc->id << " IS DONE\n";
-        break;
-      } else {
-        std::cout << "WTF happened here\n";
-        assert(0);
-      }
-    }
+    //     proc->doWork();
+    //     proc->send();
+
+    //   } else if (message_tag == DONE_TAG) {
+    //     // std::cout << "P:" << proc->id << " IS DONE\n";
+    //     break;
+    //   } else {
+    //     std::cout << "WTF happened here\n";
+    //     assert(0);
+    //   }
+    // }
 
     delete proc;
   }

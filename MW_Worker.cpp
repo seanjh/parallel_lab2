@@ -123,9 +123,45 @@ void MW_Worker::doWork()
   workToDo->pop_front();
 
   // std::cout << "P:" << worker->id << " Computing results.\n";
-  Result *new_result = work->compute();
+
+  MW_API_STATUS_CODE status;
+  do
+  {
+    std::cout << "Entered Loop" << std:: endl;
+    status = work->compute(preemptionSemaphore);
+  } while(status == Preempted);
+
+  std::cout << "Exited Loop" << std:: endl;
+
+  Result *new_result = work->result();
+  std::cout << new_result << std:: endl;
+  std::cout << "generated results" << std:: endl;
+  
   assert(new_result != NULL);
   // std::cout << "P:" << worker->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
 
   results->push_back(new_result);
+}
+
+void MW_Worker::worker_loop()
+{
+  Result *result;
+  enum MwTag message_tag;
+  while (1) {
+
+    message_tag = receive();
+
+    if (message_tag == WORK_TAG) {
+
+      doWork();
+      send();
+
+    } else if (message_tag == DONE_TAG) {
+      // std::cout << "P:" << proc->id << " IS DONE\n";
+      break;
+    } else {
+      std::cout << "WTF happened here\n";
+      assert(0);
+    }
+  }
 }

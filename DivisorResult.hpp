@@ -19,6 +19,7 @@ public:
 	//DivisorResult();
 	DivisorResult(const std::list<mpz_class> &);
 	DivisorResult(std::string);
+    virtual DivisorResult* clone() const;
 	// DivisorResult(const std::string &);
 
 public:
