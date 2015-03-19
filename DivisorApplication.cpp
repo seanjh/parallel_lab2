@@ -6,10 +6,15 @@
 
 DivisorApplication::DivisorApplication(std::string &divisorString, mpz_class ws) : divisor(mpz_class(divisorString, 10)), work_size(ws)
 {
-	
+
 }
 
 DivisorApplication::DivisorApplication(std::string &divisorString) : divisor(mpz_class(divisorString, 10)), work_size(100000)
+{
+
+}
+
+DivisorApplication::DivisorApplication(std::string &divisorString, std::string &workSizeString) : divisor(mpz_class(divisorString, 10)), work_size(mpz_class(workSizeString, 10))
 {
 
 }
@@ -57,36 +62,14 @@ int DivisorApplication::results(std::list<Result *> *listOfResults)
 		results.merge(divisorList);
 	}
 
-	std::cout << divisor << " has " << results.size() << " total divisors.\n";
-	for(auto iter = results.begin();
-	    iter != results.end();
-	    iter++) {
-	std::cout << *iter << " is a divisor\n";
-	}
+
+	std::cout<< "Dividend: " <<divisor<<" Work Size: "<<work_size<<" Work Count: "<<mpz_class((sqrt(divisor) / work_size) + 1).get_str()<<" ";
+	// std::cout << divisor << " has " << results.size() << " total divisors.\n";
+	// for(auto iter = results.begin();
+	//     iter != results.end();
+	//     iter++) {
+	// std::cout << *iter << " is a divisor\n";
+	// }
 
 	return 0;
-}
-
-std::string *DivisorApplication::workSerializer(Work &objectToSerialize)
-{
-	// std::cout<<"In DivisorWork serializer" <<std::endl;
-	return objectToSerialize.serialize();
-}
-
-Work *DivisorApplication::workDeserializer(const std::string &serializedObject)
-{
-	// std::cout<<"In DivisorWork deserializer" <<std::endl;
-	return DivisorWork::deserialize(serializedObject);
-}
-
-std::string *DivisorApplication::resultSerializer(Result &objectToSerialize)
-{
-	// std::cout<<"In DivisorResult deserializer" <<std::endl;
-	return objectToSerialize.serialize();
-}
-
-Result *DivisorApplication::resultDeserializer(const std::string &serializedObject)
-{
-	// std::cout<<"In result deserializer" <<std::endl;
-	return DivisorResult::deserialize(serializedObject);
 }

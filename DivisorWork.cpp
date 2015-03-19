@@ -15,7 +15,6 @@ DivisorWork::DivisorWork(std::string d, std::string f, std::string c):
 
 DivisorWork::DivisorWork(std::string serialObject)
 {
-	// std::cout << "DivisorWork::DivisorWork serialObject is " << serialObject << std::endl;
 	std::string divString;
 	std::string firstValString;
 	std::string countString;
@@ -24,18 +23,9 @@ DivisorWork::DivisorWork(std::string serialObject)
 	std::getline(iss,firstValString,',');
 	std::getline(iss,countString);
 
-	// std::cout << "DivisorWork::DivisorWork divString is " << divString << std::endl;
-	// std::cout << "DivisorWork::DivisorWork firstValString is " << firstValString << std::endl;
-	// std::cout << "DivisorWork::DivisorWork countString is " << countString << std::endl;
-
 	dividend = mpz_class(divString, 10);
 	firstValueToTest = mpz_class(firstValString, 10);
 	count = mpz_class(countString, 10);
-
-	// std::cout << "DivisorWork::DivisorWork divisor is " << dividend.get_str() << std::endl;
-	// std::cout << "DivisorWork::DivisorWork firstVal is " << firstValueToTest.get_str() << std::endl;
-	// std::cout << "DivisorWork::DivisorWork count is " << count.get_str() << std::endl;
-
 }
 
 // DivisorWork::~DivisorWork(){}

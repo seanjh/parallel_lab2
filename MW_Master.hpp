@@ -1,26 +1,33 @@
 #ifndef __MW__MASTER__
 #define __MW__MASTER__
 
-#include "MW_API.hpp"
-#include "MW_Process.hpp"
 #include <list>
+
+#include "MW_Process.hpp"
+#include "Work.hpp"
+#include "Result.hpp"
 
 class MW_Master : public MW_Process {
 public:
+  MW_Master(const int, const int, std::list<Work *> *);
+  void send_done();
+  void send(int);
+  enum MwTag receive();
+  bool hasWorkersHasWork();
+  bool hasWorkersNoWork();
+  bool noWorkersHasWork();
+  bool noWorkersNoWork();
+  bool hasAllWorkers();
+  int nextWorker();
+  std::list<Result *> *getResults() { return results; };
+  ~MW_Master();
+
+private:
   int id;
   int world_size;
-  MW_API *app;
   std::list<Work *> *workToDo;
   std::list<Result *> *results;
   std::list<int> *workers;
-
-  // MW_Master()
-  MW_Master(const int myid, const int sz, MW_API *app);
-  virtual void send_done();
-  virtual void send_one(int worker_id);
-  virtual void send_work();
-  virtual void receive_result();
-  // ~MW_Master();
 };
 
 #endif /* defined(__MW__MASTER__) */
