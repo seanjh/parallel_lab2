@@ -19,6 +19,11 @@ DivisorResult::DivisorResult(std::string serialObject)
     }
 }
 
+DivisorResult* DivisorResult::clone() const
+{
+	return new DivisorResult(*this);
+}
+
 std::string *DivisorResult::serialize()
 {
 	std::string divisorsString;

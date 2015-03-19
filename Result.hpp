@@ -10,9 +10,12 @@ class Work;
 class Result {
 public:
     // Must be present, even if it does nothing.
+	//copy constructor
 
     //This needs to destroy all of its children to prevent memory leaks
-    // virtual ~Result();
+    virtual ~Result() {};
+
+    virtual Result* clone()  const = 0;
 public:
 
   virtual std::string *serialize() = 0;

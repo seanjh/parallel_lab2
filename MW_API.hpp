@@ -1,9 +1,12 @@
 #ifndef __MW__MW_API__
 #define __MW__MW_API__
 
+#include "MW_API_Types.hpp"
 #include "Work.hpp"
 #include "Result.hpp"
 #include <list>
+
+
 
 class MW_API {
 public:

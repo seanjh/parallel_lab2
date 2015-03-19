@@ -37,7 +37,9 @@ WORKING_API_OBJ = $(patsubst %,$(ODIR)/%,$(_WORKING_API_OBJ))
 # _PROFILE_OBJ = mpi-profile.o
 # PROFILE_OBJ = $(patsubst %,$(ODIR)/%,$(_PROFILE_OBJ))
 
-_DIVISORS_APP_OBJ = gmp_factors_API.o DivisorApplication.o MPIMessage.o DivisorResult.o DivisorWork.o MW_API.o MW_Master.o MW_Worker.o
+_DIVISORS_APP_OBJ = gmp_factors_API.o DivisorApplication.o \
+MPIMessage.o DivisorResult.o DivisorWork.o MW_API.o MW_Master.o \
+MW_Worker.o MW_Semaphore.o
 DIVISORS_APP_OBJ = $(patsubst %,$(ODIR)/%,$(_DIVISORS_APP_OBJ))
 
 # _TEST_OBJ = test.o
@@ -82,8 +84,9 @@ mw_api: $(MW_API_OBJ)
 working_api: $(WORKING_API_OBJ)
 	$(CXX) -std=c++11 -o $@ $^ $(LIBS)
 
-divisors_app: $(DIVISORS_APP_OBJ)
-	$(CXX) -std=c++11 -o $@ $^ -L../gmplib/lib $(LIBS)
+divisors_app: $(DIVISORS_APP_OBJ) 
+	# $(CXX) -std=c++11 -o $@ $^ -L../gmplib/lib $(LIBS)
+	$(CXX) -std=c++11 -o $@ $^ $(LIBS)
 
 # profile: $(PROFILE_OBJ)
 # 	$(CXX) -o $@ $^

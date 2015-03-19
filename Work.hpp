@@ -3,6 +3,8 @@
 
 #include <string>
 #include "Result.hpp"
+#include "MW_Semaphore.hpp"
+#include "MW_API_Types.hpp"
 
 
 class Result;
@@ -12,9 +14,10 @@ public:
     // Must be present, even if it does nothing.
 
     //This needs to destroy all of its children to prevent memory leaks
-    // virtual ~Work();
+    virtual ~Work() {};
 public:
-    virtual Result *compute() = 0;
+    virtual MW_API_STATUS_CODE compute(const MW_Semaphore &) = 0;
+    virtual Result *result() = 0;
     virtual std::string *serialize() = 0;
     static Work *deserialize(const std::string &){return NULL;}
     // You could add more to the public interface, if you wanted to.

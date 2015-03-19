@@ -11,8 +11,8 @@ enum MwTag
 
 class MW_Process {
 public:
-  virtual void send(int) = 0;
-  virtual enum MwTag receive() = 0;
+  // virtual void send(int) = 0;
+  // virtual enum MwTag receive() = 0;
 // protected:
   // MW_Process() = 0;
 };

@@ -5,7 +5,9 @@
 DivisorWork::DivisorWork(mpz_class d, mpz_class f, mpz_class c):
 		dividend(d),
 		firstValueToTest(f),
-		count(c)
+		count(c),
+		divisorResult(NULL),
+		iterator(0)
 {
 	assert(count > 0);
 }
@@ -28,29 +30,47 @@ DivisorWork::DivisorWork(std::string serialObject)
 	count = mpz_class(countString, 10);
 }
 
-// DivisorWork::~DivisorWork(){}
-
-DivisorResult *DivisorWork::compute()
+DivisorWork::~DivisorWork()
 {
-	std::list<mpz_class> divisors;
-	for(mpz_class i=0; i<count; i++)
+	delete divisorResult;
+}
+
+MW_API_STATUS_CODE DivisorWork::compute(const MW_Semaphore &preemptionSemaphore)
+{
+	// std::list<mpz_class> divisors;
+	if(divisorResult == NULL)
 	{
-		mpz_class ithValue = firstValueToTest + i;
-		// std::cout<<"Testing " << ithValue << std::endl;
-		if(dividend % ithValue == 0)
+		for(; iterator<count; iterator++)
 		{
-			divisors.push_back(ithValue);
-			// std::cout<<"Adding " << ithValue << std::endl;
-			mpz_class other = dividend/ithValue;
-			if (ithValue != other)
+			if(preemptionSemaphore.get() == true)
 			{
-				divisors.push_back(other);
-				// std::cout<<"Adding " << other << std::endl;
+				return Preempted;
+			}
+			mpz_class ithValue = firstValueToTest + iterator;
+			// std::cout<<"Testing " << ithValue << std::endl;
+			if(dividend % ithValue == 0)
+			{
+				tmpDivisors.push_back(ithValue);
+				// std::cout<<"Adding " << ithValue << std::endl;
+				mpz_class other = dividend/ithValue;
+				if (ithValue != other)
+				{
+					tmpDivisors.push_back(other);
+					// std::cout<<"Adding " << other << std::endl;
+				}
 			}
 		}
+		tmpDivisors.sort();
+		divisorResult = new DivisorResult(tmpDivisors);
+		return Success;
 	}
-	divisors.sort();
-	return new DivisorResult(divisors);
+	else
+		return Success;
+}
+
+DivisorResult *DivisorWork::result()
+{
+	return divisorResult;
 }
 
 std::string *DivisorWork::serialize()

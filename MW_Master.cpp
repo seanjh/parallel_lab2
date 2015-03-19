@@ -92,7 +92,7 @@ enum MwTag MW_Master::receive()
   );
 
   int worker_id = status.Get_source();
-  int message_tag = status.Get_source();
+  int message_tag = status.Get_tag();
   int count = status.Get_count(MPI::CHAR);
   if (count != 0) {
     std::string serializedObject = std::string(message, count);
@@ -115,7 +115,7 @@ enum MwTag MW_Master::receive()
   free(message);
   // Reinclude this working in the queue
   workers->push_back(worker_id);
-  static_cast<MwTag>(message_tag);
+  return static_cast<MwTag>(message_tag);
 }
 
 
