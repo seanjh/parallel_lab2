@@ -42,9 +42,11 @@ MWTag MW_Worker::receive()
     std::string idString, serializedObject;
 
     std::getline(iss,idString,',');
-    std::cout<<idString<<std::endl;
+    MW_ID work_id = std::stoul(idString);
+    // std::cout<<work_id<<std::endl;
+
     std::getline(iss,serializedObject);
-    std::cout<<serializedObject<<std::endl;
+    // std::cout<<serializedObject<<std::endl;
 
     MPIMessage *mpi_message = new MPIMessage(serializedObject);
     // std::cout << "P:" << id << " mpi_message (work) is " << mpi_message->to_string() << std::endl;
@@ -55,7 +57,7 @@ MWTag MW_Worker::receive()
     // std::cout << "P:" << id << " Recreated work object (" << work << ") \"" << *work->serialize() << "\"\n" ;
 
     //TODO extract ID and add to map
-    // workToDo.push_back(work);
+    workToDo[work_id] = work;
     // std::cout << "P:" << id << " WorkToDo size is " << workToDo->size() << std::endl;
   } else {
     // Do nothing
@@ -133,7 +135,9 @@ void MW_Worker::doWork()
   // // std::cout << "P:" << worker->id << " Work object is (" << work << ") \"" << work->serialize() << "\"\n";
   // workToDo->pop_front();
   auto workPair = *(workToDo.begin());
-  workToDo.erase(workPair.first);
+  MW_ID work_id = workPair.first;
+  // std::cout <<work_id<< ": "<< *(workPair.second->serialize()) <<std::endl;
+  workToDo.erase(work_id);
   std::shared_ptr<Work> work = workPair.second;
 
   // std::cout << "P:" << worker->id << " Computing results.\n";
@@ -151,11 +155,12 @@ void MW_Worker::doWork()
   // std::cout << new_result << std:: endl;
   // std::cout << "generated results" << std:: endl;
 
-  assert(new_result != NULL);
+  assert(new_result);
   // std::cout << "P:" << worker->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
 
   // TODO compute ID and add to 
   // results->push_back(new_result);
+  results[work_id] = new_result;
 }
 
 void MW_Worker::worker_loop()
@@ -168,6 +173,7 @@ void MW_Worker::worker_loop()
 
     if (message_tag == WORK_TAG) {
 
+      // std::cout<<"Received WorkTag"<<std::endl;
       doWork();
       send();
 

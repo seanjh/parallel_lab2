@@ -142,7 +142,7 @@ void MW_Master::receive()
   );
 
   if (!can_receive) {
-    std::cout << "IProbe did not find a message. No receive possible\n";
+    //std::cout << "IProbe did not find a message. No receive possible\n";
     return;
   }
 
@@ -203,9 +203,10 @@ void MW_Master::process_result(int worker_id, int count, char *message)
     std::string idString, serializedObject;
 
     std::getline(iss,idString,',');
-    std::cout<<idString<<std::endl;
+    // std::cout<<idString<<std::endl;
+    MW_ID result_id = std::stoul(idString);
     std::getline(iss,serializedObject);
-    std::cout<<serializedObject<<std::endl;
+    // std::cout<<serializedObject<<std::endl;
 
     MPIMessage *mpi_message = new MPIMessage(serializedObject);
     // std::cout << "P:" << id << " mpi_message (result) is " << mpi_message->to_string() << std::endl;
@@ -217,6 +218,7 @@ void MW_Master::process_result(int worker_id, int count, char *message)
 
     //TODO
     //extract ID and add to results map
+    results[result_id] = result;
     //results->push_back(result);
     // std::cout << "results size is " << results->size() << std::endl;
   }
