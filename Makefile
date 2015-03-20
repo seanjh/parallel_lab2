@@ -7,6 +7,9 @@ CXX_FLAGS =-Wc++11-extensions
 _SERIAL_OBJ = gmp_factors_serial.o
 SERIAL_OBJ = $(patsubst %,$(ODIR)/%,$(_SERIAL_OBJ))
 
+_RANDOM_OBJ = MW_Random.o
+RANDOM_OBJ = $(patsubst %,$(ODIR)/%,$(_RANDOM_OBJ))
+
 _MASTER_OBJ = Master.o
 MASTER_OBJ = $(patsubst %,$(ODIR)/%,$(_MASTER_OBJ))
 
@@ -37,7 +40,7 @@ WORKING_API_OBJ = $(patsubst %,$(ODIR)/%,$(_WORKING_API_OBJ))
 # _PROFILE_OBJ = mpi-profile.o
 # PROFILE_OBJ = $(patsubst %,$(ODIR)/%,$(_PROFILE_OBJ))
 
-_DIVISORS_APP_OBJ = gmp_factors_API.o DivisorApplication.o \
+_DIVISORS_APP_OBJ = gmp_factors_API.o DivisorApplication.o MW_Random.o \
 MPIMessage.o DivisorResult.o DivisorWork.o MW_API.o MW_Master.o \
 MW_Worker.o MW_Semaphore.o
 DIVISORS_APP_OBJ = $(patsubst %,$(ODIR)/%,$(_DIVISORS_APP_OBJ))
@@ -69,13 +72,16 @@ partial_api: $(PARTIAL_API_OBJ)
 test_api: $(TEST_API_OBJ)
 	$(CXX) -std=c++11 -o $@ $^ $(LIBS)
 
+random: $(RANDOM_OBJ)
+		$(CXX) -std=c++11 -o $@ $^ $(LIBS)
+
 worker: $(WORKER_OBJ)
 	$(CXX) -std=c++11 -o $@ $^ $(LIBS)
 
-master: $(MPI_MESSAGE_OBJ)
+master: $(MASTER_OBJ)
 	$(CXX) -c -std=c++11 -o $@ $^ $(LIBS)
 
-mpi_message: $(MASTER_OBJ)
+mpi_message: $(MPI_MESSAGE_OBJ)
 	$(CXX) -c -std=c++11 -o $@ $^ $(LIBS)
 
 mw_api: $(MW_API_OBJ)
@@ -84,7 +90,7 @@ mw_api: $(MW_API_OBJ)
 working_api: $(WORKING_API_OBJ)
 	$(CXX) -std=c++11 -o $@ $^ $(LIBS)
 
-divisors_app: $(DIVISORS_APP_OBJ) 
+divisors_app: $(DIVISORS_APP_OBJ)
 	# $(CXX) -std=c++11 -o $@ $^ -L../gmplib/lib $(LIBS)
 	$(CXX) -std=c++11 -o $@ $^ $(LIBS)
 
