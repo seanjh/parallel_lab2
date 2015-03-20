@@ -47,7 +47,7 @@ void MW_Master::send(int worker_id)
 {
   // std::cout << "P:" << this->id << " sending work to process " << worker_id << std::endl;
 
-  Work *work = workToDo->front();
+  std::shared_ptr<Work> work = workToDo->front();
   workToDo->pop_front();
 
   std::string *work_string = work->serialize();
@@ -67,7 +67,7 @@ void MW_Master::send(int worker_id)
   // std::cout << "P:" << id << " finished send to P" << worker_id << ". " <<
   //   workToDo->size() << " work items remaining" << std::endl;
 
-  delete work;
+  // delete work;
   delete work_string;
 }
 
@@ -163,13 +163,13 @@ void MW_Master::process_result(MPI::Status status, char *message, int worker_id)
 MW_Master::~MW_Master()
 {
   // workToDo should be empty, so deleting its elements is bonus caution
-  for ( auto iter = workToDo->begin();
-      iter != workToDo->end();
-      iter++)
-  {
-    Work *work = *iter;
-    delete work;
-  }
+  // for ( auto iter = workToDo->begin();
+  //     iter != workToDo->end();
+  //     iter++)
+  // {
+  //   // Work *work = *iter;
+  //   // delete work;
+  // }
 
   delete workToDo;
 

@@ -25,7 +25,7 @@ private:
   int id;
   int master_id;
   std::list<Work *> *workToDo;
-  std::list<Result *> *results;
+  std::list<std::shared_ptr<Result>> *results;
   MW_Semaphore preemptionSemaphore;
 
 

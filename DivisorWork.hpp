@@ -26,7 +26,7 @@ public:
 public:
     // Result *compute();
     virtual MW_API_STATUS_CODE compute(const MW_Semaphore &);
-    virtual DivisorResult *result();
+    virtual std::shared_ptr<Result> result();
     virtual std::string *serialize();
     static DivisorWork *deserialize(const std::string &serialObject){return new DivisorWork(serialObject);}
 
@@ -37,7 +37,7 @@ private:
 	mpz_class firstValueToTest;
 	mpz_class count;
 	std::list<mpz_class> tmpDivisors;
-	DivisorResult *divisorResult;
+	std::shared_ptr<DivisorResult> divisorResult;
 	mpz_class iterator;
 	// void computeDivisors();
 	// void computeDivisorsCSV();
