@@ -18,4 +18,6 @@ typedef enum MASC {
 	Failure
 } MW_API_STATUS_CODE;
 
+typedef unsigned long long MW_ID;
+
 #endif

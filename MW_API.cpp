@@ -3,7 +3,6 @@
 #include <mpi.h>
 
 #include "MW_API.hpp"
-#include "MW_Process.hpp"
 #include "MW_Master.hpp"
 #include "MW_Worker.hpp"
 
@@ -30,6 +29,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
     endtime = MPI::Wtime();
 
+    
     app->results(proc->getResults());
 
     delete proc;

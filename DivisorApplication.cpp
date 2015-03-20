@@ -56,7 +56,7 @@ std::list<std::shared_ptr<Work>> &DivisorApplication::work()
 	return workList;
 }
 
-int DivisorApplication::results(std::list<Result *> *listOfResults)
+int DivisorApplication::results(std::shared_ptr<std::list<std::shared_ptr<Result>>> listOfResults)
 {
 	std::list<mpz_class> results;
 
@@ -64,7 +64,7 @@ int DivisorApplication::results(std::list<Result *> *listOfResults)
 			riter != listOfResults->end();
 			riter++)
 	{
-		DivisorResult *divResult = dynamic_cast<DivisorResult *>(*riter);
+		std::shared_ptr<DivisorResult> divResult = std::dynamic_pointer_cast<DivisorResult>(*riter);
 		std::list<mpz_class> divisorList(divResult->getDivisors());
 		results.merge(divisorList);
 	}
