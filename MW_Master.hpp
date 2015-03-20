@@ -33,10 +33,12 @@ private:
   std::list<int> *workers;
 
   int nextWorker();
+  void checkOnWorkers();
   void send_done();
   void send(int);
   void receive();
-  void process_result(MPI::Status, char *, int);
+  void process_result(int, int, char *);
+  void process_heartbeat(int);
   bool hasWorkersHasWork();
   bool hasWorkersNoWork();
   bool noWorkersHasWork();

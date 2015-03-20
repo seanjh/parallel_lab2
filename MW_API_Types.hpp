@@ -5,10 +5,11 @@
 
 typedef enum _MwTag
 {
-  WORK_TAG    = 1,
-  DONE_TAG    = 2,
-  HEARTBEAT   = 3,
-  CHECKPOINT  = 4
+  WORK_TAG,
+  DONE_TAG,
+  HEARTBEAT,
+  CHECKPOINT,
+  CHECKPOINT_DONE
 } MWTag;
 
 typedef enum MASC {
