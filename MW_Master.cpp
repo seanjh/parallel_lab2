@@ -25,9 +25,47 @@ MW_Master::MW_Master(const int myid, const int sz, const std::list<std::shared_p
   }
 }
 
+void MW_Master::master_loop()
+{
+  int worker_id;
+  while (1) {
+    checkOnWorkers();
+
+    if (hasWorkersHasWork()) {
+
+      // std::cout << "MASTER IS SENDING\n";
+      worker_id = nextWorker();
+      send(worker_id);
+
+    } else if (noWorkersHasWork() || noWorkersNoWork()) {
+
+      // std::cout << "MASTER IS WAITING FOR A RESULT\n";
+      receive();
+
+    } else if (hasWorkersNoWork()) {
+      if (hasAllWorkers()) {
+        // std::cout << "MASTER IS DONE\n";
+        send_done();
+
+        break;
+      } else {
+        receive();
+      }
+    } else {
+      std::cout << "WTF happened here\n";
+      assert(0);
+    }
+  }
+}
+
+void MW_Master::checkOnWorkers()
+{
+  // TODO: mark dead workers
+}
+
 void MW_Master::send_done()
 {
-  // TODO
+  // TODO: only send to alive workers
   //std::cout << "MASTER SENDING DONE MESSAGES\n";
   for (int process_id=0; process_id<world_size; process_id++) {
     if (process_id != id) {
@@ -71,43 +109,21 @@ void MW_Master::send(int worker_id)
   delete work_string;
 }
 
-void MW_Master::master_loop()
-{
-  int worker_id;
-  while (1) {
-    if (hasWorkersHasWork()) {
-
-      // std::cout << "MASTER IS SENDING\n";
-      worker_id = nextWorker();
-      send(worker_id);
-
-    } else if (noWorkersHasWork() || noWorkersNoWork()) {
-
-      // std::cout << "MASTER IS WAITING FOR A RESULT\n";
-      receive();
-
-    } else if (hasWorkersNoWork()) {
-      if (hasAllWorkers()) {
-        // std::cout << "MASTER IS DONE\n";
-        send_done();
-
-        break;
-      } else {
-        receive();
-      }
-    } else {
-      std::cout << "WTF happened here\n";
-      assert(0);
-    }
-  }
-}
-
 void MW_Master::receive()
 {
   // std::cout << "P:" << id << " master waiting to receive" << std::endl;
-  // TODO check for message first
-
   MPI::Status status;
+  bool can_receive = MPI::COMM_WORLD.Iprobe(
+    MPI::ANY_SOURCE,
+    MPI::ANY_TAG,
+    status
+  );
+
+  if (!can_receive) {
+    std::cout << "IProbe did not find a message. No receive possible\n";
+    return;
+  }
+
   // std::string& message = new std::string(1000, 0);
   char *message = (char*)malloc(MAX_MESSAGE_SIZE);
   memset(message, 0, MAX_MESSAGE_SIZE);
@@ -117,26 +133,43 @@ void MW_Master::receive()
     MAX_MESSAGE_SIZE,
     MPI::CHAR,
     MPI::ANY_SOURCE,
-    WORK_TAG,
+    MPI::ANY_TAG,
     status
   );
 
+  MWTag mw_tag = static_cast<MWTag>(status.Get_tag());
   int worker_id = status.Get_source();
-  int message_tag = status.Get_tag();
-  MWTag mw_tag = static_cast<MWTag>(message_tag);
+  int count = status.Get_count(MPI::CHAR);
 
-  if (mw_tag == WORK_TAG) {
-    process_result(status, message, worker_id);
-  } else if (mw_tag == HEARTBEAT) {
-    // TODO manage heartbeat here
+  switch (mw_tag)
+  {
+    case WORK_TAG: {
+      process_result(worker_id, count, message);
+      break;
+    }
+
+    case HEARTBEAT: {
+      process_heartbeat(worker_id);
+      break;
+    }
+
+    case CHECKPOINT_DONE: {
+      process_checkpoint_done(worker_id)
+      break;
+    }
+
+    default: {
+      std::cout << "WTF Happened here\n";
+      break;
+    }
   }
 
   free(message);
 }
 
-void MW_Master::process_result(MPI::Status status, char *message, int worker_id)
+void MW_Master::process_result(int worker_id, int count, char *message)
 {
-  int count = status.Get_count(MPI::CHAR);
+
   if (count != 0) {
     std::string serializedObject = std::string(message, count);
     // std::cout << "P:" << id << " Received from process " << worker_id <<
@@ -158,6 +191,19 @@ void MW_Master::process_result(MPI::Status status, char *message, int worker_id)
   // Reinclude this worker in the queue
   workers->push_back(worker_id);
 
+}
+
+void process_heartbeat(int worker_id)
+{
+  // std::cout << "P:" << id << " Received heartbeat from process " << worker_id; << "\n";
+  // TODO: implement
+  return;
+}
+
+void process_checkpoint_done(int worker_id)
+{
+  // TODO: implement
+  return;
 }
 
 MW_Master::~MW_Master()
@@ -214,6 +260,7 @@ bool MW_Master::hasAllWorkers()
 
 int MW_Master::nextWorker()
 {
+  // TODO: update to incorporate monitors
   int worker_id = workers->front();
   assert(worker_id != 0);
   workers->pop_front();
