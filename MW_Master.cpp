@@ -9,6 +9,7 @@
 #include "Result.hpp"
 #include "MPIMessage.hpp"
 #include <sstream>
+#include "MW_Random.hpp"
 
 MW_Master::MW_Master(const int myid, const int sz, const std::list<std::shared_ptr<Work>> &work_p) :
   id(myid), world_size(sz)
@@ -34,7 +35,7 @@ std::shared_ptr<std::list<std::shared_ptr<Result>>> MW_Master::getResults()
 {
   //create new list to return
   std::shared_ptr<std::list<std::shared_ptr<Result>>> retList (new std::list<std::shared_ptr<Result>>);
-  
+
   for(auto iter = results.begin();iter != results.end(); iter++)
     retList->push_back(iter->second);
 
@@ -43,8 +44,16 @@ std::shared_ptr<std::list<std::shared_ptr<Result>>> MW_Master::getResults()
 
 void MW_Master::master_loop()
 {
+  MW_Random random = MW_Random(id, world_size);
   int worker_id;
   while (1) {
+    // std::cout << "P:" << id << " Master Loop\n";
+    // if (random.random_fail()) {
+    //   std::cout << "P:" << id << " MASTER FAILURE EVENT\n";
+    //   MPI::Finalize();
+    //   exit (0);
+    // }
+
     checkOnWorkers();
 
     if (hasWorkersHasWork()) {

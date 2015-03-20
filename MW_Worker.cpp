@@ -5,6 +5,7 @@
 #include "MW_Worker.hpp"
 #include "MPIMessage.hpp"
 #include <sstream>
+#include "MW_Random.hpp"
 
 // MW_Worker::MW_Worker(const int myid, const int m_id, MW_API *mwapp)
 MW_Worker::MW_Worker(const int myid, const int m_id)
@@ -166,8 +167,16 @@ void MW_Worker::doWork()
 void MW_Worker::worker_loop()
 {
   // Result *result;
+  MW_Random random = MW_Random(id, 1);
+
   MWTag message_tag;
   while (1) {
+
+    // if (random.random_fail()) {
+    //   std::cout << "P:" << id << " WORKER FAILURE EVENT\n";
+    //   MPI::Finalize();
+    //   exit (0);
+    // }
 
     message_tag = receive();
 
