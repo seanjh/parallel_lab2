@@ -10,10 +10,14 @@
 #include "MPIMessage.hpp"
 
 MW_Master::MW_Master(const int myid, const int sz, const std::list<std::shared_ptr<Work>> &work_p) :
-  id(myid), world_size(sz), work(work_p)
+  id(myid), world_size(sz)
 {
-  workToDo = new std::list<std::shared_ptr<Work>>(work_p);
-  results = new std::list<Result *>();
+
+  MW_ID nextWorkID = 0;
+  for(auto iter = work_p.begin();iter != work_p.end(); iter++)
+    work[nextWorkID++] = *iter;
+
+  workToDo = work;
   //std::cout << "Total work in master is " << workToDo->size() << std::endl;
 
   // Prepopulate the list of workers
@@ -23,6 +27,17 @@ MW_Master::MW_Master(const int myid, const int sz, const std::list<std::shared_p
       workers->push_back(i);
     }
   }
+}
+
+std::shared_ptr<std::list<std::shared_ptr<Result>>> MW_Master::getResults()
+{
+  //create new list to return
+  std::shared_ptr<std::list<std::shared_ptr<Result>>> retList (new std::list<std::shared_ptr<Result>>);
+  
+  for(auto iter = results.begin();iter != results.end(); iter++)
+    retList->push_back(iter->second);
+
+  return retList;
 }
 
 void MW_Master::send_done()
@@ -47,11 +62,14 @@ void MW_Master::send(int worker_id)
 {
   // std::cout << "P:" << this->id << " sending work to process " << worker_id << std::endl;
 
-  std::shared_ptr<Work> work = workToDo->front();
-  workToDo->pop_front();
+  auto workPair = *(workToDo.begin());
+  workToDo.erase(workPair.first);
+  std::shared_ptr<Work> work = workPair.second;
 
   std::string *work_string = work->serialize();
   int count = (int) work_string->length();
+
+  //Need to add ID to message
 
   // std::cout << "P:" << id << " sending work with " << count <<
   //   " total MPI::CHARs -- " << *work_string << std::endl;
@@ -151,7 +169,10 @@ void MW_Master::process_result(MPI::Status status, char *message, int worker_id)
 
     // std::cout << "P:" << id << " received results (" << result << ") from process " << worker_id << ". " << std::endl;
     assert(result != NULL);
-    results->push_back(result);
+
+    //TODO
+    //extract ID and add to results map
+    //results->push_back(result);
     // std::cout << "results size is " << results->size() << std::endl;
   }
 
@@ -171,39 +192,39 @@ MW_Master::~MW_Master()
   //   // delete work;
   // }
 
-  delete workToDo;
+  // delete workToDo;
 
 
-  for ( auto iter = results->begin();
-      iter != results->end();
-      iter++)
-  {
-    Result *result = *iter;
-    delete result;
-  }
+  // for ( auto iter = results->begin();
+  //     iter != results->end();
+  //     iter++)
+  // {
+  //   Result *result = *iter;
+  //   delete result;
+  // }
 
-  delete results;
+  // delete results;
 }
 
 
 bool MW_Master::hasWorkersHasWork()
 {
-  return !workers->empty() && !workToDo->empty();
+  return !workers->empty() && !workToDo.empty();
 }
 
 bool MW_Master::hasWorkersNoWork()
 {
-  return !workers->empty() && workToDo->empty();
+  return !workers->empty() && workToDo.empty();
 }
 
 bool MW_Master::noWorkersHasWork()
 {
-  return workers->empty() && !workToDo->empty();
+  return workers->empty() && !workToDo.empty();
 }
 
 bool MW_Master::noWorkersNoWork()
 {
-  return workers->empty() && workToDo->empty();
+  return workers->empty() && workToDo.empty();
 }
 
 bool MW_Master::hasAllWorkers()

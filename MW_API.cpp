@@ -30,6 +30,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
     endtime = MPI::Wtime();
 
+    
     app->results(proc->getResults());
 
     delete proc;

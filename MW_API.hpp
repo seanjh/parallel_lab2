@@ -12,7 +12,7 @@
 class MW_API {
 public:
     virtual std::list<std::shared_ptr<Work>> &work() = 0;
-    virtual int results(std::list<Result *> *) = 0;
+    virtual int results(std::shared_ptr<std::list<std::shared_ptr<Result>>>) = 0;
 };
 
 void MW_Run(int argc, char* argv[], MW_API *app);

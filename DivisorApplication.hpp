@@ -14,7 +14,7 @@ public:
 	DivisorApplication(std::string &divisorString, mpz_class work_size);
 	DivisorApplication(std::string &, std::string &);
 	virtual std::list<std::shared_ptr<Work>> &work();
-  virtual int results(std::list<Result *> *);
+  virtual int results(std::shared_ptr<std::list<std::shared_ptr<Result>>>);
 
 private:
 	std::list<std::shared_ptr<Work>> workList;
