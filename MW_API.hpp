@@ -7,8 +7,6 @@
 #include <list>
 #include <memory>
 
-
-
 class MW_API {
 public:
     virtual std::list<std::shared_ptr<Work>> &work() = 0;
