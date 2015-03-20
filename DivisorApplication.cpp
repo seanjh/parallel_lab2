@@ -64,12 +64,12 @@ int DivisorApplication::results(std::list<Result *> *listOfResults)
 
 
 	std::cout<< "Dividend: " <<divisor<<" Work Size: "<<work_size<<" Work Count: "<<mpz_class((sqrt(divisor) / work_size) + 1).get_str()<<" ";
-	// std::cout << divisor << " has " << results.size() << " total divisors.\n";
-	// for(auto iter = results.begin();
-	//     iter != results.end();
-	//     iter++) {
-	// std::cout << *iter << " is a divisor\n";
-	// }
+	std::cout << divisor << " has " << results.size() << " total divisors.\n";
+	for(auto iter = results.begin();
+	    iter != results.end();
+	    iter++) {
+	std::cout << *iter << " is a divisor\n";
+	}
 
 	return 0;
 }

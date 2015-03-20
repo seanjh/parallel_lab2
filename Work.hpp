@@ -5,6 +5,7 @@
 #include "Result.hpp"
 #include "MW_Semaphore.hpp"
 #include "MW_API_Types.hpp"
+#include <memory>
 
 
 class Result;
@@ -17,7 +18,7 @@ public:
     virtual ~Work() {};
 public:
     virtual MW_API_STATUS_CODE compute(const MW_Semaphore &) = 0;
-    virtual Result *result() = 0;
+    virtual std::shared_ptr<Result> result() = 0;
     virtual std::string *serialize() = 0;
     static Work *deserialize(const std::string &){return NULL;}
     // You could add more to the public interface, if you wanted to.

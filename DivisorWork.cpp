@@ -6,7 +6,7 @@ DivisorWork::DivisorWork(mpz_class d, mpz_class f, mpz_class c):
 		dividend(d),
 		firstValueToTest(f),
 		count(c),
-		divisorResult(NULL),
+		divisorResult(nullptr),
 		iterator(0)
 {
 	assert(count > 0);
@@ -32,14 +32,18 @@ DivisorWork::DivisorWork(std::string serialObject)
 
 DivisorWork::~DivisorWork()
 {
-	delete divisorResult;
+	// delete divisorResult;
 }
 
 MW_API_STATUS_CODE DivisorWork::compute(const MW_Semaphore &preemptionSemaphore)
 {
 	// std::list<mpz_class> divisors;
-	if(divisorResult == NULL)
+	// std::cout << "In Compute" <<std::endl;
+	// std::cout << divisorResult <<std::endl;
+
+	if(!divisorResult)
 	{
+		// std::cout << "Computing results" <<std::endl;
 		for(; iterator<count; iterator++)
 		{
 			if(preemptionSemaphore.get() == true)
@@ -61,16 +65,20 @@ MW_API_STATUS_CODE DivisorWork::compute(const MW_Semaphore &preemptionSemaphore)
 			}
 		}
 		tmpDivisors.sort();
-		divisorResult = new DivisorResult(tmpDivisors);
+		// divisorResult = new DivisorResult(tmpDivisors);
+		divisorResult = std::make_shared<DivisorResult> (DivisorResult(tmpDivisors));
+		// std::cout << "Created Results" <<std::endl;
+		// std::cout << *(divisorResult->serialize()) <<std::endl;
 		return Success;
 	}
 	else
 		return Success;
 }
 
-DivisorResult *DivisorWork::result()
+std::shared_ptr<Result> DivisorWork::result()
 {
-	return divisorResult;
+	assert(divisorResult);
+	return std::dynamic_pointer_cast<Result>(divisorResult);
 }
 
 std::string *DivisorWork::serialize()

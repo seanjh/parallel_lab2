@@ -13,7 +13,7 @@ MW_Worker::MW_Worker(const int myid, const int m_id)
 
   // Blanks lists for work and results
   workToDo = new std::list<Work *>();
-  results = new std::list<Result *>();
+  results = new std::list<std::shared_ptr<Result>>();
 }
 
 enum MwTag MW_Worker::receive()
@@ -61,8 +61,8 @@ enum MwTag MW_Worker::receive()
 void MW_Worker::send()
 {
   // std::cout << "P:" << id << " Beginning send to master P" << master_id << std::endl;
-  Result *result = results->front();
-  assert(result != NULL);
+  std::shared_ptr<Result> result = results->front();
+  assert(result);
   results->pop_front();
 
   // std::cout << " Popped result (" << result << ") from list\n";
@@ -85,7 +85,7 @@ void MW_Worker::send()
   // std::cout << "P:" << id << " finished send to master P" << master_id << ". " <<
   //   results->size() << " results remaining" << std::endl;
 
-  delete result;
+  // delete result;
   delete result_string;
 }
 
@@ -103,13 +103,13 @@ MW_Worker::~MW_Worker()
   delete workToDo;
 
 
-  for ( auto iter = results->begin();
-      iter != results->end();
-      iter++)
-  {
-    Result *result = *iter;
-    delete result;
-  }
+  // for ( auto iter = results->begin();
+  //     iter != results->end();
+  //     iter++)
+  // {
+  //   Result *result = *iter;
+  //   delete result;
+  // }
 
   delete results;
 }
@@ -127,15 +127,16 @@ void MW_Worker::doWork()
   MW_API_STATUS_CODE status;
   do
   {
-    std::cout << "Entered Loop" << std:: endl;
+    // std::cout << "Entered Loop" << std:: endl;
     status = work->compute(preemptionSemaphore);
+    
   } while(status == Preempted);
 
-  std::cout << "Exited Loop" << std:: endl;
+  // std::cout << "Exited Loop" << std:: endl;
 
-  Result *new_result = work->result();
-  std::cout << new_result << std:: endl;
-  std::cout << "generated results" << std:: endl;
+  std::shared_ptr<Result> new_result = work->result();
+  // std::cout << new_result << std:: endl;
+  // std::cout << "generated results" << std:: endl;
   
   assert(new_result != NULL);
   // std::cout << "P:" << worker->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
@@ -145,7 +146,7 @@ void MW_Worker::doWork()
 
 void MW_Worker::worker_loop()
 {
-  Result *result;
+  // Result *result;
   enum MwTag message_tag;
   while (1) {
 
