@@ -39,6 +39,7 @@ private:
   void receive();
   void process_result(int, int, char *);
   void process_heartbeat(int);
+  void process_checkpoint_done(int);
   bool hasWorkersHasWork();
   bool hasWorkersNoWork();
   bool noWorkersHasWork();

@@ -172,7 +172,7 @@ void MW_Master::receive()
     }
 
     case CHECKPOINT_DONE: {
-      process_checkpoint_done(worker_id)
+      process_checkpoint_done(worker_id);
       break;
     }
 
@@ -214,14 +214,14 @@ void MW_Master::process_result(int worker_id, int count, char *message)
 
 }
 
-void process_heartbeat(int worker_id)
+void MW_Master::process_heartbeat(int worker_id)
 {
   // std::cout << "P:" << id << " Received heartbeat from process " << worker_id; << "\n";
   // TODO: implement
   return;
 }
 
-void process_checkpoint_done(int worker_id)
+void MW_Master::process_checkpoint_done(int worker_id)
 {
   // TODO: implement
   return;

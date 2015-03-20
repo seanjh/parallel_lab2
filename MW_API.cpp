@@ -3,7 +3,6 @@
 #include <mpi.h>
 
 #include "MW_API.hpp"
-#include "MW_Process.hpp"
 #include "MW_Master.hpp"
 #include "MW_Worker.hpp"
 
