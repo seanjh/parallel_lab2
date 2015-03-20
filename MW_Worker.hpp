@@ -3,12 +3,13 @@
 
 #include <list>
 
-#include "MW_Process.hpp"
+// #include "MW_Process.hpp"
+#include "MW_API_Types.hpp"
 #include "Work.hpp"
 #include "Result.hpp"
 #include "MW_Semaphore.hpp"
 
-class MW_Worker : public MW_Process {
+class MW_Worker {
 
 
 public:
@@ -28,7 +29,7 @@ private:
   MW_Semaphore preemptionSemaphore;
 
 
-  enum MwTag receive();
+  MWTag receive();
   void doWork();
   void send();
   void send(int) { send(); };

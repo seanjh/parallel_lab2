@@ -16,7 +16,7 @@ MW_Worker::MW_Worker(const int myid, const int m_id)
   results = new std::list<Result *>();
 }
 
-enum MwTag MW_Worker::receive()
+MWTag MW_Worker::receive()
 {
   // std::cout << "P:" << id << " waiting to receive work from master." << std::endl;
 
@@ -41,10 +41,10 @@ enum MwTag MW_Worker::receive()
     std::string serializedObject = std::string(message, status.Get_count(MPI::CHAR));
     // std::cout << "P:" << id << " Received from master P" << master_id << " message \"" << serializedObject << "\"\n";
 
-    MPIMessage *message = new MPIMessage(serializedObject);
-    // std::cout << "P:" << id << " message (work) is " << message->to_string() << std::endl;
-    Work *work = message->deserializeWork();
-    delete message;
+    MPIMessage *mpi_message = new MPIMessage(serializedObject);
+    // std::cout << "P:" << id << " mpi_message (work) is " << mpi_message->to_string() << std::endl;
+    Work *work = mpi_message->deserializeWork();
+    delete mpi_message;
     assert(work != NULL);
     // std::cout << "P:" << id << " Recreated work object (" << work << ") \"" << *work->serialize() << "\"\n" ;
 
@@ -55,7 +55,7 @@ enum MwTag MW_Worker::receive()
   }
 
   free(message);
-  return static_cast<MwTag>(message_tag);
+  return static_cast<MWTag>(message_tag);
 }
 
 void MW_Worker::send()
@@ -136,7 +136,7 @@ void MW_Worker::doWork()
   Result *new_result = work->result();
   std::cout << new_result << std:: endl;
   std::cout << "generated results" << std:: endl;
-  
+
   assert(new_result != NULL);
   // std::cout << "P:" << worker->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
 
@@ -146,7 +146,7 @@ void MW_Worker::doWork()
 void MW_Worker::worker_loop()
 {
   Result *result;
-  enum MwTag message_tag;
+  MWTag message_tag;
   while (1) {
 
     message_tag = receive();

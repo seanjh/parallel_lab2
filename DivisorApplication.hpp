@@ -13,10 +13,11 @@ public:
 	DivisorApplication(std::string &divisorString);
 	DivisorApplication(std::string &divisorString, mpz_class work_size);
 	DivisorApplication(std::string &, std::string &);
-	virtual std::list<Work *> *work();
+	virtual std::list<std::shared_ptr<Work>> &work();
   virtual int results(std::list<Result *> *);
 
 private:
+	std::list<std::shared_ptr<Work>> workList;
 	mpz_class divisor;
 	mpz_class work_size;
 };

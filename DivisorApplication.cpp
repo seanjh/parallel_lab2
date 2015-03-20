@@ -19,9 +19,10 @@ DivisorApplication::DivisorApplication(std::string &divisorString, std::string &
 
 }
 
-std::list<Work *> *DivisorApplication::work()
+std::list<std::shared_ptr<Work>> &DivisorApplication::work()
 {
-	std::list<Work *> *retList = new std::list<Work *>();
+	// std::list<std::shared_ptr<Work>> *retList = std::list<std::shared_ptr<Work>>;
+
 	mpz_class square_a = sqrt(divisor);
 
 	// std::cout << square_a.get_str() << std::endl;
@@ -33,20 +34,26 @@ std::list<Work *> *DivisorApplication::work()
 		lastWorkSize = work_size;
 
 
+
 	for(mpz_class i=0; i<numberOfWork-1; i++)
 	{
 		mpz_class beginVal = (i * work_size) + 1;
 		// std::cout << i << ": " << beginVal.get_str() << ": " << work_size << std::endl;
-		DivisorWork *divWork = new DivisorWork(divisor, beginVal, work_size);
-		retList->push_back(divWork);
+		// TODO shared ptr
+		std::shared_ptr<DivisorWork> divWork(new DivisorWork(divisor, beginVal, work_size));
+		// DivisorWork *divWork = new DivisorWork(divisor, beginVal, work_size);
+		workList.push_back(divWork);
 	}
 
 	mpz_class beginVal = ((numberOfWork-1) * work_size) + 1;
 	// std::cout << numberOfWork-1 << ": " << beginVal.get_str() << ": " << lastWorkSize << std::endl;
-	DivisorWork *divWork = new DivisorWork(divisor, beginVal, lastWorkSize);
-	retList->push_back(divWork);
 
-	return retList;
+	// TODO shared ptr
+	std::shared_ptr<DivisorWork> divWork(new DivisorWork(divisor, beginVal, lastWorkSize));
+	// DivisorWork *divWork = new DivisorWork(divisor, beginVal, lastWorkSize);
+	workList.push_back(divWork);
+
+	return workList;
 }
 
 int DivisorApplication::results(std::list<Result *> *listOfResults)

@@ -5,12 +5,13 @@
 #include "Work.hpp"
 #include "Result.hpp"
 #include <list>
+#include <memory>
 
 
 
 class MW_API {
 public:
-    virtual std::list<Work *> *work() = 0;
+    virtual std::list<std::shared_ptr<Work>> &work() = 0;
     virtual int results(std::list<Result *> *) = 0;
 };
 

@@ -9,12 +9,10 @@
 #include "Result.hpp"
 #include "MPIMessage.hpp"
 
-MW_Master::MW_Master(const int myid, const int sz, std::list<Work *> *work)
+MW_Master::MW_Master(const int myid, const int sz, const std::list<std::shared_ptr<Work>> &work_p) :
+  id(myid), world_size(sz), work(work_p)
 {
-  id = myid;
-  world_size = sz;
-
-  workToDo = work;
+  workToDo = new std::list<std::shared_ptr<Work>>(work_p);
   results = new std::list<Result *>();
   //std::cout << "Total work in master is " << workToDo->size() << std::endl;
 
@@ -29,6 +27,7 @@ MW_Master::MW_Master(const int myid, const int sz, std::list<Work *> *work)
 
 void MW_Master::send_done()
 {
+  // TODO
   //std::cout << "MASTER SENDING DONE MESSAGES\n";
   for (int process_id=0; process_id<world_size; process_id++) {
     if (process_id != id) {
@@ -103,10 +102,10 @@ void MW_Master::master_loop()
   }
 }
 
-
-enum MwTag MW_Master::receive()
+void MW_Master::receive()
 {
   // std::cout << "P:" << id << " master waiting to receive" << std::endl;
+  // TODO check for message first
 
   MPI::Status status;
   // std::string& message = new std::string(1000, 0);
@@ -124,6 +123,19 @@ enum MwTag MW_Master::receive()
 
   int worker_id = status.Get_source();
   int message_tag = status.Get_tag();
+  MWTag mw_tag = static_cast<MWTag>(message_tag);
+
+  if (mw_tag == WORK_TAG) {
+    process_result(status, message, worker_id);
+  } else if (mw_tag == HEARTBEAT) {
+    // TODO manage heartbeat here
+  }
+
+  free(message);
+}
+
+void MW_Master::process_result(MPI::Status status, char *message, int worker_id)
+{
   int count = status.Get_count(MPI::CHAR);
   if (count != 0) {
     std::string serializedObject = std::string(message, count);
@@ -132,10 +144,10 @@ enum MwTag MW_Master::receive()
 
     // std::cout << "App is: " << app << std::endl;
     // Result *result = app->resultDeserializer(serializedObject);
-    MPIMessage *message = new MPIMessage(serializedObject);
-    // std::cout << "P:" << id << " message (result) is " << message->to_string() << std::endl;
-    Result *result = message->deserializeResult();
-    delete message;
+    MPIMessage *mpi_message = new MPIMessage(serializedObject);
+    // std::cout << "P:" << id << " mpi_message (result) is " << mpi_message->to_string() << std::endl;
+    Result *result = mpi_message->deserializeResult();
+    delete mpi_message;
 
     // std::cout << "P:" << id << " received results (" << result << ") from process " << worker_id << ". " << std::endl;
     assert(result != NULL);
@@ -143,12 +155,10 @@ enum MwTag MW_Master::receive()
     // std::cout << "results size is " << results->size() << std::endl;
   }
 
-  free(message);
-  // Reinclude this working in the queue
+  // Reinclude this worker in the queue
   workers->push_back(worker_id);
-  return static_cast<MwTag>(message_tag);
-}
 
+}
 
 MW_Master::~MW_Master()
 {

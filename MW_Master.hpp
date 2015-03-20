@@ -3,13 +3,15 @@
 
 #include <list>
 
-#include "MW_Process.hpp"
+// #include "MW_Process.hpp"
+#include "MW_API_Types.hpp"
+#include "MW_Monitor.hpp"
 #include "Work.hpp"
 #include "Result.hpp"
 
-class MW_Master : public MW_Process {
+class MW_Master {
 public:
-  MW_Master(const int, const int, std::list<Work *> *);
+  MW_Master(const int, const int, const std::list<std::shared_ptr<Work>> &);
   void master_loop();
   std::list<Result *> *getResults() { return results; };
   ~MW_Master();
@@ -17,14 +19,17 @@ public:
 private:
   int id;
   int world_size;
-  std::list<Work *> *workToDo;
+  const std::list<std::shared_ptr<Work>> &work;
+  std::list<std::shared_ptr<Work>> *workToDo;
   std::list<Result *> *results;
+  // std::list<MW_Monitor *> *workers;
   std::list<int> *workers;
 
   int nextWorker();
   void send_done();
   void send(int);
-  enum MwTag receive();
+  void receive();
+  void process_result(MPI::Status, char *, int);
   bool hasWorkersHasWork();
   bool hasWorkersNoWork();
   bool noWorkersHasWork();
