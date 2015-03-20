@@ -28,7 +28,7 @@ public:
     virtual MW_API_STATUS_CODE compute(const MW_Semaphore &);
     virtual std::shared_ptr<Result> result();
     virtual std::string *serialize();
-    static DivisorWork *deserialize(const std::string &serialObject){return new DivisorWork(serialObject);}
+    static  std::shared_ptr<Work> deserialize(const std::string &serialObject){return std::shared_ptr<Work>(new DivisorWork(serialObject));}
 
 private:
  //    std::list<mpz_class> divisors;

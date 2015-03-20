@@ -4,16 +4,13 @@
 
 #include "MW_Worker.hpp"
 #include "MPIMessage.hpp"
+#include <sstream>
 
 // MW_Worker::MW_Worker(const int myid, const int m_id, MW_API *mwapp)
 MW_Worker::MW_Worker(const int myid, const int m_id)
 {
   id = myid;
   master_id = m_id;
-
-  // Blanks lists for work and results
-  workToDo = new std::list<Work *>();
-  results = new std::list<std::shared_ptr<Result>>();
 }
 
 MWTag MW_Worker::receive()
@@ -38,17 +35,27 @@ MWTag MW_Worker::receive()
   int message_tag = status.Get_tag();
 
   if (message_tag == WORK_TAG) {
-    std::string serializedObject = std::string(message, status.Get_count(MPI::CHAR));
+    std::string messageString = std::string(message, status.Get_count(MPI::CHAR));
     // std::cout << "P:" << id << " Received from master P" << master_id << " message \"" << serializedObject << "\"\n";
+
+    std::istringstream iss (messageString);
+    std::string idString, serializedObject;
+
+    std::getline(iss,idString,',');
+    std::cout<<idString<<std::endl;
+    std::getline(iss,serializedObject);
+    std::cout<<serializedObject<<std::endl;
 
     MPIMessage *mpi_message = new MPIMessage(serializedObject);
     // std::cout << "P:" << id << " mpi_message (work) is " << mpi_message->to_string() << std::endl;
-    Work *work = mpi_message->deserializeWork();
+    //Work *work = mpi_message->deserializeWork();
+    std::shared_ptr<Work> work = mpi_message->deserializeWork();
     delete mpi_message;
     assert(work != NULL);
     // std::cout << "P:" << id << " Recreated work object (" << work << ") \"" << *work->serialize() << "\"\n" ;
 
-    workToDo->push_back(work);
+    //TODO extract ID and add to map
+    // workToDo.push_back(work);
     // std::cout << "P:" << id << " WorkToDo size is " << workToDo->size() << std::endl;
   } else {
     // Do nothing
@@ -61,13 +68,17 @@ MWTag MW_Worker::receive()
 void MW_Worker::send()
 {
   // std::cout << "P:" << id << " Beginning send to master P" << master_id << std::endl;
-  std::shared_ptr<Result> result = results->front();
+  auto resultPair = *(results.begin());
+  results.erase(resultPair.first);
+  std::shared_ptr<Result> result = resultPair.second;
   assert(result);
-  results->pop_front();
+  // results->pop_front();
 
   // std::cout << " Popped result (" << result << ") from list\n";
 
-  std::string *result_string = result->serialize();
+  // std::string result_string = resultPair.first.to_string() + "," + *(result->serialize());
+  std::shared_ptr<std::string> result_string = std::make_shared<std::string> (std::to_string(resultPair.first) + "," + *(result->serialize()));
+
   int count = (int) result_string->length();
 
   // std::cout << "P:" << id << " sending result with " << count <<
@@ -86,21 +97,21 @@ void MW_Worker::send()
   //   results->size() << " results remaining" << std::endl;
 
   // delete result;
-  delete result_string;
+  // delete result_string;
 }
 
 MW_Worker::~MW_Worker()
 {
   // workToDo should be empty, so deleting its elements is bonus caution
-  for ( auto iter = workToDo->begin();
-      iter != workToDo->end();
-      iter++)
-  {
-    Work *work = *iter;
-    delete work;
-  }
+  // for ( auto iter = workToDo->begin();
+  //     iter != workToDo->end();
+  //     iter++)
+  // {
+  //   Work *work = *iter;
+  //   delete work;
+  // }
 
-  delete workToDo;
+  // delete workToDo;
 
 
   // for ( auto iter = results->begin();
@@ -111,16 +122,19 @@ MW_Worker::~MW_Worker()
   //   delete result;
   // }
 
-  delete results;
+  // delete results;
 }
 
 void MW_Worker::doWork()
 {
   // std::cout << "P:" << worker->id << " Grabbing some workToDo\n";
-  Work *work = workToDo->front();
-  assert(work != NULL);
-  // std::cout << "P:" << worker->id << " Work object is (" << work << ") \"" << work->serialize() << "\"\n";
-  workToDo->pop_front();
+  // Work *work = workToDo->front();
+  // assert(work != NULL);
+  // // std::cout << "P:" << worker->id << " Work object is (" << work << ") \"" << work->serialize() << "\"\n";
+  // workToDo->pop_front();
+  auto workPair = *(workToDo.begin());
+  workToDo.erase(workPair.first);
+  std::shared_ptr<Work> work = workPair.second;
 
   // std::cout << "P:" << worker->id << " Computing results.\n";
 
@@ -140,7 +154,8 @@ void MW_Worker::doWork()
   assert(new_result != NULL);
   // std::cout << "P:" << worker->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
 
-  results->push_back(new_result);
+  // TODO compute ID and add to 
+  // results->push_back(new_result);
 }
 
 void MW_Worker::worker_loop()

@@ -29,8 +29,8 @@ public:
   //   return stream;
   // }
 
-  virtual Result *deserializeResult();
-  virtual Work *deserializeWork();
+  virtual std::shared_ptr<Result> deserializeResult();
+  virtual std::shared_ptr<Work> deserializeWork();
 };
 
 #endif

@@ -1,13 +1,14 @@
 #include "MPIMessage.hpp"
 #include "DivisorResult.hpp"
 #include "DivisorWork.hpp"
+#include <memory>
 
-Result * MPIMessage::deserializeResult()
+std::shared_ptr<Result> MPIMessage::deserializeResult()
 {
   return DivisorResult::deserialize(message);
 }
 
-Work * MPIMessage::deserializeWork()
+std::shared_ptr<Work> MPIMessage::deserializeWork()
 {
   return DivisorWork::deserialize(message);
 }

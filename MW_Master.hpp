@@ -24,10 +24,7 @@ private:
   int world_size;
   //const std::list<std::shared_ptr<Work>> &work;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> work;
-  
-  // std::list<std::shared_ptr<Work>> *workToDo;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
-  // std::list<Result *> *results;
   std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
   // std::list<MW_Monitor *> *workers;
   std::list<int> *workers;

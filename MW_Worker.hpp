@@ -7,6 +7,7 @@
 #include "Work.hpp"
 #include "Result.hpp"
 #include "MW_Semaphore.hpp"
+#include <unordered_map>
 
 class MW_Worker {
 
@@ -23,8 +24,9 @@ public:
 private:
   int id;
   int master_id;
-  std::list<Work *> *workToDo;
-  std::list<std::shared_ptr<Result>> *results;
+  std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
+  std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
+
   MW_Semaphore preemptionSemaphore;
 
 

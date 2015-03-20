@@ -8,6 +8,7 @@
 #include "Work.hpp"
 #include "Result.hpp"
 #include "MPIMessage.hpp"
+#include <sstream>
 
 MW_Master::MW_Master(const int myid, const int sz, const std::list<std::shared_ptr<Work>> &work_p) :
   id(myid), world_size(sz)
@@ -96,6 +97,8 @@ void MW_Master::send_done()
   }
 }
 
+
+
 void MW_Master::send(int worker_id)
 {
   // std::cout << "P:" << this->id << " sending work to process " << worker_id << std::endl;
@@ -104,7 +107,8 @@ void MW_Master::send(int worker_id)
   workToDo.erase(workPair.first);
   std::shared_ptr<Work> work = workPair.second;
 
-  std::string *work_string = work->serialize();
+  std::shared_ptr<std::string> work_string = std::make_shared<std::string> (std::to_string(workPair.first) + "," + *(work->serialize()));
+
   int count = (int) work_string->length();
 
   //Need to add ID to message
@@ -124,7 +128,7 @@ void MW_Master::send(int worker_id)
   //   workToDo->size() << " work items remaining" << std::endl;
 
   // delete work;
-  delete work_string;
+  // delete work_string;
 }
 
 void MW_Master::receive()
@@ -189,15 +193,23 @@ void MW_Master::process_result(int worker_id, int count, char *message)
 {
 
   if (count != 0) {
-    std::string serializedObject = std::string(message, count);
+    std::string messageString = std::string(message, count);
     // std::cout << "P:" << id << " Received from process " << worker_id <<
     //   " message of length "<< count << " \"" << serializedObject << "\"\n";
 
     // std::cout << "App is: " << app << std::endl;
     // Result *result = app->resultDeserializer(serializedObject);
+    std::istringstream iss (messageString);
+    std::string idString, serializedObject;
+
+    std::getline(iss,idString,',');
+    std::cout<<idString<<std::endl;
+    std::getline(iss,serializedObject);
+    std::cout<<serializedObject<<std::endl;
+
     MPIMessage *mpi_message = new MPIMessage(serializedObject);
     // std::cout << "P:" << id << " mpi_message (result) is " << mpi_message->to_string() << std::endl;
-    Result *result = mpi_message->deserializeResult();
+    std::shared_ptr<Result> result = mpi_message->deserializeResult();
     delete mpi_message;
 
     // std::cout << "P:" << id << " received results (" << result << ") from process " << worker_id << ". " << std::endl;
