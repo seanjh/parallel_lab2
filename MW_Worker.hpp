@@ -6,9 +6,10 @@
 #include "MW_API_Types.hpp"
 #include "Work.hpp"
 #include "Result.hpp"
-#include "MW_Semaphore.hpp"
+#include "MW_Timer.hpp"
 #include <unordered_map>
 #include <memory>
+// #include "boost/asio.hpp"
 
 class MW_Worker {
 
@@ -28,8 +29,7 @@ private:
   std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
   std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
 
-  MW_Semaphore preemptionSemaphore;
-
+  MW_Timer preemptionTimer;
 
   MWTag receive();
   // void doWork();

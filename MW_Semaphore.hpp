@@ -2,15 +2,16 @@
 #define __MW__SEMAPHORE__
 
 #include <mutex>
+#include "MW_Object.hpp"
 
-class MW_Semaphore {
+class MW_Semaphore : public MW_Object {
 public:
 	MW_Semaphore();
-	bool get() const;
-	void set();
-	void clear();
+	virtual bool get() const;
+	virtual void set();
+	virtual void clear();
 
-private:
+protected:
 	mutable std::mutex b_mutex;
 	bool value;
 };

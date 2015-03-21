@@ -92,7 +92,7 @@ void MW_Master::master_loop()
     if (shouldCheckpoint()) performCheckpoint();
     else if (hasWorkersHasWork()) {
 
-      std::cout << "MASTER IS SENDING\n";
+      // std::cout << "MASTER IS SENDING\n";
       worker_id = nextWorker();
       send(worker_id);
 
@@ -102,9 +102,9 @@ void MW_Master::master_loop()
       receive();
 
     } else if (hasWorkersNoWork()) {
-      std::cout << "No Work!!\n";
+      // std::cout << "No Work!!\n";
       if (hasAllWorkers()) {
-        std::cout << "MASTER IS DONE\n";
+        // std::cout << "MASTER IS DONE\n";
         send_done();
 
         break;

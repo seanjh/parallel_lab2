@@ -6,10 +6,8 @@
 #include "MPIMessage.hpp"
 #include <sstream>
 #include "MW_Random.hpp"
-// #include <utility> 
 
-// MW_Worker::MW_Worker(const int myid, const int m_id, MW_API *mwapp)
-MW_Worker::MW_Worker(const int myid, const int m_id)
+MW_Worker::MW_Worker(const int myid, const int m_id): preemptionTimer(.1)
 {
   id = myid;
   master_id = m_id;
@@ -219,7 +217,7 @@ void MW_Worker::worker_loop()
 
     if (message_tag == WORK_TAG) {
 
-      std::cout<<"Received WorkTag"<<std::endl;
+      // std::cout<<"Received WorkTag"<<std::endl;
       // doWork();
       // send();
 
@@ -237,9 +235,11 @@ void MW_Worker::worker_loop()
       std::shared_ptr<Work> work = workPair.second;
 
       MW_API_STATUS_CODE status;
-      status = work->compute(preemptionSemaphore);
+      preemptionTimer.reset();
+      status = work->compute(preemptionTimer);
       if (status != Preempted)
       {
+        std::cout <<"Worker returning Success"<<std::endl;
         assert(status == Success);
 
         //remove from work to do map
@@ -253,6 +253,10 @@ void MW_Worker::worker_loop()
         send(work_id, new_result);
 
       }
+      else
+      {
+        std::cout <<"Worker returning preempted"<<std::endl;
+      }
 
     }
     else {
@@ -262,3 +266,16 @@ void MW_Worker::worker_loop()
     }
   }
 }
+
+// void MW_Worker::preemptionTimerHandler(const boost::system::error_code& error)
+// {
+//   // if (!error)
+//   // {
+//   //   std::cout<<"Timer Expired. Resetting." << std::endl;
+//   //   preemptionTimer = std::unique_ptr<boost::asio::deadline_timer> \
+//   //   (new boost::asio::deadline_timer(
+//   //     *preemptionTimerIOService,
+//   //     boost::posix_time::milliseconds(100)));
+//   //   preemptionTimer->async_wait(this->preemptionTimerHandler);
+//   // }
+// }

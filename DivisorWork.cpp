@@ -35,7 +35,7 @@ DivisorWork::~DivisorWork()
 	// delete divisorResult;
 }
 
-MW_API_STATUS_CODE DivisorWork::compute(const MW_Semaphore &preemptionSemaphore)
+MW_API_STATUS_CODE DivisorWork::compute(const MW_Object &preemptionObject)
 {
 	// std::list<mpz_class> divisors;
 	// std::cout << "In Compute" <<std::endl;
@@ -46,7 +46,7 @@ MW_API_STATUS_CODE DivisorWork::compute(const MW_Semaphore &preemptionSemaphore)
 		// std::cout << "Computing results" <<std::endl;
 		for(; iterator<count; iterator++)
 		{
-			if(preemptionSemaphore.get() == true)
+			if(preemptionObject.get() == true)
 			{
 				return Preempted;
 			}

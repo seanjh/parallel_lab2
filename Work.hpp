@@ -3,7 +3,7 @@
 
 #include <string>
 #include "Result.hpp"
-#include "MW_Semaphore.hpp"
+#include "MW_Object.hpp"
 #include "MW_API_Types.hpp"
 #include <memory>
 
@@ -17,7 +17,7 @@ public:
     //This needs to destroy all of its children to prevent memory leaks
     virtual ~Work() {};
 public:
-    virtual MW_API_STATUS_CODE compute(const MW_Semaphore &) = 0;
+    virtual MW_API_STATUS_CODE compute(const MW_Object &) = 0;
     virtual std::shared_ptr<Result> result() = 0;
     virtual std::string *serialize() = 0;
     static std::shared_ptr<Work> deserialize(const std::string &){return nullptr;}

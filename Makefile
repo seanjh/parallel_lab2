@@ -1,7 +1,7 @@
 CXX=mpic++
 ODIR=obj
 
-LIBS =-lgmpxx -lgmp
+LIBS =-lgmpxx -lgmp -lboost_system
 CXX_FLAGS =-Wc++11-extensions
 
 _SERIAL_OBJ = gmp_factors_serial.o
@@ -42,7 +42,9 @@ WORKING_API_OBJ = $(patsubst %,$(ODIR)/%,$(_WORKING_API_OBJ))
 
 _DIVISORS_APP_OBJ = gmp_factors_API.o DivisorApplication.o \
 MPIMessage.o DivisorResult.o DivisorWork.o MW_API.o MW_Master.o \
-MW_Worker.o MW_Semaphore.o MW_Monitor.o MW_Remote_Worker.o
+MW_Worker.o MW_Semaphore.o MW_Monitor.o MW_Remote_Worker.o \
+MW_Timer.o
+
 DIVISORS_APP_OBJ = $(patsubst %,$(ODIR)/%,$(_DIVISORS_APP_OBJ))
 
 # _TEST_OBJ = test.o
@@ -58,7 +60,7 @@ obj:
 	mkdir -p $@
 
 $(ODIR)/%.o: %.cpp | obj
-	$(CXX) -std=c++11 -I. -c -o $@ $<
+	$(CXX) -std=c++11 -I.:/usr/local/include/boost -c -o $@ $<
 
 serial: $(SERIAL_OBJ)
 	$(CXX) -o $@ $^ $(LIBS)

@@ -41,10 +41,8 @@ const std::list<MW_ID> &MW_Remote_Worker::getPendingWork()
 bool MW_Remote_Worker::isAvailable()
 {
 	bool alive = heartbeatMonitor.isAlive();
-	// if(alive)
-	// 	std::cout<< id << " is alive" << std::endl;
-	// else
-	// 	std::cout<< id << " is NOT alive" << std::endl;
+	if(!alive)
+		std::cout<< id << " is NOT alive" << std::endl;
 	bool empty = issuedWork.empty();
 	// if(empty)
 	// 	std::cout<< id << " is empty" << std::endl;

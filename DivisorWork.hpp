@@ -7,7 +7,7 @@
 #include <list>
 #include <gmpxx.h>
 #include "Work.hpp"
-#include "MW_Semaphore.hpp"
+#include "MW_Object.hpp"
 #include "MW_API_Types.hpp"
 
 class DivisorResult;
@@ -25,7 +25,7 @@ public:
 //Work Interface
 public:
     // Result *compute();
-    virtual MW_API_STATUS_CODE compute(const MW_Semaphore &);
+    virtual MW_API_STATUS_CODE compute(const MW_Object &);
     virtual std::shared_ptr<Result> result();
     virtual std::string *serialize();
     static  std::shared_ptr<Work> deserialize(const std::string &serialObject){return std::shared_ptr<Work>(new DivisorWork(serialObject));}
