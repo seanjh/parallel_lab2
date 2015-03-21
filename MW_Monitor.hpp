@@ -6,14 +6,16 @@
 class MW_Monitor {
 public:
   MW_Monitor(int, double);
+  MW_Monitor(const MW_Monitor &);
+  // MW_Monitor &operator= ( const MW_Monitor & );
   bool isAlive();
-  void addHearbeat();
+  void addHeartbeat();
 
 private:
-  int id;
+  const int id;
   bool dead;
-  double period;
-  std::list<double> *heartbeats;
+  const double period;
+  std::list<const double> heartbeats;
 };
 
 #endif //__MW__MONITOR__

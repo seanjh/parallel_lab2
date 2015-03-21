@@ -9,10 +9,11 @@
 #include "Work.hpp"
 #include "Result.hpp"
 #include <unordered_map>
+#include "MW_Remote_Worker.hpp"
 
 class MW_Master {
 public:
-  MW_Master(const int, const int, const std::list<std::shared_ptr<Work>> &);
+  MW_Master(int, int, const std::list<std::shared_ptr<Work>> &);
 
   //TODO: Add new constructor for worker->master transition, add work to do and results parameters
   void master_loop();
@@ -27,7 +28,11 @@ private:
   std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
   std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
   // std::list<MW_Monitor *> *workers;
-  std::list<int> *workers;
+  // std::list<int> *workers;
+  std::unordered_map<int, std::shared_ptr<MW_Remote_Worker>> workerMap;
+  // std::list<int> freeWorkers;
+
+  double lastCheckpoint;
 
   int nextWorker();
   void checkOnWorkers();
@@ -42,6 +47,8 @@ private:
   bool noWorkersHasWork();
   bool noWorkersNoWork();
   bool hasAllWorkers();
+  void performCheckpoint();
+  bool shouldCheckpoint();
 };
 
 #endif /* defined(__MW__MASTER__) */

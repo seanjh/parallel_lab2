@@ -42,7 +42,7 @@ WORKING_API_OBJ = $(patsubst %,$(ODIR)/%,$(_WORKING_API_OBJ))
 
 _DIVISORS_APP_OBJ = gmp_factors_API.o DivisorApplication.o \
 MPIMessage.o DivisorResult.o DivisorWork.o MW_API.o MW_Master.o \
-MW_Worker.o MW_Semaphore.o
+MW_Worker.o MW_Semaphore.o MW_Remote_Worker.o MW_Monitor.o
 DIVISORS_APP_OBJ = $(patsubst %,$(ODIR)/%,$(_DIVISORS_APP_OBJ))
 
 # _TEST_OBJ = test.o

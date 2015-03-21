@@ -10,8 +10,11 @@
 #include "MPIMessage.hpp"
 #include <sstream>
 #include "MW_Random.hpp"
+#include <fstream>
 
-MW_Master::MW_Master(const int myid, const int sz, const std::list<std::shared_ptr<Work>> &work_p) :
+#define CHECKPOINT_PERIOD 1.0
+
+MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &work_p) :
   id(myid), world_size(sz)
 {
 
@@ -23,12 +26,27 @@ MW_Master::MW_Master(const int myid, const int sz, const std::list<std::shared_p
   //std::cout << "Total work in master is " << workToDo->size() << std::endl;
 
   // Prepopulate the list of workers
-  workers = new std::list<int>();
+  // workers = new std::list<int>();
+
+  // for (int i=0; i<world_size; i++) {
+  //   if (i != id) {
+  //     workers->push_back(i);
+  //   }
+  // }
+
+
+
   for (int i=0; i<world_size; i++) {
     if (i != id) {
-      workers->push_back(i);
+      // workers->push_back(i);
+      workerMap[i] = std::shared_ptr<MW_Remote_Worker> (new MW_Remote_Worker(i));
+      // workerMap[i] = MW_Remote_Worker(i);
     }
   }
+
+
+
+  performCheckpoint();
 }
 
 std::shared_ptr<std::list<std::shared_ptr<Result>>> MW_Master::getResults()
@@ -46,6 +64,8 @@ void MW_Master::master_loop()
 {
   MW_Random random = MW_Random(id, world_size);
   int worker_id;
+  long long int iteration_count=0;
+
   while (1) {
     // std::cout << "P:" << id << " Master Loop\n";
     // if (random.random_fail()) {
@@ -56,20 +76,22 @@ void MW_Master::master_loop()
 
     checkOnWorkers();
 
-    if (hasWorkersHasWork()) {
+    if (shouldCheckpoint()) performCheckpoint();
+    else if (hasWorkersHasWork()) {
 
-      // std::cout << "MASTER IS SENDING\n";
+      std::cout << "MASTER IS SENDING\n";
       worker_id = nextWorker();
       send(worker_id);
 
     } else if (noWorkersHasWork() || noWorkersNoWork()) {
 
-      // std::cout << "MASTER IS WAITING FOR A RESULT\n";
+      std::cout << "MASTER IS WAITING FOR A RESULT\n";
       receive();
 
     } else if (hasWorkersNoWork()) {
+      std::cout << "No Work!!\n";
       if (hasAllWorkers()) {
-        // std::cout << "MASTER IS DONE\n";
+        std::cout << "MASTER IS DONE\n";
         send_done();
 
         break;
@@ -112,9 +134,16 @@ void MW_Master::send(int worker_id)
 {
   // std::cout << "P:" << this->id << " sending work to process " << worker_id << std::endl;
 
+  // for(auto it=workToDo.begin(); it!=workToDo.end(); it++)
+  //     std::cout << it->first <<": "<<*(it->second->serialize())<<std::endl;
+
   auto workPair = *(workToDo.begin());
-  workToDo.erase(workPair.first);
+  MW_ID workID = workPair.first;
+  workToDo.erase(workID);
   std::shared_ptr<Work> work = workPair.second;
+
+  std::shared_ptr<MW_Remote_Worker> rm = workerMap[worker_id];
+  rm->markPending(workID);
 
   std::shared_ptr<std::string> work_string = std::make_shared<std::string> (std::to_string(workPair.first) + "," + *(work->serialize()));
 
@@ -138,6 +167,7 @@ void MW_Master::send(int worker_id)
 
   // delete work;
   // delete work_string;
+
 }
 
 void MW_Master::receive()
@@ -179,12 +209,12 @@ void MW_Master::receive()
       break;
     }
 
-    case HEARTBEAT: {
+    case HEARTBEAT_TAG: {
       process_heartbeat(worker_id);
       break;
     }
 
-    case CHECKPOINT_DONE: {
+    case CHECKPOINT_DONE_TAG: {
       process_checkpoint_done(worker_id);
       break;
     }
@@ -227,13 +257,18 @@ void MW_Master::process_result(int worker_id, int count, char *message)
 
     //TODO
     //extract ID and add to results map
+    std::shared_ptr<MW_Remote_Worker> rm = workerMap[worker_id];
+    rm->markCompleted(result_id);
     results[result_id] = result;
     //results->push_back(result);
-    // std::cout << "results size is " << results->size() << std::endl;
+    // std::cout << "results size is " << results.size() << std::endl;
+
+    // for(auto it=results.begin(); it!=results.end(); it++)
+    //   std::cout << it->first <<": "<<*(it->second->serialize())<<std::endl;
   }
 
   // Reinclude this worker in the queue
-  workers->push_back(worker_id);
+  // workers->push_back(worker_id);
 
 }
 
@@ -248,6 +283,33 @@ void MW_Master::process_checkpoint_done(int worker_id)
 {
   // TODO: implement
   return;
+}
+
+bool MW_Master::shouldCheckpoint()
+{
+  //return count % CHECKPOINT_COUNT == 0;
+  return (MPI::Wtime() - lastCheckpoint) > CHECKPOINT_PERIOD;
+}
+void MW_Master::performCheckpoint()
+{
+  std::cout <<"Starting Checkpoint" << std::endl;
+
+  std::ofstream checkpointWorkFile, checkpointResultsFile;
+  checkpointWorkFile.open("checkpoint_work.csv");
+
+  for(auto it=work.begin(); it!=work.end(); it++)
+      checkpointWorkFile << it->first <<","<<*(it->second->serialize())<<std::endl;
+
+  checkpointWorkFile.close();
+
+  checkpointResultsFile.open("checkpoint_result.csv");
+  for(auto it=results.begin(); it!=results.end(); it++)
+      checkpointResultsFile << it->first <<","<<*(it->second->serialize())<<std::endl;
+
+  checkpointResultsFile.close();
+
+  lastCheckpoint = MPI::Wtime();
+  std::cout <<"Completed Checkpoint" << std::endl;
 }
 
 MW_Master::~MW_Master()
@@ -276,38 +338,51 @@ MW_Master::~MW_Master()
 }
 
 
+
 bool MW_Master::hasWorkersHasWork()
 {
-  return !workers->empty() && !workToDo.empty();
+  return (nextWorker() != -1) && !workToDo.empty();
 }
 
 bool MW_Master::hasWorkersNoWork()
 {
-  return !workers->empty() && workToDo.empty();
+  return (nextWorker() != -1) && workToDo.empty();
 }
 
 bool MW_Master::noWorkersHasWork()
 {
-  return workers->empty() && !workToDo.empty();
+  return (nextWorker() == -1) && !workToDo.empty();
 }
 
 bool MW_Master::noWorkersNoWork()
 {
-  return workers->empty() && workToDo.empty();
+  return (nextWorker() == -1) && workToDo.empty();
 }
 
 bool MW_Master::hasAllWorkers()
 {
-  return workers->size() == world_size - 1;  // exclude self (master)
+  for(auto it=workerMap.begin(); it != workerMap.end(); it++)
+  {
+    if (it->second->heartbeatMonitor.isAlive() && !it->second->isAvailable())
+      return false;
+  }
+  return true;
+  //return workers->size() == world_size - 1;  // exclude self (master)
 }
 
 
 int MW_Master::nextWorker()
 {
+  for(auto it=workerMap.begin(); it != workerMap.end(); it++)
+  {
+    if (it->second->isAvailable())
+      return it->first;
+  }
+  //assert(false;)
   // TODO: update to incorporate monitors
-  int worker_id = workers->front();
-  assert(worker_id != 0);
-  workers->pop_front();
+  // int worker_id = workers->front();
+  // assert(worker_id != 0);
+  // workers->pop_front();
 
-  return worker_id;
+  return -1;
 }

@@ -7,9 +7,9 @@ typedef enum _MwTag
 {
   WORK_TAG,
   DONE_TAG,
-  HEARTBEAT,
-  CHECKPOINT,
-  CHECKPOINT_DONE
+  HEARTBEAT_TAG,
+  CHECKPOINT_TAG,
+  CHECKPOINT_DONE_TAG
 } MWTag;
 
 typedef enum MASC {
@@ -19,5 +19,6 @@ typedef enum MASC {
 } MW_API_STATUS_CODE;
 
 typedef unsigned long MW_ID;
+const double HEARTBEAT_PERIOD = .5;
 
 #endif

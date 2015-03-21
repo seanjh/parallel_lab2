@@ -189,7 +189,12 @@ void MW_Worker::worker_loop()
     } else if (message_tag == DONE_TAG) {
       // std::cout << "P:" << proc->id << " IS DONE\n";
       break;
-    } else {
+    } else if (message_tag == HEARTBEAT_TAG) {
+      // std::cout << "P:" << proc->id << " IS DONE\n";
+      break;
+    } 
+
+    else {
       std::cout << "WTF happened here\n";
       assert(0);
     }
