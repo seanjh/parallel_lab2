@@ -28,15 +28,6 @@ MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &w
   workToDo = work;
   //std::cout << "Total work in master is " << workToDo->size() << std::endl;
 
-  // Prepopulate the list of workers
-  // workers = new std::list<int>();
-
-  // for (int i=0; i<world_size; i++) {
-  //   if (i != id) {
-  //     workers->push_back(i);
-  //   }
-  // }
-
   initializeWorkerMap();
 
   performCheckpoint();
@@ -88,7 +79,7 @@ void MW_Master::master_loop()
     checkOnWorkers();
 
     // if(shouldSendHeartbeat()) sendHeartbeat();
-    // else 
+    // else
     if (shouldCheckpoint()) performCheckpoint();
     else if (hasWorkersHasWork()) {
 
@@ -268,8 +259,6 @@ void MW_Master::process_result(int worker_id, int count, char *message)
     // std::cout << "P:" << id << " received results (" << result << ") from process " << worker_id << ". " << std::endl;
     assert(result != NULL);
 
-    //TODO
-    //extract ID and add to results map
     std::shared_ptr<MW_Remote_Worker> rm = workerMap[worker_id];
     rm->markCompleted(result_id);
     results[result_id] = result;
@@ -325,30 +314,7 @@ void MW_Master::performCheckpoint()
   std::cout <<"Completed Checkpoint" << std::endl;
 }
 
-MW_Master::~MW_Master()
-{
-  // workToDo should be empty, so deleting its elements is bonus caution
-  // for ( auto iter = workToDo->begin();
-  //     iter != workToDo->end();
-  //     iter++)
-  // {
-  //   // Work *work = *iter;
-  //   // delete work;
-  // }
-
-  // delete workToDo;
-
-
-  // for ( auto iter = results->begin();
-  //     iter != results->end();
-  //     iter++)
-  // {
-  //   Result *result = *iter;
-  //   delete result;
-  // }
-
-  // delete results;
-}
+MW_Master::~MW_Master() { }
 
 bool MW_Master::shouldSendHeartbeat()
 {
@@ -405,26 +371,17 @@ int MW_Master::nextWorker()
       return it->first;
   }
   //assert(false;)
-  // TODO: update to incorporate monitors
-  // int worker_id = workers->front();
-  // assert(worker_id != 0);
-  // workers->pop_front();
 
   return -1;
 }
 
-
-MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
+void MW_Master::initializeResultFromCheckpoint()
 {
-  std::cout << "P" << myid << ": Creating NEW Master from checkpoint\n";
-
-  initializeWorkerMap();
-
+  std::cout << "P" << id << ": RESTORING RESULTS\n";
   std::string line, idString, serializedObject;
   MW_ID id;
   std::shared_ptr<MPIMessage> message;
-  std::ifstream infile (WORK_CHECKPOINT_FILENAME);
-  //std::istringstream iss ;
+  std::ifstream infile (RESULTS_CHECKPOINT_FILENAME);
 
   if (infile.is_open())
   {
@@ -435,7 +392,37 @@ MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
       std::istringstream iss (line);
       std::getline(iss, idString,',');
       id = std::stoul(idString);
-      std::cout << "idString: " << idString << "(" << id << ")" << '\n';
+      std::cout << "idString: " << idString << " (MW_ID=" << id << ")" << '\n';
+      std::getline(iss, serializedObject);
+      std::cout << "serializedObject: " << serializedObject << '\n';
+
+      message = std::make_shared<MPIMessage> (serializedObject);
+      std::cout << "MPIMessage: " << message->to_string() << '\n';
+      results[id] = message->deserializeResult();
+    }
+    infile.close();
+  }
+  else std::cerr << "Unable to open file";
+}
+
+void MW_Master::initializeWorkFromCheckpoint()
+{
+  std::cout << "P" << id << ": RESTORING WORK\n";
+  std::string line, idString, serializedObject;
+  MW_ID id;
+  std::shared_ptr<MPIMessage> message;
+  std::ifstream infile (WORK_CHECKPOINT_FILENAME);
+
+  if (infile.is_open())
+  {
+    while (getline (infile, line))
+    {
+      std::cout << "line: " << line << '\n';
+
+      std::istringstream iss (line);
+      std::getline(iss, idString,',');
+      id = std::stoul(idString);
+      std::cout << "idString: " << idString << " (MW_ID=" << id << ")" << '\n';
       std::getline(iss, serializedObject);
       std::cout << "serializedObject: " << serializedObject << '\n';
 
@@ -445,10 +432,32 @@ MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
     }
     infile.close();
   }
-  else std::cout << "Unable to open file";
+  else std::cerr << "Unable to open file";
+}
 
-  std::cout << "WORK INITIALIZED\n";
+
+MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
+{
+  std::cout << "P" << myid << ": Creating NEW Master from checkpoint\n";
+
+  initializeWorkerMap();
+
+  initializeWorkFromCheckpoint();
+
+  initializeResultFromCheckpoint();
+
+  std::cout << "workToDo is size " << workToDo.size() << "\n";
+  std::shared_ptr<Result> result;
   for ( auto it = work.begin(); it != work.end(); ++it )
-    std::cout << " " << it->first << ":" << it->second;
-  std::cout << std::endl;
+  {
+    try {
+      result = results.at(it->first);
+    }
+    catch (const std::out_of_range& oor) {
+      std::cerr << "WORK is not in RESULTS. Out of Range error: " << oor.what() << '\n';
+      workToDo[it->first] = it->second;
+      std::cout << "workToDo is size " << workToDo.size() << "\n";
+    }
+  }
+
 }
