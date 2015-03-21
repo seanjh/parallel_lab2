@@ -32,9 +32,11 @@ private:
 
 
   MWTag receive();
-  void doWork();
-  void send();
-  void send(int) { send(); };
+  // void doWork();
+  // void send();
+  // void send(int) { send(); };
+  bool hasWork() {return !workToDo.empty();};
+  void send(MW_ID result_id, std::shared_ptr<Result> result);
 };
 
 #endif /* defined(__MW__WORKER__) */

@@ -39,6 +39,7 @@ private:
   // std::list<int> freeWorkers;
 
   double lastCheckpoint;
+  double lastHeartbeat;
 
   void initializeWorkerMap();
   int nextWorker();
@@ -56,6 +57,9 @@ private:
   bool hasAllWorkers();
   void performCheckpoint();
   bool shouldCheckpoint();
+  bool shouldSendHeartbeat();
+  void sendHeartbeat();
+
 };
 
 #endif /* defined(__MW__MASTER__) */

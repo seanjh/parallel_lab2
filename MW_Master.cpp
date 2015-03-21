@@ -13,7 +13,7 @@
 #include "MW_Random.hpp"
 
 // #define CHECKPOINT_PERIOD 1.0
-const double CHECKPOINT_PERIOD = 1.0;
+// const double CHECKPOINT_PERIOD = 1.0;
 const std::string WORK_CHECKPOINT_FILENAME    = "checkpoint_work.csv";
 const std::string RESULTS_CHECKPOINT_FILENAME = "checkpoint_result.csv";
 
@@ -40,6 +40,7 @@ MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &w
   initializeWorkerMap();
 
   performCheckpoint();
+  sendHeartbeat();
 }
 
 void MW_Master::initializeWorkerMap()
@@ -77,7 +78,7 @@ void MW_Master::master_loop()
   long long int iteration_count=0;
 
   while (1) {
-    // std::cout << "P:" << id << " Master Loop\n";
+    //std::cout << "P:" << id << " Master Loop\n";
     // if (random.random_fail()) {
     //   std::cout << "P:" << id << " MASTER FAILURE EVENT\n";
     //   MPI::Finalize();
@@ -87,24 +88,23 @@ void MW_Master::master_loop()
     checkOnWorkers();
 
     // if(shouldSendHeartbeat()) sendHeartbeat();
-    // else
+    // else 
     if (shouldCheckpoint()) performCheckpoint();
-    
     else if (hasWorkersHasWork()) {
 
-      // std::cout << "MASTER IS SENDING\n";
+      std::cout << "MASTER IS SENDING\n";
       worker_id = nextWorker();
       send(worker_id);
 
     } else if (noWorkersHasWork() || noWorkersNoWork()) {
 
-      // std::cout << "MASTER IS WAITING FOR A RESULT\n";
+      //std::cout << "MASTER IS WAITING FOR A RESULT\n";
       receive();
 
     } else if (hasWorkersNoWork()) {
-      // std::cout << "No Work!!\n";
+      std::cout << "No Work!!\n";
       if (hasAllWorkers()) {
-        // std::cout << "MASTER IS DONE\n";
+        std::cout << "MASTER IS DONE\n";
         send_done();
 
         break;
@@ -350,7 +350,20 @@ MW_Master::~MW_Master()
   // delete results;
 }
 
+bool MW_Master::shouldSendHeartbeat()
+{
+  return (MPI::Wtime() - lastHeartbeat) > HEARTBEAT_PERIOD;
+}
 
+void MW_Master::sendHeartbeat()
+{
+  for(auto it=workerMap.begin(); it != workerMap.end(); it++)
+  {
+    if (it->second->heartbeatMonitor.isAlive())
+      it->second->heartbeatMonitor.sendHeartbeat(true);
+  }
+  lastHeartbeat = MPI::Wtime();
+}
 
 bool MW_Master::hasWorkersHasWork()
 {

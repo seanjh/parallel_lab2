@@ -10,6 +10,7 @@ public:
   // MW_Monitor &operator= ( const MW_Monitor & );
   bool isAlive();
   void addHeartbeat();
+  void sendHeartbeat(bool masterFlag);
 
 private:
   const int id;
