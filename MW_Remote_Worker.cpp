@@ -37,6 +37,6 @@ const std::list<MW_ID> &MW_Remote_Worker::getPendingWork()
 
 bool MW_Remote_Worker::isAvailable()
 {
-	return issuedWork.empty();
+	return heartbeatMonitor.isAlive() && issuedWork.empty();
 }
 

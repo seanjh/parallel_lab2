@@ -76,22 +76,25 @@ void MW_Master::master_loop()
 
     checkOnWorkers();
 
+    // if(shouldSendHeartbeat()) sendHeartbeat();
+    // else
     if (shouldCheckpoint()) performCheckpoint();
+    
     else if (hasWorkersHasWork()) {
 
-      std::cout << "MASTER IS SENDING\n";
+      // std::cout << "MASTER IS SENDING\n";
       worker_id = nextWorker();
       send(worker_id);
 
     } else if (noWorkersHasWork() || noWorkersNoWork()) {
 
-      std::cout << "MASTER IS WAITING FOR A RESULT\n";
+      // std::cout << "MASTER IS WAITING FOR A RESULT\n";
       receive();
 
     } else if (hasWorkersNoWork()) {
-      std::cout << "No Work!!\n";
+      // std::cout << "No Work!!\n";
       if (hasAllWorkers()) {
-        std::cout << "MASTER IS DONE\n";
+        // std::cout << "MASTER IS DONE\n";
         send_done();
 
         break;
