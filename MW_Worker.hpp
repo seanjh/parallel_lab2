@@ -8,6 +8,7 @@
 #include "Result.hpp"
 #include "MW_Semaphore.hpp"
 #include <unordered_map>
+#include <memory>
 
 class MW_Worker {
 

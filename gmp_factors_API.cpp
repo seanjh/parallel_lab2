@@ -9,6 +9,7 @@
 #include <list>
 #include <string>
 #include <iostream>
+#include <memory>
 
 // void runApp(MW_API *app)
 // {

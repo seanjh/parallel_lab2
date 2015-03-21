@@ -9,6 +9,7 @@
 #include "Work.hpp"
 #include "Result.hpp"
 #include <unordered_map>
+#include <memory>
 #include "MW_Remote_Worker.hpp"
 
 class MW_Master {

@@ -159,7 +159,7 @@ void MW_Worker::doWork()
   assert(new_result);
   // std::cout << "P:" << worker->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
 
-  // TODO compute ID and add to 
+  // TODO compute ID and add to
   // results->push_back(new_result);
   results[work_id] = new_result;
 }
@@ -192,7 +192,7 @@ void MW_Worker::worker_loop()
     } else if (message_tag == HEARTBEAT_TAG) {
       // std::cout << "P:" << proc->id << " IS DONE\n";
       break;
-    } 
+    }
 
     else {
       std::cout << "WTF happened here\n";

@@ -2,8 +2,8 @@
 #define __MW__RESULT__
 
 #include <string>
+#include <memory>
 #include "Work.hpp"
-
 
 class Work;
 
