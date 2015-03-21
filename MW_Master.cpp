@@ -276,9 +276,8 @@ void MW_Master::process_result(int worker_id, int count, char *message)
 
 void MW_Master::process_heartbeat(int worker_id)
 {
-  // std::cout << "P:" << id << " Received heartbeat from process " << worker_id; << "\n";
-  // TODO: implement
-  return;
+  auto worker = workerMap[worker_id];
+  worker->heartbeatMonitor.addHeartbeat();
 }
 
 void MW_Master::process_checkpoint_done(int worker_id)
