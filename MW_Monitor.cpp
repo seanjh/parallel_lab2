@@ -21,10 +21,11 @@ MW_Monitor::MW_Monitor(const MW_Monitor &m) : MW_Monitor(m.id, m.period)
 
 bool MW_Monitor::isAlive()
 {
-  if (!dead) {
-    dead = (MPI::Wtime() - heartbeats.back()) > period;
-  }
-  return dead;
+  // if (!dead) {
+  //   dead = (MPI::Wtime() - heartbeats.back()) > period;
+  // }
+  // return dead;
+  return (MPI::Wtime() - heartbeats.back()) > period;
 }
 
 void MW_Monitor::addHeartbeat()
