@@ -215,6 +215,9 @@ void MW_Worker::worker_loop()
 
     message_tag = receive();
 
+    preemptionTimer.reset();
+    
+
     if (message_tag == WORK_TAG) {
 
       // std::cout<<"Received WorkTag"<<std::endl;
@@ -235,11 +238,10 @@ void MW_Worker::worker_loop()
       std::shared_ptr<Work> work = workPair.second;
 
       MW_API_STATUS_CODE status;
-      preemptionTimer.reset();
       status = work->compute(preemptionTimer);
       if (status != Preempted)
       {
-        std::cout <<"Worker returning Success"<<std::endl;
+        // std::cout <<"Worker returning Success"<<std::endl;
         assert(status == Success);
 
         //remove from work to do map
@@ -255,7 +257,8 @@ void MW_Worker::worker_loop()
       }
       else
       {
-        std::cout <<"Worker returning preempted"<<std::endl;
+        // std::cout <<"Worker returning preempted"<<std::endl;
+        continue;
       }
 
     }
