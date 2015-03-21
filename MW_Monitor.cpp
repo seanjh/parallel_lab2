@@ -8,8 +8,8 @@ MW_Monitor::MW_Monitor(int proc_ic, double time_period) : period(time_period), i
   dead = false;
   addHeartbeat();
 }
-
-// MW_Monitor &MW_Monitor::operator= ( const MW_Monitor & m): 
+// 
+// MW_Monitor &MW_Monitor::operator= ( const MW_Monitor & m):
 // {
 // 	return MW_Monitor(m);
 // }

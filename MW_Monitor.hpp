@@ -15,7 +15,7 @@ private:
   const int id;
   bool dead;
   const double period;
-  std::list<const double> heartbeats;
+  std::list<double> heartbeats;
 };
 
 #endif //__MW__MONITOR__
