@@ -6,7 +6,8 @@
 #include "MW_Master.hpp"
 #include "MW_Worker.hpp"
 
-#define MASTER_PROCESS_ID 0
+// #define MASTER_PROCESS_ID 0
+const int MASTER_PROCESS_ID = 0;
 
 void MW_Run(int argc, char* argv[], MW_API *app)
 {
@@ -21,7 +22,9 @@ void MW_Run(int argc, char* argv[], MW_API *app)
   MPI::COMM_WORLD.Barrier();
 
   if (myid == MASTER_PROCESS_ID) {
-    MW_Master *proc = new MW_Master(myid, sz, app->work());
+    // MW_Master *proc = new MW_Master(myid, sz, app->work());
+    // std::shared_ptr<MW_Master> proc = std::make_shared<MW_Master>(myid, sz, app->work());
+    auto proc = MW_Master::restore(myid, sz);
 
     starttime = MPI::Wtime();
 
@@ -29,17 +32,18 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
     endtime = MPI::Wtime();
 
-    
+
     app->results(proc->getResults());
 
-    delete proc;
+    // delete proc;
 
   } else {
-    MW_Worker *proc = new MW_Worker(myid, 0);
+    // MW_Worker *proc = new MW_Worker(myid, MASTER_PROCESS_ID);
+    std::shared_ptr<MW_Worker> proc = std::make_shared<MW_Worker>(myid, MASTER_PROCESS_ID);
 
     proc->worker_loop();
 
-    delete proc;
+    // delete proc;
   }
 
   if (myid == MASTER_PROCESS_ID) {

@@ -49,11 +49,12 @@ MWTag MW_Worker::receive()
     std::getline(iss,serializedObject);
     // std::cout<<serializedObject<<std::endl;
 
-    MPIMessage *mpi_message = new MPIMessage(serializedObject);
+    // MPIMessage *mpi_message = new MPIMessage(serializedObject);
+    auto mpi_message = std::make_shared<MPIMessage>(serializedObject);
     // std::cout << "P:" << id << " mpi_message (work) is " << mpi_message->to_string() << std::endl;
     //Work *work = mpi_message->deserializeWork();
     std::shared_ptr<Work> work = mpi_message->deserializeWork();
-    delete mpi_message;
+    // delete mpi_message;
     assert(work != NULL);
     // std::cout << "P:" << id << " Recreated work object (" << work << ") \"" << *work->serialize() << "\"\n" ;
 

@@ -1,5 +1,7 @@
 #include <assert.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <list>
 #include <string>
 #include <mpi.h>
@@ -8,11 +10,12 @@
 #include "Work.hpp"
 #include "Result.hpp"
 #include "MPIMessage.hpp"
-#include <sstream>
 #include "MW_Random.hpp"
-#include <fstream>
 
-#define CHECKPOINT_PERIOD 1.0
+// #define CHECKPOINT_PERIOD 1.0
+const double CHECKPOINT_PERIOD = 1.0;
+const std::string WORK_CHECKPOINT_FILENAME    = "checkpoint_work.csv";
+const std::string RESULTS_CHECKPOINT_FILENAME = "checkpoint_result.csv";
 
 MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &work_p) :
   id(myid), world_size(sz)
@@ -34,8 +37,13 @@ MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &w
   //   }
   // }
 
+  initializeWorkerMap();
 
+  performCheckpoint();
+}
 
+void MW_Master::initializeWorkerMap()
+{
   for (int i=0; i<world_size; i++) {
     if (i != id) {
       // workers->push_back(i);
@@ -43,11 +51,13 @@ MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &w
       // workerMap[i] = MW_Remote_Worker(i);
     }
   }
-
-
-
-  performCheckpoint();
 }
+
+std::shared_ptr<MW_Master> MW_Master::restore(int myid, int size)
+{
+  return std::make_shared<MW_Master> (myid, size);
+}
+
 
 std::shared_ptr<std::list<std::shared_ptr<Result>>> MW_Master::getResults()
 {
@@ -230,7 +240,6 @@ void MW_Master::receive()
 
 void MW_Master::process_result(int worker_id, int count, char *message)
 {
-
   if (count != 0) {
     std::string messageString = std::string(message, count);
     // std::cout << "P:" << id << " Received from process " << worker_id <<
@@ -247,10 +256,11 @@ void MW_Master::process_result(int worker_id, int count, char *message)
     std::getline(iss,serializedObject);
     // std::cout<<serializedObject<<std::endl;
 
-    MPIMessage *mpi_message = new MPIMessage(serializedObject);
+    // MPIMessage *mpi_message = new MPIMessage(serializedObject);
+    auto mpi_message = std::make_shared<MPIMessage>(serializedObject);
     // std::cout << "P:" << id << " mpi_message (result) is " << mpi_message->to_string() << std::endl;
     std::shared_ptr<Result> result = mpi_message->deserializeResult();
-    delete mpi_message;
+    // delete mpi_message;
 
     // std::cout << "P:" << id << " received results (" << result << ") from process " << worker_id << ". " << std::endl;
     assert(result != NULL);
@@ -295,14 +305,14 @@ void MW_Master::performCheckpoint()
   std::cout <<"Starting Checkpoint" << std::endl;
 
   std::ofstream checkpointWorkFile, checkpointResultsFile;
-  checkpointWorkFile.open("checkpoint_work.csv");
+  checkpointWorkFile.open(WORK_CHECKPOINT_FILENAME);
 
   for(auto it=work.begin(); it!=work.end(); it++)
       checkpointWorkFile << it->first <<","<<*(it->second->serialize())<<std::endl;
 
   checkpointWorkFile.close();
 
-  checkpointResultsFile.open("checkpoint_result.csv");
+  checkpointResultsFile.open(RESULTS_CHECKPOINT_FILENAME);
   for(auto it=results.begin(); it!=results.end(); it++)
       checkpointResultsFile << it->first <<","<<*(it->second->serialize())<<std::endl;
 
@@ -385,4 +395,44 @@ int MW_Master::nextWorker()
   // workers->pop_front();
 
   return -1;
+}
+
+
+MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
+{
+  std::cout << "P" << myid << ": Creating NEW Master from checkpoint\n";
+
+  initializeWorkerMap();
+
+  std::string line, idString, serializedObject;
+  MW_ID id;
+  std::shared_ptr<MPIMessage> message;
+  std::ifstream infile (WORK_CHECKPOINT_FILENAME);
+  //std::istringstream iss ;
+
+  if (infile.is_open())
+  {
+    while (getline (infile, line))
+    {
+      std::cout << "line: " << line << '\n';
+
+      std::istringstream iss (line);
+      std::getline(iss, idString,',');
+      id = std::stoul(idString);
+      std::cout << "idString: " << idString << "(" << id << ")" << '\n';
+      std::getline(iss, serializedObject);
+      std::cout << "serializedObject: " << serializedObject << '\n';
+
+      message = std::make_shared<MPIMessage> (serializedObject);
+      std::cout << "MPIMessage: " << message->to_string() << '\n';
+      work[id] = message->deserializeWork();
+    }
+    infile.close();
+  }
+  else std::cout << "Unable to open file";
+
+  std::cout << "WORK INITIALIZED\n";
+  for ( auto it = work.begin(); it != work.end(); ++it )
+    std::cout << " " << it->first << ":" << it->second;
+  std::cout << std::endl;
 }

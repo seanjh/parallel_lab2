@@ -1,25 +1,30 @@
 #ifndef __MW__MASTER__
 #define __MW__MASTER__
 
+#include <memory>
 #include <list>
+#include <unordered_map>
 
-// #include "MW_Process.hpp"
 #include "MW_API_Types.hpp"
-#include "MW_Monitor.hpp"
 #include "Work.hpp"
 #include "Result.hpp"
-#include <unordered_map>
-#include <memory>
+#include "MPIMessage.hpp"
+#include "MW_Monitor.hpp"
 #include "MW_Remote_Worker.hpp"
+
+extern const double       CHECKPOINT_PERIOD;
+extern const std::string  WORK_CHECKPOINT_FILENAME;
+extern const std::string  RESULTS_CHECKPOINT_FILENAME;
 
 class MW_Master {
 public:
   MW_Master(int, int, const std::list<std::shared_ptr<Work>> &);
-
   //TODO: Add new constructor for worker->master transition, add work to do and results parameters
+  MW_Master(int, int); // Restores from checkpoint
   void master_loop();
   std::shared_ptr<std::list<std::shared_ptr<Result>>> getResults();
   ~MW_Master();
+  static std::shared_ptr<MW_Master> restore(int, int);
 
 private:
   int id;
@@ -35,6 +40,7 @@ private:
 
   double lastCheckpoint;
 
+  void initializeWorkerMap();
   int nextWorker();
   void checkOnWorkers();
   void send_done();

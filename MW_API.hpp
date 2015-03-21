@@ -7,6 +7,8 @@
 #include <list>
 #include <memory>
 
+extern const int MASTER_PROCESS_ID;
+
 class MW_API {
 public:
     virtual std::list<std::shared_ptr<Work>> &work() = 0;
