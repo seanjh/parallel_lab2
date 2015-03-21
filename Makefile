@@ -1,7 +1,7 @@
 CXX=mpic++
 ODIR=obj
 
-LIBS =-lgmpxx -lgmp -lboost_system
+LIBS =-lgmpxx -lgmp
 CXX_FLAGS =-Wc++11-extensions
 
 _SERIAL_OBJ = gmp_factors_serial.o
@@ -60,7 +60,7 @@ obj:
 	mkdir -p $@
 
 $(ODIR)/%.o: %.cpp | obj
-	$(CXX) -std=c++11 -I.:/usr/local/include/boost -c -o $@ $<
+	$(CXX) -std=c++11 -I. -c -o $@ $<
 
 serial: $(SERIAL_OBJ)
 	$(CXX) -o $@ $^ $(LIBS)

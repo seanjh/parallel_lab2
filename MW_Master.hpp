@@ -19,7 +19,6 @@ extern const std::string  RESULTS_CHECKPOINT_FILENAME;
 class MW_Master {
 public:
   MW_Master(int, int, const std::list<std::shared_ptr<Work>> &);
-  //TODO: Add new constructor for worker->master transition, add work to do and results parameters
   MW_Master(int, int); // Restores from checkpoint
   void master_loop();
   std::shared_ptr<std::list<std::shared_ptr<Result>>> getResults();
@@ -42,6 +41,8 @@ private:
   double lastHeartbeat;
 
   void initializeWorkerMap();
+  void initializeWorkFromCheckpoint();
+  void initializeResultFromCheckpoint();
   int nextWorker();
   void checkOnWorkers();
   void send_done();

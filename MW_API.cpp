@@ -23,7 +23,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
   if (myid == MASTER_PROCESS_ID) {
     // MW_Master *proc = new MW_Master(myid, sz, app->work());
-    std::shared_ptr<MW_Master> proc = std::make_shared<MW_Master>(myid, sz, app->work());
+    auto proc = std::make_shared<MW_Master>(myid, sz, app->work());
     // auto proc = MW_Master::restore(myid, sz);
 
     starttime = MPI::Wtime();
@@ -39,7 +39,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
   } else {
     // MW_Worker *proc = new MW_Worker(myid, MASTER_PROCESS_ID);
-    std::shared_ptr<MW_Worker> proc = std::make_shared<MW_Worker>(myid, MASTER_PROCESS_ID);
+    auto proc = std::make_shared<MW_Worker>(myid, MASTER_PROCESS_ID);
 
     proc->worker_loop();
 
