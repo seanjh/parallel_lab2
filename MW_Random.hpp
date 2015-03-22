@@ -5,7 +5,7 @@
 #include <chrono>
 #include <iostream>
 
-const double FAILURE_PROBABILITY = 0.01;
+const double DEFAULT_FAILURE_PROBABILITY = 0.01;
 
 class MW_Random {
 public:
@@ -19,7 +19,7 @@ public:
 
   MW_Random(int id, int size)
   {
-    MW_Random(FAILURE_PROBABILITY, id, size);
+    MW_Random(DEFAULT_FAILURE_PROBABILITY, id, size);
   }
 
   bool random_fail()
