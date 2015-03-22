@@ -17,7 +17,11 @@ class MW_Worker {
 
 
 public:
+// <<<<<<< HEAD
   MW_Worker(const int, const int, const int);
+// =======
+//   MW_Worker(int, int, int);
+// >>>>>>> sean-lab3
   //void send(int) { send(); };
   //void send();
   //enum MwTag receive();

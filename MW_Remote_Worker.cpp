@@ -30,7 +30,7 @@ void MW_Remote_Worker::markCompleted(MW_ID work_id)
 
 int MW_Remote_Worker::workPendingCount()
 {
-	return issuedWork.size(); 
+	return issuedWork.size();
 }
 
 std::list<MW_ID> &MW_Remote_Worker::getPendingWork()
@@ -50,4 +50,3 @@ bool MW_Remote_Worker::isAvailable()
 	// 	std::cout<< id << " is NOT empty" << std::endl;
 	return  alive && empty;
 }
-

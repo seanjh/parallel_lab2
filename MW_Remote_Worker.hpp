@@ -18,9 +18,10 @@ public:
 	std::list<MW_ID> &getPendingWork();
 
 	MW_Monitor heartbeatMonitor;
+	const int id;
 
 private:
-	const int id;
+	
 	std::list<MW_ID> issuedWork;
 	
 };

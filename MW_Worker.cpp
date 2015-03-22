@@ -6,11 +6,17 @@
 #include "MPIMessage.hpp"
 #include <sstream>
 
+// <<<<<<< HEAD
 MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preemptionTimer(.1), random(MW_Random(myid, w_size))
 {
   id = myid;
   master_id = m_id;
   world_size = w_size;
+// =======
+// MW_Worker::MW_Worker(int myid, int m_id, int size): id(myid), master_id(m_id), world_size(size), preemptionTimer(.1)
+// {
+//   // NADA
+// >>>>>>> sean-lab3
 }
 
 MWTag MW_Worker::receive()
@@ -105,7 +111,6 @@ MWTag MW_Worker::receive()
       }
       nodeMonitor->addHeartbeat();
     }
-
   }
   // else
   // {
@@ -145,12 +150,23 @@ MW_Worker::~MW_Worker()
 void MW_Worker::worker_loop()
 {
   // Result *result;
-  // MW_Random random = MW_Random(id, 1);
+// <<<<<<< HEAD
+//   // MW_Random random = MW_Random(id, 1);
+// =======
+
+//   MW_Random random = MW_Random(WORKER_FAILURE_PROBABILITY, id, world_size);
+//   std::cout << "P" << id << ": ";
+//   bool will_fail = random.random_fail();
+//   if (will_fail && WORKER_FAIL_TEST_ON) {
+//     std::cout << "P:" << id << " THIS WORKER WILL EVENTUALLY FAIL\n";
+//   }
+//   random = MW_Random(id, world_size);
+// >>>>>>> sean-lab3
 
   MWTag message_tag;
   while (1) {
 
-    // if (random.random_fail()) {
+    // if (random.random_fail() && WORKER_FAIL_TEST_ON) {
     //   std::cout << "P:" << id << " WORKER FAILURE EVENT\n";
     //   MPI::Finalize();
     //   exit (0);
@@ -186,9 +202,6 @@ void MW_Worker::worker_loop()
     // }
 
     preemptionTimer.reset();
-
-
-    
 
     if (message_tag == WORK_TAG) {
 

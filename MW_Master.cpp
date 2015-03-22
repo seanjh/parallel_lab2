@@ -63,17 +63,27 @@ std::shared_ptr<std::list<std::shared_ptr<Result>>> MW_Master::getResults()
 
 void MW_Master::master_loop()
 {
-  // MW_Random random = MW_Random(id, world_size);
+// <<<<<<< HEAD
+//   // MW_Random random = MW_Random(id, world_size);
+// =======
+//   MW_Random random = MW_Random(MASTER_FAILURE_PROBABILITY, id, world_size);
+//   std::cout << "P" << id << ": ";
+//   bool will_fail = random.random_fail();
+//   if (will_fail && MASTER_FAIL_TEST_ON) {
+//     std::cout << "P:" << id << " MASTER WILL EVENTUALLY FAIL\n";
+//   }
+//   random = MW_Random(id, world_size);
+
+// >>>>>>> sean-lab3
   int worker_id;
   long long int iteration_count=0;
 
   while (1) {
-    //std::cout << "P:" << id << " Master Loop\n";
-    // if (random.random_fail()) {
-    //   std::cout << "P:" << id << " MASTER FAILURE EVENT\n";
-    //   MPI::Finalize();
-    //   exit (0);
-    // }
+    if (random.random_fail() && MASTER_FAIL_TEST_ON) {
+      std::cout << "P:" << id << " MASTER FAILURE EVENT\n";
+      MPI::Finalize();
+      exit (0);
+    }
 
     checkOnWorkers();
 
@@ -118,6 +128,7 @@ void MW_Master::checkOnWorkers()
     if (!it->second->heartbeatMonitor.isAlive() && (it->second->workPendingCount() > 0))
     {
       std::list<MW_ID> &pendingWorkList = it->second->getPendingWork();
+      std::cout << it->second->id << " is dead" <<std::endl;
       while(!pendingWorkList.empty())
       {
         auto work_id = pendingWorkList.front();
@@ -329,7 +340,7 @@ bool MW_Master::shouldCheckpoint()
 }
 void MW_Master::performCheckpoint()
 {
-  std::cout <<"Starting Checkpoint" << std::endl;
+  std::cout << "Starting Checkpoint" << std::endl;
 
   std::ofstream checkpointWorkFile, checkpointResultsFile;
   checkpointWorkFile.open(WORK_CHECKPOINT_FILENAME);
@@ -346,7 +357,7 @@ void MW_Master::performCheckpoint()
   checkpointResultsFile.close();
 
   lastCheckpoint = MPI::Wtime();
-  std::cout <<"Completed Checkpoint" << std::endl;
+  std::cout << "Completed Checkpoint" << std::endl;
 }
 
 MW_Master::~MW_Master() { }
