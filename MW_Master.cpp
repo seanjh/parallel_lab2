@@ -79,11 +79,11 @@ void MW_Master::master_loop()
   long long int iteration_count=0;
 
   while (1) {
-    if (random.random_fail() && MASTER_FAIL_TEST_ON) {
-      std::cout << "P:" << id << " MASTER FAILURE EVENT\n";
-      MPI::Finalize();
-      exit (0);
-    }
+    // if (random.random_fail() && MASTER_FAIL_TEST_ON) {
+    //   std::cout << "P:" << id << " MASTER FAILURE EVENT\n";
+    //   MPI::Finalize();
+    //   exit (0);
+    // }
 
     checkOnWorkers();
 
