@@ -39,7 +39,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
   } else {
     // MW_Worker *proc = new MW_Worker(myid, MASTER_PROCESS_ID);
-    auto proc = std::make_shared<MW_Worker>(myid, MASTER_PROCESS_ID);
+    auto proc = std::make_shared<MW_Worker>(myid, MASTER_PROCESS_ID, sz);
 
     proc->worker_loop();
 

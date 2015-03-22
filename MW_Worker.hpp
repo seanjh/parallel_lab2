@@ -15,7 +15,7 @@ class MW_Worker {
 
 
 public:
-  MW_Worker(const int, const int);
+  MW_Worker(int, int, int);
   //void send(int) { send(); };
   //void send();
   //enum MwTag receive();
@@ -26,6 +26,7 @@ public:
 private:
   int id;
   int master_id;
+  int world_size;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
   std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
 
