@@ -21,7 +21,7 @@ typedef enum MASC {
 } MW_API_STATUS_CODE;
 
 typedef unsigned long MW_ID;
-const double HEARTBEAT_PERIOD = 2;
+const double HEARTBEAT_PERIOD = .5;
 const double CHECKPOINT_PERIOD = 60.0;
 
 #endif

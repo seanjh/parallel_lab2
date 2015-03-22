@@ -10,7 +10,6 @@
 #include "Work.hpp"
 #include "Result.hpp"
 #include "MPIMessage.hpp"
-#include "MW_Random.hpp"
 
 // #define CHECKPOINT_PERIOD 1.0
 // const double CHECKPOINT_PERIOD = 1.0;
@@ -18,7 +17,7 @@ const std::string WORK_CHECKPOINT_FILENAME    = "checkpoint_work.csv";
 const std::string RESULTS_CHECKPOINT_FILENAME = "checkpoint_result.csv";
 
 MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &work_p) :
-  id(myid), world_size(sz)
+  id(myid), world_size(sz), random(MW_Random(myid, sz))
 {
 
   MW_ID nextWorkID = 0;
@@ -26,12 +25,12 @@ MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &w
     work[nextWorkID++] = *iter;
 
   workToDo = work;
-  //std::cout << "Total work in master is " << workToDo->size() << std::endl;
+  std::cout << "Total work in master is " << workToDo.size() << std::endl;
 
-  initializeWorkerMap();
+  // initializeWorkerMap();
 
   performCheckpoint();
-  sendHeartbeat();
+  broadcastHeartbeat();
 }
 
 void MW_Master::initializeWorkerMap()
@@ -64,7 +63,7 @@ std::shared_ptr<std::list<std::shared_ptr<Result>>> MW_Master::getResults()
 
 void MW_Master::master_loop()
 {
-  MW_Random random = MW_Random(id, world_size);
+  // MW_Random random = MW_Random(id, world_size);
   int worker_id;
   long long int iteration_count=0;
 
@@ -78,30 +77,32 @@ void MW_Master::master_loop()
 
     checkOnWorkers();
 
-    // if(shouldSendHeartbeat()) sendHeartbeat();
-    // else
-    if (shouldCheckpoint()) performCheckpoint();
-    else if (hasWorkersHasWork()) {
+    if(shouldSendHeartbeat()) sendHeartbeat();
+    else if (shouldCheckpoint()) performCheckpoint();
+    
+    else if (hasWorkers() && hasWorkToDistribute()) {
 
       // std::cout << "MASTER IS SENDING\n";
       worker_id = nextWorker();
       send(worker_id);
 
-    } else if (noWorkersHasWork() || noWorkersNoWork()) {
+    } else if (hasPendingWork()) {
 
-      //std::cout << "MASTER IS WAITING FOR A RESULT\n";
+      // std::cout << "MASTER IS WAITING FOR A RESULT\n";
       receive();
 
-    } else if (hasWorkersNoWork()) {
+    } else if (!hasPendingWork()) {
+      send_done();
+      break;
       // std::cout << "No Work!!\n";
-      if (hasAllWorkers()) {
-        // std::cout << "MASTER IS DONE\n";
-        send_done();
+      // if (hasAllWorkers()) {
+      //   std::cout << "MASTER IS DONE\n";
+      //   send_done();
 
-        break;
-      } else {
-        receive();
-      }
+      //   break;
+      // } else {
+      //   receive();
+      // }
     } else {
       std::cout << "WTF happened here\n";
       assert(0);
@@ -112,6 +113,20 @@ void MW_Master::master_loop()
 void MW_Master::checkOnWorkers()
 {
   // TODO: mark dead workers
+  for(auto it=workerMap.begin(); it != workerMap.end(); it++)
+  {
+    if (!it->second->heartbeatMonitor.isAlive() && (it->second->workPendingCount() > 0))
+    {
+      std::list<MW_ID> &pendingWorkList = it->second->getPendingWork();
+      while(!pendingWorkList.empty())
+      {
+        auto work_id = pendingWorkList.front();
+        std::cout << "Moving " << work_id << " back on to work list" <<std::endl;
+        pendingWorkList.pop_front();
+        workToDo[work_id] = work[work_id];
+      }
+    }
+  }
 }
 
 void MW_Master::send_done()
@@ -141,6 +156,7 @@ void MW_Master::send(int worker_id)
   // for(auto it=workToDo.begin(); it!=workToDo.end(); it++)
   //     std::cout << it->first <<": "<<*(it->second->serialize())<<std::endl;
 
+  assert(!workToDo.empty());
   auto workPair = *(workToDo.begin());
   MW_ID workID = workPair.first;
   workToDo.erase(workID);
@@ -214,6 +230,7 @@ void MW_Master::receive()
     }
 
     case HEARTBEAT_TAG: {
+      // std::cout<<"Master Recieved heartbeat" << std::endl;
       process_heartbeat(worker_id);
       break;
     }
@@ -262,6 +279,9 @@ void MW_Master::process_result(int worker_id, int count, char *message)
     std::shared_ptr<MW_Remote_Worker> rm = workerMap[worker_id];
     rm->markCompleted(result_id);
     results[result_id] = result;
+    // std::cout << "Adding to completed work list" <<std::endl;
+    completedWork[result_id] = work[result_id];
+    // std::cout << "Added to completed work list" <<std::endl;
     //results->push_back(result);
     // std::cout << "results size is " << results.size() << std::endl;
 
@@ -276,7 +296,23 @@ void MW_Master::process_result(int worker_id, int count, char *message)
 
 void MW_Master::process_heartbeat(int worker_id)
 {
-  auto worker = workerMap[worker_id];
+  // std::cout << "Received heartbeat from " << worker_id << std::endl;
+  // auto worker = workerMap[worker_id];
+  // worker->heartbeatMonitor.addHeartbeat();
+
+  // std::cout << "Received heartbeat from " << worker_id << std::endl;
+
+  std::shared_ptr<MW_Remote_Worker> worker;
+  try {
+    worker = workerMap.at(worker_id);
+  }
+  catch (const std::out_of_range& oor) {
+    
+    std::cout << "Received first heartbeat from " << worker_id << ". Adding to monitor map\n";
+    // worker = std::shared_ptr<MW_Remote_Worker>(new MW_Remote_Worker(worker_id, HEARTBEAT_PERIOD));
+    worker = std::shared_ptr<MW_Remote_Worker> (new MW_Remote_Worker(worker_id));
+    workerMap[worker_id] = worker;
+  }
   worker->heartbeatMonitor.addHeartbeat();
 }
 
@@ -322,33 +358,61 @@ bool MW_Master::shouldSendHeartbeat()
 
 void MW_Master::sendHeartbeat()
 {
+  // if (random.random_fail()) {
+  //   std::cout << "P:" << id << " MASTER FAILURE EVENT\n";
+  //   MPI::Finalize();
+  //   exit (0);
+  // }
+
   for(auto it=workerMap.begin(); it != workerMap.end(); it++)
   {
-    if (it->second->heartbeatMonitor.isAlive())
-      it->second->heartbeatMonitor.sendHeartbeat(true);
+    // if (it->second->heartbeatMonitor.isAlive())
+    it->second->heartbeatMonitor.sendHeartbeat(true);
   }
   lastHeartbeat = MPI::Wtime();
 }
 
-bool MW_Master::hasWorkersHasWork()
+bool MW_Master::hasWorkToDistribute()
 {
-  return (nextWorker() != -1) && !workToDo.empty();
+  //bool val = !(completedWork.size() == work.size());
+  bool val = !workToDo.empty();
+  // if (!va l)
+    // std::cout << "there is no more to distrubute" << std::endl;
+  return val;
 }
 
-bool MW_Master::hasWorkersNoWork()
+bool MW_Master::hasPendingWork()
 {
-  return (nextWorker() != -1) && workToDo.empty();
+  bool val = !(completedWork.size() == work.size());
+  if (!val)
+    std::cout << "there is no more pending work" << std::endl;
+  return val;
 }
 
-bool MW_Master::noWorkersHasWork()
+bool MW_Master::hasWorkers()
 {
-  return (nextWorker() == -1) && !workToDo.empty();
+  return (nextWorker() != -1);
 }
 
-bool MW_Master::noWorkersNoWork()
-{
-  return (nextWorker() == -1) && workToDo.empty();
-}
+// bool MW_Master::hasWorkersHasWork()
+// {
+//   return (nextWorker() != -1) && hasWork();
+// }
+
+// bool MW_Master::hasWorkersNoWork()
+// {
+//   return (nextWorker() != -1) && !hasWork();
+// }
+
+// bool MW_Master::noWorkersHasWork()
+// {
+//   return (nextWorker() == -1) && hasWork();
+// }
+
+// bool MW_Master::noWorkersNoWork()
+// {
+//   return (nextWorker() == -1) && !hasWork();
+// }
 
 bool MW_Master::hasAllWorkers()
 {
@@ -435,11 +499,11 @@ void MW_Master::initializeWorkFromCheckpoint()
 }
 
 
-MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
+MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size), random(MW_Random(myid, size))
 {
   std::cout << "P" << myid << ": Creating NEW Master from checkpoint\n";
 
-  initializeWorkerMap();
+  // initializeWorkerMap();
 
   initializeWorkFromCheckpoint();
 
@@ -459,4 +523,32 @@ MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
     }
   }
 
+  broadcastHeartbeat();
+
+}
+
+void MW_Master::broadcastHeartbeat()
+{
+  // std::cout << "Master Broadcasting heartbeat" << std::endl;
+  // std::cout << "my id is " << id << std::endl;
+  for (int i=0; i<world_size; i++)
+  {
+    // std::cout << "my id is " << id << std::endl;
+    // std::cout << "i is " << i << std::endl;
+    if (i != id)
+    {
+      // std::cout<<"Sending heartbeat to " << i <<std::endl;
+      char m = 1;
+      MPI::COMM_WORLD.Send(
+        (void *) &m,
+        1,
+        MPI::CHAR,
+        i,
+        HEARTBEAT_TAG
+      );
+      // std::cout<<"Sent heartbeat to " << id <<std::endl;
+    }
+  }
+  // std::cout<<"Master done sending heartbeats"<<std::endl;
+  lastHeartbeat = MPI::Wtime();
 }

@@ -19,6 +19,8 @@ public:
 
   bool random_fail()
   {
+    double failureValue = distribution(dre);
+    // std::cout << failureValue << std::endl;
     return distribution(dre) < FAILURE_PROBABILITY;
   }
 private:
