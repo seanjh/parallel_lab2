@@ -8,7 +8,7 @@ MW_Monitor::MW_Monitor(int proc_ic, double time_period) : period(time_period), i
 {
   // heartbeats = new list<double>;
   dead = false;
-  addHeartbeat();
+  // addHeartbeat();
 }
 // 
 // MW_Monitor &MW_Monitor::operator= ( const MW_Monitor & m):
@@ -38,11 +38,12 @@ void MW_Monitor::addHeartbeat()
 
 void MW_Monitor::sendHeartbeat(bool masterFlag)
 {
-  std::cout<<"Sending heartbeat to " << id <<std::endl;
+  // std::cout<<"Sending heartbeat to " << id <<std::endl;
+  char m = masterFlag ? 1 : 0;
   MPI::COMM_WORLD.Send(
-    (void *) &masterFlag,
+    (void *) &m,
     1,
-    MPI::BOOL,
+    MPI::CHAR,
     id,
     HEARTBEAT_TAG
   );

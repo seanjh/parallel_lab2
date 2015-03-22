@@ -33,7 +33,7 @@ int MW_Remote_Worker::workPendingCount()
 	return issuedWork.size();
 }
 
-const std::list<MW_ID> &MW_Remote_Worker::getPendingWork()
+std::list<MW_ID> &MW_Remote_Worker::getPendingWork()
 {
 	return issuedWork;
 }
@@ -41,12 +41,12 @@ const std::list<MW_ID> &MW_Remote_Worker::getPendingWork()
 bool MW_Remote_Worker::isAvailable()
 {
 	bool alive = heartbeatMonitor.isAlive();
-	if(!alive)
-		std::cout<< id << " is NOT alive" << std::endl;
-	bool empty = issuedWork.empty();
+	// if(!alive)
+	// 	std::cout<< id << " is NOT alive" << std::endl;
+	// bool empty = issuedWork.empty();
 	// if(empty)
 	// 	std::cout<< id << " is empty" << std::endl;
 	// else
 	// 	std::cout<< id << " is NOT empty" << std::endl;
-	return  alive && empty;
+	return  alive && (issuedWork.size() < 5);
 }

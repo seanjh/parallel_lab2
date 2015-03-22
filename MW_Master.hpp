@@ -11,6 +11,7 @@
 #include "MPIMessage.hpp"
 #include "MW_Monitor.hpp"
 #include "MW_Remote_Worker.hpp"
+#include "MW_Random.hpp"
 
 extern const double       CHECKPOINT_PERIOD;
 extern const std::string  WORK_CHECKPOINT_FILENAME;
@@ -30,6 +31,7 @@ private:
   int world_size;
   //const std::list<std::shared_ptr<Work>> &work;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> work;
+  std::unordered_map<MW_ID, std::shared_ptr<Work>> completedWork;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
   std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
   // std::list<MW_Monitor *> *workers;
@@ -39,6 +41,7 @@ private:
 
   double lastCheckpoint;
   double lastHeartbeat;
+  MW_Random random;
 
   void initializeWorkerMap();
   void initializeWorkFromCheckpoint();
@@ -51,15 +54,20 @@ private:
   void process_result(int, int, char *);
   void process_heartbeat(int);
   void process_checkpoint_done(int);
-  bool hasWorkersHasWork();
-  bool hasWorkersNoWork();
-  bool noWorkersHasWork();
-  bool noWorkersNoWork();
+  // bool hasWorkersHasWork();
+  // bool hasWorkersNoWork();
+  // bool noWorkersHasWork();
+  // bool noWorkersNoWork();
   bool hasAllWorkers();
   void performCheckpoint();
   bool shouldCheckpoint();
   bool shouldSendHeartbeat();
   void sendHeartbeat();
+  void broadcastHeartbeat();
+  // bool hasWork();
+  bool hasWorkers();
+  bool hasPendingWork();
+  bool hasWorkToDistribute();
 
 };
 

@@ -5,11 +5,18 @@
 #include "MW_Worker.hpp"
 #include "MPIMessage.hpp"
 #include <sstream>
-#include "MW_Random.hpp"
 
-MW_Worker::MW_Worker(int myid, int m_id, int size): id(myid), master_id(m_id), world_size(size), preemptionTimer(.1)
+// <<<<<<< HEAD
+MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preemptionTimer(.1), random(MW_Random(myid, w_size))
 {
-  // NADA
+  id = myid;
+  master_id = m_id;
+  world_size = w_size;
+// =======
+// MW_Worker::MW_Worker(int myid, int m_id, int size): id(myid), master_id(m_id), world_size(size), preemptionTimer(.1)
+// {
+//   // NADA
+// >>>>>>> sean-lab3
 }
 
 MWTag MW_Worker::receive()
@@ -37,15 +44,22 @@ MWTag MW_Worker::receive()
     (void *) message,
     MAX_MESSAGE_SIZE,
     MPI::CHAR,
-    master_id,
+    MPI::ANY_SOURCE,
     MPI::ANY_TAG,
     // MW_Worker::WORK_TAG,
     status
   );
 
-  int message_tag = status.Get_tag();
+  // int message_tag = status.Get_tag();
+
+  MWTag message_tag = static_cast<MWTag>(status.Get_tag());
+  int source_id = status.Get_source();
+  int count = status.Get_count(MPI::CHAR);
+
+  // std::cout<< "received message" <<std::endl;
 
   if (message_tag == WORK_TAG) {
+    assert(source_id == master_id);
     std::string messageString = std::string(message, status.Get_count(MPI::CHAR));
     // std::cout << "P:" << id << " Received from master P" << master_id << " message \"" << serializedObject << "\"\n";
 
@@ -74,49 +88,40 @@ MWTag MW_Worker::receive()
     //TODO extract ID and add to map
     workToDo[work_id] = work;
     // std::cout << "P:" << id << " WorkToDo size is " << workToDo->size() << std::endl;
-  } else {
-    // Do nothing
-    std::cout << "P" << id << ": Received unknown message (heartbeat?)" << std::endl;
+  } else if (message_tag == HEARTBEAT_TAG) {
+    // std::cout << "Received heartbeat from " << source_id << std::endl;
+
+    if (source_id == master_id)
+    {
+      if (!masterMonitor)
+        masterMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD));
+      masterMonitor->addHeartbeat();
+    }
+    else
+    {
+      std::shared_ptr<MW_Monitor> nodeMonitor;
+      try {
+        nodeMonitor = otherWorkersMonitorMap.at(source_id);
+      }
+      catch (const std::out_of_range& oor) {
+        
+        std::cout << "Received first heartbeat from " << source_id << ". Adding to monitor map\n";
+        nodeMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD));
+        otherWorkersMonitorMap[source_id] = nodeMonitor;
+      }
+      nodeMonitor->addHeartbeat();
+    }
   }
+  // else
+  // {
+  //   // Do nothing
+  //   //std::cout << "Received unknown message" << std::endl;
+  // }
 
   free(message);
-  return static_cast<MWTag>(message_tag);
+  return message_tag;
 }
 
-// void MW_Worker::send()
-// {
-//   // std::cout << "P:" << id << " Beginning send to master P" << master_id << std::endl;
-//   auto resultPair = *(results.begin());
-//   results.erase(resultPair.first);
-//   std::shared_ptr<Result> result = resultPair.second;
-//   assert(result);
-//   // results->pop_front();
-
-//   // std::cout << " Popped result (" << result << ") from list\n";
-
-//   // std::string result_string = resultPair.first.to_string() + "," + *(result->serialize());
-//   std::shared_ptr<std::string> result_string = std::make_shared<std::string> (std::to_string(resultPair.first) + "," + *(result->serialize()));
-
-//   int count = (int) result_string->length();
-
-//   // std::cout << "P:" << id << " sending result with " << count <<
-//   //   " total MPI::CHARs -- " << result_string << std::endl;
-
-//   assert(count < MAX_MESSAGE_SIZE);
-//   MPI::COMM_WORLD.Send(
-//     (void *) result_string->data(),
-//     count,
-//     MPI::CHAR,
-//     master_id,
-//     WORK_TAG
-//   );
-
-//   // std::cout << "P:" << id << " finished send to master P" << master_id << ". " <<
-//   //   results->size() << " results remaining" << std::endl;
-
-//   // delete result;
-//   // delete result_string;
-// }
 
 void MW_Worker::send(MW_ID result_id, std::shared_ptr<Result> result)
 {
@@ -139,90 +144,64 @@ void MW_Worker::send(MW_ID result_id, std::shared_ptr<Result> result)
 
 MW_Worker::~MW_Worker()
 {
-  // workToDo should be empty, so deleting its elements is bonus caution
-  // for ( auto iter = workToDo->begin();
-  //     iter != workToDo->end();
-  //     iter++)
-  // {
-  //   Work *work = *iter;
-  //   delete work;
-  // }
 
-  // delete workToDo;
-
-
-  // for ( auto iter = results->begin();
-  //     iter != results->end();
-  //     iter++)
-  // {
-  //   Result *result = *iter;
-  //   delete result;
-  // }
-
-  // delete results;
 }
-
-// void MW_Worker::doWork()
-// {
-//   // std::cout << "P:" << worker->id << " Grabbing some workToDo\n";
-//   // Work *work = workToDo->front();
-//   // assert(work != NULL);
-//   // // std::cout << "P:" << worker->id << " Work object is (" << work << ") \"" << work->serialize() << "\"\n";
-//   // workToDo->pop_front();
-//   auto workPair = *(workToDo.begin());
-//   MW_ID work_id = workPair.first;
-//   // std::cout <<work_id<< ": "<< *(workPair.second->serialize()) <<std::endl;
-//   workToDo.erase(work_id);
-//   std::shared_ptr<Work> work = workPair.second;
-
-//   // std::cout << "P:" << worker->id << " Computing results.\n";
-
-//   MW_API_STATUS_CODE status;
-//   do
-//   {
-//     // std::cout << "Entered Loop" << std:: endl;
-//     status = work->compute(preemptionSemaphore);
-
-//   } while(status == Preempted);
-
-//   // std::cout << "Exited Loop" << std:: endl;
-//   std::shared_ptr<Result> new_result = work->result();
-//   // std::cout << new_result << std:: endl;
-//   // std::cout << "generated results" << std:: endl;
-
-//   assert(new_result);
-//   // std::cout << "P:" << worker->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
-
-//   // TODO compute ID and add to
-//   // results->push_back(new_result);
-//   results[work_id] = new_result;
-// }
 
 void MW_Worker::worker_loop()
 {
   // Result *result;
+// <<<<<<< HEAD
+//   // MW_Random random = MW_Random(id, 1);
+// =======
 
-  MW_Random random = MW_Random(WORKER_FAILURE_PROBABILITY, id, world_size);
-  std::cout << "P" << id << ": ";
-  bool will_fail = random.random_fail();
-  if (will_fail && WORKER_FAIL_TEST_ON) {
-    std::cout << "P:" << id << " THIS WORKER WILL EVENTUALLY FAIL\n";
-  }
-  random = MW_Random(id, world_size);
+//   MW_Random random = MW_Random(WORKER_FAILURE_PROBABILITY, id, world_size);
+//   std::cout << "P" << id << ": ";
+//   bool will_fail = random.random_fail();
+//   if (will_fail && WORKER_FAIL_TEST_ON) {
+//     std::cout << "P:" << id << " THIS WORKER WILL EVENTUALLY FAIL\n";
+//   }
+//   random = MW_Random(id, world_size);
+// >>>>>>> sean-lab3
 
   MWTag message_tag;
   while (1) {
 
-    if (random.random_fail() && WORKER_FAIL_TEST_ON) {
-      std::cout << "P:" << id << " WORKER FAILURE EVENT\n";
-      MPI::Finalize();
-      exit (0);
+    // if (random.random_fail() && WORKER_FAIL_TEST_ON) {
+    //   std::cout << "P:" << id << " WORKER FAILURE EVENT\n";
+    //   MPI::Finalize();
+    //   exit (0);
+    // }
+
+    // std::cout << "Top of worker loop" <<std::endl;
+
+    // if(!masterMonitor && shouldSendHeartbeat())
+    // {
+    //   // int worker_array[16];
+    //   // MPI::COMM_WORLD.Bcast(
+    //   //   (void *)&world_size, 
+    //   //   16,
+    //   //   MPI::INT 
+    //   //   master_id);
+
+    //   // masterMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD));
+    //   broadcastHeartbeat();
+    // }
+
+    if(shouldSendHeartbeat()) 
+    {
+      sendHeartbeat();
+      continue;
     }
 
     message_tag = receive();
 
-    preemptionTimer.reset();
+    // if(shouldSendHeartbeat()) 
+    // {
+    //   sendHeartbeat();
+    //   continue;
+    // }
 
+    preemptionTimer.reset();
 
     if (message_tag == WORK_TAG) {
 
@@ -231,7 +210,7 @@ void MW_Worker::worker_loop()
       // send();
 
     } else if (message_tag == DONE_TAG) {
-      // std::cout << "P:" << proc->id << " IS DONE\n";
+      std::cout << "P:" << id << " IS DONE\n";
       break;
     } else if (message_tag == HEARTBEAT_TAG) {
       // std::cout << "P:" << proc->id << " IS DONE\n";
@@ -276,15 +255,73 @@ void MW_Worker::worker_loop()
   }
 }
 
-// void MW_Worker::preemptionTimerHandler(const boost::system::error_code& error)
+bool MW_Worker::shouldSendHeartbeat()
+{
+  return (MPI::Wtime() - lastHeartbeat) > HEARTBEAT_PERIOD;
+}
+
+// void MW_Worker::sendHeartbeat()
 // {
-//   // if (!error)
-//   // {
-//   //   std::cout<<"Timer Expired. Resetting." << std::endl;
-//   //   preemptionTimer = std::unique_ptr<boost::asio::deadline_timer> \
-//   //   (new boost::asio::deadline_timer(
-//   //     *preemptionTimerIOService,
-//   //     boost::posix_time::milliseconds(100)));
-//   //   preemptionTimer->async_wait(this->preemptionTimerHandler);
-//   // }
+//   std::cout << "worker sending heartbeat" <<std::endl;
+//   // if(masterMonitor->isAlive())
+//   masterMonitor->sendHeartbeat(false);
+//   std::cout << "worker sent heartbeat to master" <<std::endl;
+//   for(auto it=otherWorkersMonitorMap.begin(); it != otherWorkersMonitorMap.end(); it++)
+//   {
+//     // if (it->second->isAlive())
+//     it->second->sendHeartbeat(true);
+//   }
+//   lastHeartbeat = MPI::Wtime();
+//   std::cout << "worker finished sending heartbeat" <<std::endl;
 // }
+
+void MW_Worker::sendHeartbeat()
+{
+  if (random.random_fail()) {
+    std::cout << "P:" << id << " WORKER FAILURE EVENT\n";
+    MPI::Finalize();
+    exit (0);
+  }
+
+  if (!masterMonitor)
+    broadcastHeartbeat();
+  else 
+  {
+    // std::cout << "worker sending heartbeat" <<std::endl;
+    // if(masterMonitor->isAlive())
+    masterMonitor->sendHeartbeat(false);
+    // std::cout << "worker sent heartbeat to master" <<std::endl;
+    for(auto it=otherWorkersMonitorMap.begin(); it != otherWorkersMonitorMap.end(); it++)
+    {
+      // if (it->second->isAlive())
+      it->second->sendHeartbeat(false);
+    }
+    lastHeartbeat = MPI::Wtime();
+    // std::cout << "worker finished sending heartbeat" <<std::endl;
+  }
+  
+}
+
+
+void MW_Worker::broadcastHeartbeat()
+{
+  // std::cout << "Worker Broadcasting heartbeat" << std::endl;
+  for (int i=0; i<world_size; i++)
+  {
+    if (i != id)
+    {
+      // std::cout<<"Sending heartbeat to " << i <<std::endl;
+      char m = 0;
+      MPI::COMM_WORLD.Send(
+        (void *) &m,
+        1,
+        MPI::CHAR,
+        i,
+        HEARTBEAT_TAG
+      );
+      // std::cout<<"Sent heartbeat to " << id <<std::endl;
+    }
+  }
+  // std::cout<<"Worker done sending heartbeats"<<std::endl;
+  lastHeartbeat = MPI::Wtime();
+}

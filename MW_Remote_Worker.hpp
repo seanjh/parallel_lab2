@@ -15,12 +15,13 @@ public:
 	void markCompleted(MW_ID);
 	int workPendingCount();
 	bool isAvailable();
-	const std::list<MW_ID> &getPendingWork();
+	std::list<MW_ID> &getPendingWork();
 
 	MW_Monitor heartbeatMonitor;
+	const int id;
 
 private:
-	const int id;
+	
 	std::list<MW_ID> issuedWork;
 	
 };

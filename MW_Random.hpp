@@ -17,9 +17,8 @@ public:
     distribution = std::uniform_real_distribution<double> (0.0, 1.0);
   }
 
-  MW_Random(int id, int size)
+  MW_Random(int id, int size):MW_Random(DEFAULT_FAILURE_PROBABILITY, id, size)
   {
-    MW_Random(DEFAULT_FAILURE_PROBABILITY, id, size);
   }
 
   bool random_fail()
@@ -28,6 +27,7 @@ public:
     // std::cout << " Rolled " << val << " against probability " << probability << std::endl;
     return val < probability;
   }
+
 private:
   double probability;
   std::uniform_real_distribution<double> distribution;
