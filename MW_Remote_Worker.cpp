@@ -43,10 +43,10 @@ bool MW_Remote_Worker::isAvailable()
 	bool alive = heartbeatMonitor.isAlive();
 	// if(!alive)
 	// 	std::cout<< id << " is NOT alive" << std::endl;
-	bool empty = issuedWork.empty();
+	// bool empty = issuedWork.empty();
 	// if(empty)
 	// 	std::cout<< id << " is empty" << std::endl;
 	// else
 	// 	std::cout<< id << " is NOT empty" << std::endl;
-	return  alive && empty;
+	return  alive && (issuedWork.size() < 5);
 }
