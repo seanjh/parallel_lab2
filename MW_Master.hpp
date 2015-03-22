@@ -12,30 +12,32 @@
 #include "MW_Monitor.hpp"
 #include "MW_Remote_Worker.hpp"
 
+using namespace std;
+
 extern const double       CHECKPOINT_PERIOD;
-extern const std::string  WORK_CHECKPOINT_FILENAME;
-extern const std::string  RESULTS_CHECKPOINT_FILENAME;
+extern const string  WORK_CHECKPOINT_FILENAME;
+extern const string  RESULTS_CHECKPOINT_FILENAME;
 
 class MW_Master {
 public:
-  MW_Master(int, int, const std::list<std::shared_ptr<Work>> &);
+  MW_Master(int, int, const list<shared_ptr<Work>> &);
   MW_Master(int, int); // Restores from checkpoint
   void master_loop();
-  std::shared_ptr<std::list<std::shared_ptr<Result>>> getResults();
+  shared_ptr<list<shared_ptr<Result>>> getResults();
   ~MW_Master();
-  static std::shared_ptr<MW_Master> restore(int, int);
+  static shared_ptr<MW_Master> restore(int, int);
 
 private:
   int id;
   int world_size;
-  //const std::list<std::shared_ptr<Work>> &work;
-  std::unordered_map<MW_ID, std::shared_ptr<Work>> work;
-  std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
-  std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
-  // std::list<MW_Monitor *> *workers;
-  // std::list<int> *workers;
-  std::unordered_map<int, std::shared_ptr<MW_Remote_Worker>> workerMap;
-  // std::list<int> freeWorkers;
+  //const list<shared_ptr<Work>> &work;
+  unordered_map<MW_ID, shared_ptr<Work>> work;
+  unordered_map<MW_ID, shared_ptr<Work>> workToDo;
+  unordered_map<MW_ID, shared_ptr<Result>> results;
+  // list<MW_Monitor *> *workers;
+  // list<int> *workers;
+  unordered_map<int, shared_ptr<MW_Remote_Worker>> workerMap;
+  // list<int> freeWorkers;
 
   double lastCheckpoint;
   double lastHeartbeat;

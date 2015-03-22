@@ -3,34 +3,37 @@
 
 #include <iostream>
 #include <string>
+
 #include "Result.hpp"
 #include "Work.hpp"
 
+using namespace std;
+
 class MPIMessage
 {
-  std::string message;
+  string message;
 
 public:
   MPIMessage() : message("") {}
-  MPIMessage(const std::string & str) : message(str) {}
+  MPIMessage(const string & str) : message(str) {}
   MPIMessage(const char * str) : message(str) {}
   MPIMessage(const MPIMessage & m) : message(m.message) {}
 
   ~MPIMessage() {}
 
-  std::string & to_string()
+  string & to_string()
   {
     return message;
   }
 
-  // std::ostream &operator<<(std::ostream &stream, const MPIMessage & m)
+  // ostream &operator<<(ostream &stream, const MPIMessage & m)
   // {
   //   stream << m.message;
   //   return stream;
   // }
 
-  virtual std::shared_ptr<Result> deserializeResult();
-  virtual std::shared_ptr<Work> deserializeWork();
+  virtual shared_ptr<Result> deserializeResult();
+  virtual shared_ptr<Work> deserializeWork();
 };
 
 #endif

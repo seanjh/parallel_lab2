@@ -1,6 +1,7 @@
 #include <iostream>
 #include <list>
 #include <gmpxx.h>
+
 #include "DivisorWork.hpp"
 #include "DivisorResult.hpp"
 
@@ -64,7 +65,7 @@ int main(int argc, char* argv[])
   //cout << divGen1.getDivisorsCSV()<<endl;
   // list<mpz_class> divs1FromCSV = csvToList(*(divResult1->serialize()));
   // list<mpz_class>::iterator iter;
-  // for(iter = divs1FromCSV.begin(); 
+  // for(iter = divs1FromCSV.begin();
   //       iter != divs1FromCSV.end();
   //       iter++) {
   //   cout << *iter << " is a divisor\n";
@@ -78,7 +79,7 @@ int main(int argc, char* argv[])
   results.merge(divs2);
 
   cout << a << " has " << results.size() << " total divisors.\n";
-  for(auto iter = results.begin(); 
+  for(auto iter = results.begin();
         iter != results.end();
         iter++) {
     cout << *iter << " is a divisor\n";

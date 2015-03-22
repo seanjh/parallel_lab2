@@ -1,7 +1,9 @@
 #ifndef __MW__MW_API_TYPES__
 #define __MW__MW_API_TYPES__
 
-#define MAX_MESSAGE_SIZE 8092
+using namespace std;
+
+// #define MAX_MESSAGE_SIZE 8092
 
 typedef enum _MwTag
 {
@@ -21,6 +23,7 @@ typedef enum MASC {
 } MW_API_STATUS_CODE;
 
 typedef unsigned long MW_ID;
+const int     MAX_MESSAGE_SIZE            = 8092;
 const double  HEARTBEAT_PERIOD            = 2;
 const double  CHECKPOINT_PERIOD           = 60.0;
 const bool    WORKER_FAIL_TEST_ON         = true;

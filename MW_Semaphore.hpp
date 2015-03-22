@@ -2,7 +2,10 @@
 #define __MW__SEMAPHORE__
 
 #include <mutex>
+
 #include "MW_Object.hpp"
+
+using namespace std;
 
 class MW_Semaphore : public MW_Object {
 public:
@@ -12,7 +15,7 @@ public:
 	virtual void clear();
 
 protected:
-	mutable std::mutex b_mutex;
+	mutable mutex b_mutex;
 	bool value;
 };
 

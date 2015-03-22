@@ -2,11 +2,14 @@
 #define __MW__DIVISOR_RESULT__
 
 #include <string>
-//#include "DivisorWork.hpp"
 #include <iostream>
 #include <list>
 #include <gmpxx.h>
+
 #include "Result.hpp"
+//#include "DivisorWork.hpp"
+
+using namespace std;
 
 class DivisorResult : public Result {
 
@@ -17,25 +20,27 @@ public:
     // virtual ~Result();
 
 	//DivisorResult();
-	DivisorResult(const std::list<mpz_class> &);
-	DivisorResult(std::string);
-    virtual DivisorResult* clone() const;
-	// DivisorResult(const std::string &);
+	DivisorResult(const list<mpz_class> &);
+	DivisorResult(string);
+	virtual DivisorResult* clone() const;
+	// DivisorResult(const string &);
 
 public:
 	//void addDivisor(mpz_class);
-    // std::string *serialize();
-    // static DivisorResult *deserialize(const std::string &);
+    // string *serialize();
+    // static DivisorResult *deserialize(const string &);
     // You could add more to the public interface, if you wanted to.
-	//const std::string &getDivisorsCSV();
-    virtual std::string *serialize();
-    static std::shared_ptr<Result> deserialize(const std::string &serialObject){return std::shared_ptr<Result>(new DivisorResult(serialObject));}
-    const std::list<mpz_class> &getDivisors();
+	//const string &getDivisorsCSV();
+    virtual shared_ptr<string> serialize();
+    static shared_ptr<Result> deserialize(const string &serialObject)
+		{
+			return shared_ptr<Result>(make_shared<DivisorResult>(serialObject));
+		}
+    const list<mpz_class> &getDivisors();
 private:
     // Private things for your implementation.  Probably will not need
     // anything, since this primarily an interface class.
-	std::list<mpz_class> divisors;
-
+	list<mpz_class> divisors;
 
 };
 

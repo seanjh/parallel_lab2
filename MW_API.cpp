@@ -6,10 +6,12 @@
 #include "MW_Master.hpp"
 #include "MW_Worker.hpp"
 
+using namespace std;
+
 // #define MASTER_PROCESS_ID 0
 const int MASTER_PROCESS_ID = 0;
 
-void MW_Run(int argc, char* argv[], MW_API *app)
+void MW_Run(int argc, char* argv[], shared_ptr<MW_API> app)
 {
   int sz, myid;
 
@@ -23,7 +25,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
   if (myid == MASTER_PROCESS_ID) {
     // MW_Master *proc = new MW_Master(myid, sz, app->work());
-    auto proc = std::make_shared<MW_Master>(myid, sz, app->work());
+    auto proc = make_shared<MW_Master>(myid, sz, app->work());
     // auto proc = MW_Master::restore(myid, sz);
 
     starttime = MPI::Wtime();
@@ -39,7 +41,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
   } else {
     // MW_Worker *proc = new MW_Worker(myid, MASTER_PROCESS_ID);
-    auto proc = std::make_shared<MW_Worker>(myid, MASTER_PROCESS_ID, sz);
+    auto proc = make_shared<MW_Worker>(myid, MASTER_PROCESS_ID, sz);
 
     proc->worker_loop();
 
@@ -48,7 +50,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
   if (myid == MASTER_PROCESS_ID) {
     double elapsed = endtime - starttime;
-    std::cout << "Completed in " << elapsed * 1000 << " ms\n";
+    cout << "Completed in " << elapsed * 1000 << " ms\n";
   }
 
   MPI::Finalize();

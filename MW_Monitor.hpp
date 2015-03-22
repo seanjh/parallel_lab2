@@ -3,6 +3,8 @@
 
 #include <list>
 
+using namespace std;
+
 class MW_Monitor {
 public:
   MW_Monitor(int, double);
@@ -16,7 +18,7 @@ private:
   const int id;
   bool dead;
   const double period;
-  std::list<double> heartbeats;
+  list<double> heartbeats;
 };
 
 #endif //__MW__MONITOR__

@@ -2,11 +2,13 @@
 #define __MW__WORK__
 
 #include <string>
+#include <memory>
+
 #include "Result.hpp"
 #include "MW_Object.hpp"
 #include "MW_API_Types.hpp"
-#include <memory>
 
+using namespace std;
 
 class Result;
 
@@ -18,9 +20,13 @@ public:
     virtual ~Work() {};
 public:
     virtual MW_API_STATUS_CODE compute(const MW_Object &) = 0;
-    virtual std::shared_ptr<Result> result() = 0;
-    virtual std::string *serialize() = 0;
-    static std::shared_ptr<Work> deserialize(const std::string &){return nullptr;}
+    virtual shared_ptr<Result> result() = 0;
+    virtual shared_ptr<string> serialize() = 0;
+    static shared_ptr<Work> deserialize(const string &)
+    {
+      shared_ptr<Work> ptr (nullptr);
+      return ptr;
+    }
     // You could add more to the public interface, if you wanted to.
 private:
     // Private things for your implementation.  Probably will not need

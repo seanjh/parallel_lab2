@@ -1,6 +1,9 @@
-#include "DivisorWork.hpp"
 #include <assert.h>
 #include <sstream>
+
+#include "DivisorWork.hpp"
+
+using namespace std;
 
 DivisorWork::DivisorWork(mpz_class d, mpz_class f, mpz_class c):
 		dividend(d),
@@ -12,18 +15,18 @@ DivisorWork::DivisorWork(mpz_class d, mpz_class f, mpz_class c):
 	assert(count > 0);
 }
 
-DivisorWork::DivisorWork(std::string d, std::string f, std::string c):
+DivisorWork::DivisorWork(string d, string f, string c):
 	DivisorWork(mpz_class(d, 10), mpz_class(f, 10), mpz_class(c, 10)) {}
 
-DivisorWork::DivisorWork(std::string serialObject)
+DivisorWork::DivisorWork(string serialObject)
 {
-	std::string divString;
-	std::string firstValString;
-	std::string countString;
-	std::istringstream iss(serialObject);
-	std::getline(iss,divString,',');
-	std::getline(iss,firstValString,',');
-	std::getline(iss,countString);
+	string divString;
+	string firstValString;
+	string countString;
+	istringstream iss(serialObject);
+	getline(iss,divString,',');
+	getline(iss,firstValString,',');
+	getline(iss,countString);
 
 	dividend = mpz_class(divString, 10);
 	firstValueToTest = mpz_class(firstValString, 10);
@@ -37,13 +40,13 @@ DivisorWork::~DivisorWork()
 
 MW_API_STATUS_CODE DivisorWork::compute(const MW_Object &preemptionObject)
 {
-	// std::list<mpz_class> divisors;
-	// std::cout << "In Compute" <<std::endl;
-	// std::cout << divisorResult <<std::endl;
+	// list<mpz_class> divisors;
+	// cout << "In Compute" <<endl;
+	// cout << divisorResult <<endl;
 
 	if(!divisorResult)
 	{
-		// std::cout << "Computing results" <<std::endl;
+		// cout << "Computing results" <<endl;
 		for(; iterator<count; iterator++)
 		{
 			if(preemptionObject.get() == true)
@@ -51,39 +54,39 @@ MW_API_STATUS_CODE DivisorWork::compute(const MW_Object &preemptionObject)
 				return Preempted;
 			}
 			mpz_class ithValue = firstValueToTest + iterator;
-			// std::cout<<"Testing " << ithValue << std::endl;
+			// cout<<"Testing " << ithValue << endl;
 			if(dividend % ithValue == 0)
 			{
 				tmpDivisors.push_back(ithValue);
-				// std::cout<<"Adding " << ithValue << std::endl;
+				// cout<<"Adding " << ithValue << endl;
 				mpz_class other = dividend/ithValue;
 				if (ithValue != other)
 				{
 					tmpDivisors.push_back(other);
-					// std::cout<<"Adding " << other << std::endl;
+					// cout<<"Adding " << other << endl;
 				}
 			}
 		}
 		tmpDivisors.sort();
 		// divisorResult = new DivisorResult(tmpDivisors);
-		divisorResult = std::make_shared<DivisorResult> (DivisorResult(tmpDivisors));
-		// std::cout << "Created Results" <<std::endl;
-		// std::cout << *(divisorResult->serialize()) <<std::endl;
+		divisorResult = make_shared<DivisorResult> (DivisorResult(tmpDivisors));
+		// cout << "Created Results" <<endl;
+		// cout << *(divisorResult->serialize()) <<endl;
 		return Success;
 	}
 	else
 		return Success;
 }
 
-std::shared_ptr<Result> DivisorWork::result()
+shared_ptr<Result> DivisorWork::result()
 {
 	assert(divisorResult);
-	return std::dynamic_pointer_cast<Result>(divisorResult);
+	return dynamic_pointer_cast<Result>(divisorResult);
 }
 
-std::string *DivisorWork::serialize()
+shared_ptr<string> DivisorWork::serialize()
 {
-	return new std::string(dividend.get_str() + ',' +
+	return make_shared<string>(dividend.get_str() + ',' +
 						firstValueToTest.get_str() + ',' +
 						count.get_str());
 }

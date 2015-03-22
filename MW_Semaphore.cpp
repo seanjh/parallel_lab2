@@ -1,5 +1,7 @@
 #include "MW_Semaphore.hpp"
 
+using namespace std;
+
 MW_Semaphore::MW_Semaphore(): value(false)
 {
 

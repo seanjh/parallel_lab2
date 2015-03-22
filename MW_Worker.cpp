@@ -1,11 +1,13 @@
-#include <assert.h>
 #include <iostream>
+#include <sstream>
+#include <assert.h>
 #include <mpi.h>
 
 #include "MW_Worker.hpp"
 #include "MPIMessage.hpp"
-#include <sstream>
 #include "MW_Random.hpp"
+
+using namespace std;
 
 MW_Worker::MW_Worker(int myid, int m_id, int size): id(myid), master_id(m_id), world_size(size), preemptionTimer(.1)
 {
@@ -14,7 +16,7 @@ MW_Worker::MW_Worker(int myid, int m_id, int size): id(myid), master_id(m_id), w
 
 MWTag MW_Worker::receive()
 {
-  // std::cout << "P:" << id << " waiting to receive work from master." << std::endl;
+  // cout << "P:" << id << " waiting to receive work from master." << endl;
 
   MPI::Status status;
   bool can_receive = MPI::COMM_WORLD.Iprobe(
@@ -24,14 +26,14 @@ MWTag MW_Worker::receive()
   );
 
   if (!can_receive) {
-    //std::cout << "IProbe did not find a message. No receive possible\n";
+    //cout << "IProbe did not find a message. No receive possible\n";
     return NOTHING_TAG;
   }
 
   // MPI::Status status;
   char *message = (char*)malloc(MAX_MESSAGE_SIZE);
   memset(message, 0, MAX_MESSAGE_SIZE);
-  // std::string message(1000, 0);
+  // string message(1000, 0);
 
   MPI::COMM_WORLD.Recv(
     (void *) message,
@@ -46,37 +48,37 @@ MWTag MW_Worker::receive()
   int message_tag = status.Get_tag();
 
   if (message_tag == WORK_TAG) {
-    std::string messageString = std::string(message, status.Get_count(MPI::CHAR));
-    // std::cout << "P:" << id << " Received from master P" << master_id << " message \"" << serializedObject << "\"\n";
+    string messageString = string(message, status.Get_count(MPI::CHAR));
+    // cout << "P:" << id << " Received from master P" << master_id << " message \"" << serializedObject << "\"\n";
 
-    std::istringstream iss (messageString);
-    std::string idString, serializedObject;
+    istringstream iss (messageString);
+    string idString, serializedObject;
 
-    std::getline(iss,idString,',');
-    MW_ID work_id = std::stoul(idString);
-    // std::cout<<work_id<<std::endl;
+    getline(iss,idString,',');
+    MW_ID work_id = stoul(idString);
+    // cout<<work_id<<endl;
 
-    std::getline(iss,serializedObject);
-    // std::cout<<serializedObject<<std::endl;
+    getline(iss,serializedObject);
+    // cout<<serializedObject<<endl;
 
     // MPIMessage *mpi_message = new MPIMessage(serializedObject);
-    auto mpi_message = std::make_shared<MPIMessage>(serializedObject);
-    // std::cout << "P:" << id << " mpi_message (work) is " << mpi_message->to_string() << std::endl;
+    auto mpi_message = make_shared<MPIMessage>(serializedObject);
+    // cout << "P:" << id << " mpi_message (work) is " << mpi_message->to_string() << endl;
     // MPIMessage *mpi_message = new MPIMessage(serializedObject);
-    // std::cout << "P:" << id << " mpi_message (work) is " << mpi_message->to_string() << std::endl;
+    // cout << "P:" << id << " mpi_message (work) is " << mpi_message->to_string() << endl;
 
     //Work *work = mpi_message->deserializeWork();
-    std::shared_ptr<Work> work = mpi_message->deserializeWork();
+    shared_ptr<Work> work = mpi_message->deserializeWork();
     // delete mpi_message;
     assert(work != NULL);
-    // std::cout << "P:" << id << " Recreated work object (" << work << ") \"" << *work->serialize() << "\"\n" ;
+    // cout << "P:" << id << " Recreated work object (" << work << ") \"" << *work->serialize() << "\"\n" ;
 
     //TODO extract ID and add to map
     workToDo[work_id] = work;
-    // std::cout << "P:" << id << " WorkToDo size is " << workToDo->size() << std::endl;
+    // cout << "P:" << id << " WorkToDo size is " << workToDo->size() << endl;
   } else {
     // Do nothing
-    std::cout << "P" << id << ": Received unknown message (heartbeat?)" << std::endl;
+    cout << "P" << id << ": Received unknown message (heartbeat?)" << endl;
   }
 
   free(message);
@@ -85,22 +87,22 @@ MWTag MW_Worker::receive()
 
 // void MW_Worker::send()
 // {
-//   // std::cout << "P:" << id << " Beginning send to master P" << master_id << std::endl;
+//   // cout << "P:" << id << " Beginning send to master P" << master_id << endl;
 //   auto resultPair = *(results.begin());
 //   results.erase(resultPair.first);
-//   std::shared_ptr<Result> result = resultPair.second;
+//   shared_ptr<Result> result = resultPair.second;
 //   assert(result);
 //   // results->pop_front();
 
-//   // std::cout << " Popped result (" << result << ") from list\n";
+//   // cout << " Popped result (" << result << ") from list\n";
 
-//   // std::string result_string = resultPair.first.to_string() + "," + *(result->serialize());
-//   std::shared_ptr<std::string> result_string = std::make_shared<std::string> (std::to_string(resultPair.first) + "," + *(result->serialize()));
+//   // string result_string = resultPair.first.to_string() + "," + *(result->serialize());
+//   shared_ptr<string> result_string = make_shared<string> (to_string(resultPair.first) + "," + *(result->serialize()));
 
 //   int count = (int) result_string->length();
 
-//   // std::cout << "P:" << id << " sending result with " << count <<
-//   //   " total MPI::CHARs -- " << result_string << std::endl;
+//   // cout << "P:" << id << " sending result with " << count <<
+//   //   " total MPI::CHARs -- " << result_string << endl;
 
 //   assert(count < MAX_MESSAGE_SIZE);
 //   MPI::COMM_WORLD.Send(
@@ -111,18 +113,18 @@ MWTag MW_Worker::receive()
 //     WORK_TAG
 //   );
 
-//   // std::cout << "P:" << id << " finished send to master P" << master_id << ". " <<
-//   //   results->size() << " results remaining" << std::endl;
+//   // cout << "P:" << id << " finished send to master P" << master_id << ". " <<
+//   //   results->size() << " results remaining" << endl;
 
 //   // delete result;
 //   // delete result_string;
 // }
 
-void MW_Worker::send(MW_ID result_id, std::shared_ptr<Result> result)
+void MW_Worker::send(MW_ID result_id, shared_ptr<Result> result)
 {
 
-  std::shared_ptr<std::string> result_string = \
-    std::make_shared<std::string> (std::to_string(result_id) + \
+  shared_ptr<string> result_string = \
+    make_shared<string> (to_string(result_id) + \
     "," + *(result->serialize()));
 
   int count = (int) result_string->length();
@@ -164,34 +166,34 @@ MW_Worker::~MW_Worker()
 
 // void MW_Worker::doWork()
 // {
-//   // std::cout << "P:" << worker->id << " Grabbing some workToDo\n";
+//   // cout << "P:" << worker->id << " Grabbing some workToDo\n";
 //   // Work *work = workToDo->front();
 //   // assert(work != NULL);
-//   // // std::cout << "P:" << worker->id << " Work object is (" << work << ") \"" << work->serialize() << "\"\n";
+//   // // cout << "P:" << worker->id << " Work object is (" << work << ") \"" << work->serialize() << "\"\n";
 //   // workToDo->pop_front();
 //   auto workPair = *(workToDo.begin());
 //   MW_ID work_id = workPair.first;
-//   // std::cout <<work_id<< ": "<< *(workPair.second->serialize()) <<std::endl;
+//   // cout <<work_id<< ": "<< *(workPair.second->serialize()) <<endl;
 //   workToDo.erase(work_id);
-//   std::shared_ptr<Work> work = workPair.second;
+//   shared_ptr<Work> work = workPair.second;
 
-//   // std::cout << "P:" << worker->id << " Computing results.\n";
+//   // cout << "P:" << worker->id << " Computing results.\n";
 
 //   MW_API_STATUS_CODE status;
 //   do
 //   {
-//     // std::cout << "Entered Loop" << std:: endl;
+//     // cout << "Entered Loop" <<  endl;
 //     status = work->compute(preemptionSemaphore);
 
 //   } while(status == Preempted);
 
-//   // std::cout << "Exited Loop" << std:: endl;
-//   std::shared_ptr<Result> new_result = work->result();
-//   // std::cout << new_result << std:: endl;
-//   // std::cout << "generated results" << std:: endl;
+//   // cout << "Exited Loop" <<  endl;
+//   shared_ptr<Result> new_result = work->result();
+//   // cout << new_result <<  endl;
+//   // cout << "generated results" <<  endl;
 
 //   assert(new_result);
-//   // std::cout << "P:" << worker->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
+//   // cout << "P:" << worker->id << " Result object is (" << one_result << ") \"" << one_result->serialize() << "\"\n";
 
 //   // TODO compute ID and add to
 //   // results->push_back(new_result);
@@ -203,10 +205,10 @@ void MW_Worker::worker_loop()
   // Result *result;
 
   MW_Random random = MW_Random(WORKER_FAILURE_PROBABILITY, id, world_size);
-  std::cout << "P" << id << ": ";
+  cout << "P" << id << ": ";
   bool will_fail = random.random_fail();
   if (will_fail && WORKER_FAIL_TEST_ON) {
-    std::cout << "P:" << id << " THIS WORKER WILL EVENTUALLY FAIL\n";
+    cout << "P:" << id << " THIS WORKER WILL EVENTUALLY FAIL\n";
   }
   random = MW_Random(id, world_size);
 
@@ -214,7 +216,7 @@ void MW_Worker::worker_loop()
   while (1) {
 
     if (random.random_fail() && WORKER_FAIL_TEST_ON) {
-      std::cout << "P:" << id << " WORKER FAILURE EVENT\n";
+      cout << "P:" << id << " WORKER FAILURE EVENT\n";
       MPI::Finalize();
       exit (0);
     }
@@ -226,33 +228,33 @@ void MW_Worker::worker_loop()
 
     if (message_tag == WORK_TAG) {
 
-      // std::cout<<"Received WorkTag"<<std::endl;
+      // cout<<"Received WorkTag"<<endl;
       // doWork();
       // send();
 
     } else if (message_tag == DONE_TAG) {
-      // std::cout << "P:" << proc->id << " IS DONE\n";
+      // cout << "P:" << proc->id << " IS DONE\n";
       break;
     } else if (message_tag == HEARTBEAT_TAG) {
-      // std::cout << "P:" << proc->id << " IS DONE\n";
+      // cout << "P:" << proc->id << " IS DONE\n";
       continue;
     } else if (hasWork())
     {
       auto workPair = *(workToDo.begin());
       MW_ID work_id = workPair.first;
 
-      std::shared_ptr<Work> work = workPair.second;
+      shared_ptr<Work> work = workPair.second;
 
       MW_API_STATUS_CODE status;
       status = work->compute(preemptionTimer);
       if (status != Preempted)
       {
-        // std::cout <<"Worker returning Success"<<std::endl;
+        // cout <<"Worker returning Success"<<endl;
         assert(status == Success);
 
         //remove from work to do map
         workToDo.erase(work_id);
-        std::shared_ptr<Result> new_result = work->result();
+        shared_ptr<Result> new_result = work->result();
 
         assert(new_result);
         results[work_id] = new_result;
@@ -263,13 +265,13 @@ void MW_Worker::worker_loop()
       }
       else
       {
-        // std::cout <<"Worker returning preempted"<<std::endl;
+        // cout <<"Worker returning preempted"<<endl;
         continue;
       }
 
     }
     else {
-      // std::cout << "WTF happened here\n";
+      // cout << "WTF happened here\n";
       // assert(0);
       continue;
     }
@@ -280,8 +282,8 @@ void MW_Worker::worker_loop()
 // {
 //   // if (!error)
 //   // {
-//   //   std::cout<<"Timer Expired. Resetting." << std::endl;
-//   //   preemptionTimer = std::unique_ptr<boost::asio::deadline_timer> \
+//   //   cout<<"Timer Expired. Resetting." << endl;
+//   //   preemptionTimer = unique_ptr<boost::asio::deadline_timer> \
 //   //   (new boost::asio::deadline_timer(
 //   //     *preemptionTimerIOService,
 //   //     boost::posix_time::milliseconds(100)));

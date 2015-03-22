@@ -6,18 +6,19 @@
 #include "DivisorResult.hpp"
 #include "DivisorWork.hpp"
 #include <string>
+using namespace std;
 // #include <gmpxx.h>
 
 class DivisorApplication : public MW_API {
 public:
-	DivisorApplication(std::string &divisorString);
-	DivisorApplication(std::string &divisorString, mpz_class work_size);
-	DivisorApplication(std::string &, std::string &);
-	virtual std::list<std::shared_ptr<Work>> &work();
-  virtual int results(std::shared_ptr<std::list<std::shared_ptr<Result>>>);
+	DivisorApplication(string &divisorString);
+	DivisorApplication(string &divisorString, mpz_class work_size);
+	DivisorApplication(string &, string &);
+	virtual list<shared_ptr<Work>> &work();
+  virtual int results(shared_ptr<list<shared_ptr<Result>>>);
 
 private:
-	std::list<std::shared_ptr<Work>> workList;
+	list<shared_ptr<Work>> workList;
 	mpz_class divisor;
 	mpz_class work_size;
 };

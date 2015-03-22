@@ -1,7 +1,9 @@
 #include <iostream>
 #include <list>
 #include <gmpxx.h>
+
 #include "DivisorGenerator.hpp"
+
 using namespace std;
 
 list<mpz_class> csvToList(string csv)
@@ -52,7 +54,7 @@ int main(int argc, char* argv[])
   //cout << divGen1.getDivisorsCSV()<<endl;
   list<mpz_class> divs1FromCSV = csvToList(divGen1.getDivisorsCSV());
   list<mpz_class>::iterator iter;
-  for(iter = divs1FromCSV.begin(); 
+  for(iter = divs1FromCSV.begin();
         iter != divs1FromCSV.end();
         iter++) {
     cout << *iter << " is a divisor\n";
@@ -65,9 +67,9 @@ int main(int argc, char* argv[])
   results.merge(divs1);
   results.merge(divs2);
 
-  
+
   cout << a << " has " << results.size() << " total divisors.\n";
-  for(iter = results.begin(); 
+  for(iter = results.begin();
         iter != results.end();
         iter++) {
     cout << *iter << " is a divisor\n";

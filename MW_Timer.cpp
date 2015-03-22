@@ -1,5 +1,7 @@
 #include "MW_Timer.hpp"
 
+using namespace std;
+
 MW_Timer::MW_Timer(double periodInSeconds): period(periodInSeconds)
 {
 	reset();
@@ -10,7 +12,7 @@ bool MW_Timer::get() const
 	b_mutex.lock();
 	bool retVal = MPI::Wtime() > expirationTime;
 	b_mutex.unlock();
-	
+
 	return retVal;
 }
 

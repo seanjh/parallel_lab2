@@ -1,6 +1,7 @@
 #include <iostream>
 #include <list>
 #include <gmpxx.h>
+
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -32,7 +33,7 @@ int main(int argc, char* argv[])
 
   list<mpz_class>::iterator iter;
   cout << a << " has " << results.size() << " total divisors.\n";
-  for(iter = results.begin(); 
+  for(iter = results.begin();
         iter != results.end();
         iter++) {
     cout << *iter << " is a divisor\n";

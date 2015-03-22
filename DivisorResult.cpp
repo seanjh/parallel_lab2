@@ -1,19 +1,22 @@
-#include "DivisorResult.hpp"
 #include <sstream>
 
+#include "DivisorResult.hpp"
 
-DivisorResult::DivisorResult(const std::list<mpz_class> &divList)
+using namespace std;
+
+
+DivisorResult::DivisorResult(const list<mpz_class> &divList)
 {
 	divisors = divList;
 }
 
-DivisorResult::DivisorResult(std::string serialObject)
+DivisorResult::DivisorResult(string serialObject)
 {
-	std::istringstream iss (serialObject);
-	std::string divString;
+	istringstream iss (serialObject);
+	string divString;
 
-	//std::cout << "Serialized result object: " <<serialObject<<std::endl;
-	while(std::getline(iss,divString,','))
+	//cout << "Serialized result object: " <<serialObject<<endl;
+	while(getline(iss,divString,','))
     {
         divisors.push_back(mpz_class(divString, 10));
     }
@@ -24,10 +27,10 @@ DivisorResult* DivisorResult::clone() const
 	return new DivisorResult(*this);
 }
 
-std::string *DivisorResult::serialize()
+shared_ptr<string> DivisorResult::serialize()
 {
-	std::string divisorsString;
-	std::list<mpz_class>::const_iterator divIter = divisors.cbegin();
+	string divisorsString;
+	list<mpz_class>::const_iterator divIter = divisors.cbegin();
 	if(divIter!=divisors.cend())
 	{
 		divisorsString += divIter->get_str();
@@ -39,10 +42,10 @@ std::string *DivisorResult::serialize()
 		divisorsString += "," + divIter->get_str();
 	}
 
-	return new std::string(divisorsString);
+	return make_shared<string>(divisorsString);
 }
 
-const std::list<mpz_class> &DivisorResult::getDivisors()
+const list<mpz_class> &DivisorResult::getDivisors()
 {
-	return const_cast<std::list<mpz_class> &>(divisors);
+	return const_cast<list<mpz_class> &>(divisors);
 }

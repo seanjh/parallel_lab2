@@ -1,8 +1,9 @@
 #include "DivisorGenerator.hpp"
 #include <assert.h>
 #include <iostream>
+using namespace std;
 
-DivisorGenerator::DivisorGenerator(mpz_class d, mpz_class f, int c): 
+DivisorGenerator::DivisorGenerator(mpz_class d, mpz_class f, int c):
 		dividend(d),
 		firstValueToTest(f),
 		count(c)
@@ -12,11 +13,11 @@ DivisorGenerator::DivisorGenerator(mpz_class d, mpz_class f, int c):
 	computeDivisors();
 }
 
-DivisorGenerator::DivisorGenerator(std::string d, std::string f, int c): 
+DivisorGenerator::DivisorGenerator(string d, string f, int c):
 	DivisorGenerator(mpz_class(d, 10), mpz_class(f, 10), c) {}
 
-// DivisorGenerator::DivisorGenerator(std::string input): 
-// 	DivisorGenerator(mpz_class(d, 10), mpz_class(f, 10), c) 
+// DivisorGenerator::DivisorGenerator(string input):
+// 	DivisorGenerator(mpz_class(d, 10), mpz_class(f, 10), c)
 // {
 
 
@@ -27,16 +28,16 @@ void DivisorGenerator::computeDivisors()
 	for(int i=0; i<count; i++)
 	{
 		mpz_class ithValue = firstValueToTest + i;
-		// std::cout<<"Testing " << ithValue << std::endl;
+		// cout<<"Testing " << ithValue << endl;
 		if(dividend % ithValue == 0)
 		{
 			divisors.push_back(ithValue);
-			// std::cout<<"Adding " << ithValue << std::endl;
+			// cout<<"Adding " << ithValue << endl;
 			mpz_class other = dividend/ithValue;
 			if (ithValue != other)
 			{
 				divisors.push_back(other);
-				// std::cout<<"Adding " << other << std::endl;
+				// cout<<"Adding " << other << endl;
 			}
 		}
 	}
@@ -44,39 +45,39 @@ void DivisorGenerator::computeDivisors()
 	computeDivisorsCSV();
 }
 
-const std::list<mpz_class> &DivisorGenerator::getDivisors()
+const list<mpz_class> &DivisorGenerator::getDivisors()
 {
 	return divisors;
 }
 
-const std::string &DivisorGenerator::getDivisorsCSV()
+const string &DivisorGenerator::getDivisorsCSV()
 {
 	return divisorsCSV;
 }
 
 void DivisorGenerator::computeDivisorsCSV()
 {
-	std::string divisorsString;
-	std::list<mpz_class>::const_iterator divIter = divisors.cbegin();
+	string divisorsString;
+	list<mpz_class>::const_iterator divIter = divisors.cbegin();
 	if(divIter!=divisors.cend())
 	{
 		divisorsString += divIter->get_str();
-		// std::cout<<divIter->get_str()<<std::endl;
-		// std::cout<<divisorsString<<std::endl;
+		// cout<<divIter->get_str()<<endl;
+		// cout<<divisorsString<<endl;
 		divIter++;
 	}
 
 	for(;divIter!=divisors.cend();divIter++)
 	{
 		divisorsString += "," + divIter->get_str();
-		// std::cout<<divIter->get_str()<<std::endl;
-		// std::cout<<divisorsString<<std::endl;
+		// cout<<divIter->get_str()<<endl;
+		// cout<<divisorsString<<endl;
 	}
 
-	divisorsCSV = std::string(divisorsString);
+	divisorsCSV = string(divisorsString);
 }
 
-std::list<mpz_class>::const_iterator DivisorGenerator::getIterator()
+list<mpz_class>::const_iterator DivisorGenerator::getIterator()
 {
 	return divisors.cbegin();
 }

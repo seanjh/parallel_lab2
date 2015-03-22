@@ -1,20 +1,23 @@
 #ifndef __MW__MW_API__
 #define __MW__MW_API__
 
+#include <list>
+#include <memory>
+
 #include "MW_API_Types.hpp"
 #include "Work.hpp"
 #include "Result.hpp"
-#include <list>
-#include <memory>
+
+using namespace std;
 
 extern const int MASTER_PROCESS_ID;
 
 class MW_API {
 public:
-    virtual std::list<std::shared_ptr<Work>> &work() = 0;
-    virtual int results(std::shared_ptr<std::list<std::shared_ptr<Result>>>) = 0;
+    virtual list<shared_ptr<Work>> &work() = 0;
+    virtual int results(shared_ptr<list<shared_ptr<Result>>>) = 0;
 };
 
-void MW_Run(int argc, char* argv[], MW_API *app);
+void MW_Run(int argc, char* argv[], shared_ptr<MW_API>);
 
 #endif

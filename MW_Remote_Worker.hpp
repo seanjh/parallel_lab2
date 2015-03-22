@@ -1,10 +1,13 @@
 #ifndef __MW__REMOTE_WORKER__
 #define __MW__REMOTE_WORKER__
 
-#include "MW_Monitor.hpp"
 #include <unordered_map>
-#include "Work.hpp"
+
+#include "MW_Monitor.hpp"
 #include "MW_API_Types.hpp"
+#include "Work.hpp"
+
+using namespace std;
 
 class MW_Remote_Worker {
 public:
@@ -15,14 +18,14 @@ public:
 	void markCompleted(MW_ID);
 	int workPendingCount();
 	bool isAvailable();
-	const std::list<MW_ID> &getPendingWork();
+	const list<MW_ID> &getPendingWork();
 
 	MW_Monitor heartbeatMonitor;
 
 private:
 	const int id;
-	std::list<MW_ID> issuedWork;
-	
+	list<MW_ID> issuedWork;
+
 };
 
 #endif
