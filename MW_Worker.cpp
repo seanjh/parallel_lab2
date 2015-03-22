@@ -6,17 +6,11 @@
 #include "MPIMessage.hpp"
 #include <sstream>
 
-// <<<<<<< HEAD
 MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preemptionTimer(.1), random(MW_Random(myid, w_size))
 {
   id = myid;
   master_id = m_id;
   world_size = w_size;
-// =======
-// MW_Worker::MW_Worker(int myid, int m_id, int size): id(myid), master_id(m_id), world_size(size), preemptionTimer(.1)
-// {
-//   // NADA
-// >>>>>>> sean-lab3
 }
 
 MWTag MW_Worker::receive()
@@ -59,6 +53,7 @@ MWTag MW_Worker::receive()
   // std::cout<< "received message" <<std::endl;
 
   if (message_tag == WORK_TAG) {
+    assert(masterMonitor);
     assert(source_id == master_id);
     std::string messageString = std::string(message, status.Get_count(MPI::CHAR));
     // std::cout << "P:" << id << " Received from master P" << master_id << " message \"" << serializedObject << "\"\n";
@@ -147,45 +142,11 @@ MW_Worker::~MW_Worker()
 
 }
 
-void MW_Worker::worker_loop()
+bool MW_Worker::worker_loop()
 {
-  // Result *result;
-// <<<<<<< HEAD
-//   // MW_Random random = MW_Random(id, 1);
-// =======
-
-//   MW_Random random = MW_Random(WORKER_FAILURE_PROBABILITY, id, world_size);
-//   std::cout << "P" << id << ": ";
-//   bool will_fail = random.random_fail();
-//   if (will_fail && WORKER_FAIL_TEST_ON) {
-//     std::cout << "P:" << id << " THIS WORKER WILL EVENTUALLY FAIL\n";
-//   }
-//   random = MW_Random(id, world_size);
-// >>>>>>> sean-lab3
 
   MWTag message_tag;
   while (1) {
-
-    // if (random.random_fail() && WORKER_FAIL_TEST_ON) {
-    //   std::cout << "P:" << id << " WORKER FAILURE EVENT\n";
-    //   MPI::Finalize();
-    //   exit (0);
-    // }
-
-    // std::cout << "Top of worker loop" <<std::endl;
-
-    // if(!masterMonitor && shouldSendHeartbeat())
-    // {
-    //   // int worker_array[16];
-    //   // MPI::COMM_WORLD.Bcast(
-    //   //   (void *)&world_size, 
-    //   //   16,
-    //   //   MPI::INT 
-    //   //   master_id);
-
-    //   // masterMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD));
-    //   broadcastHeartbeat();
-    // }
 
     if(shouldSendHeartbeat()) 
     {
@@ -193,13 +154,18 @@ void MW_Worker::worker_loop()
       continue;
     }
 
-    message_tag = receive();
+    if (shouldCheckOnMaster())
+    {
+      bool transitionToMaster = checkOnMaster();
+      if (transitionToMaster)
+        return true;
+      else 
+        continue;
+    }
+      
 
-    // if(shouldSendHeartbeat()) 
-    // {
-    //   sendHeartbeat();
-    //   continue;
-    // }
+
+    message_tag = receive();
 
     preemptionTimer.reset();
 
@@ -209,9 +175,11 @@ void MW_Worker::worker_loop()
       // doWork();
       // send();
 
+      continue;
+
     } else if (message_tag == DONE_TAG) {
       std::cout << "P:" << id << " IS DONE\n";
-      break;
+      return false;
     } else if (message_tag == HEARTBEAT_TAG) {
       // std::cout << "P:" << proc->id << " IS DONE\n";
       continue;
@@ -259,21 +227,6 @@ bool MW_Worker::shouldSendHeartbeat()
 {
   return (MPI::Wtime() - lastHeartbeat) > HEARTBEAT_PERIOD;
 }
-
-// void MW_Worker::sendHeartbeat()
-// {
-//   std::cout << "worker sending heartbeat" <<std::endl;
-//   // if(masterMonitor->isAlive())
-//   masterMonitor->sendHeartbeat(false);
-//   std::cout << "worker sent heartbeat to master" <<std::endl;
-//   for(auto it=otherWorkersMonitorMap.begin(); it != otherWorkersMonitorMap.end(); it++)
-//   {
-//     // if (it->second->isAlive())
-//     it->second->sendHeartbeat(true);
-//   }
-//   lastHeartbeat = MPI::Wtime();
-//   std::cout << "worker finished sending heartbeat" <<std::endl;
-// }
 
 void MW_Worker::sendHeartbeat()
 {
@@ -324,4 +277,38 @@ void MW_Worker::broadcastHeartbeat()
   }
   // std::cout<<"Worker done sending heartbeats"<<std::endl;
   lastHeartbeat = MPI::Wtime();
+}
+
+// bool MW_Worker::hasMaster()
+// {
+//   return masterMonitor;
+// }
+
+bool MW_Worker::shouldCheckOnMaster()
+{
+  return false;
+  // return MPI::Wtime() > nextMasterCheckTime;
+}
+
+bool MW_Worker::checkOnMaster()
+{
+  assert(masterMonitor);
+  if(!masterMonitor->isAlive())
+  {
+
+    //flush current work
+
+    //determine which worker is next master by which workers are still alive
+
+    //if I am not the new master, move the new master off the worker monitor
+    //map into the master slot, set next master check for some long time in the future
+    //return false
+
+    //if I am the new master, return true
+
+
+    return false;
+  }
+  else
+    return false;
 }

@@ -11,23 +11,17 @@
 #include <memory>
 #include "MW_Monitor.hpp"
 #include "MW_Random.hpp"
+#include "MW_Process.hpp"
 // #include "boost/asio.hpp"
 
-class MW_Worker {
+class MW_Worker : public MW_Process {
 
 
 public:
-// <<<<<<< HEAD
   MW_Worker(const int, const int, const int);
-// =======
-//   MW_Worker(int, int, int);
-// >>>>>>> sean-lab3
-  //void send(int) { send(); };
-  //void send();
-  //enum MwTag receive();
-  //void doWork();
-  void worker_loop();
+  bool worker_loop();
   ~MW_Worker();
+  virtual bool isMaster() {return false;};
 
 private:
   int id;
@@ -40,6 +34,8 @@ private:
 
   MW_Timer preemptionTimer;
   MW_Random random;
+  double nextMasterCheckTime;
+  bool heardFromMaster;
 
   MWTag receive();
   // void doWork();
@@ -51,6 +47,9 @@ private:
   void sendHeartbeat();
   void broadcastHeartbeat();
   double lastHeartbeat;
+  // bool hasMaster();
+  bool shouldCheckOnMaster();
+  bool checkOnMaster();
 };
 
 #endif /* defined(__MW__WORKER__) */

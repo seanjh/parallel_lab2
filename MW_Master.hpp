@@ -12,12 +12,13 @@
 #include "MW_Monitor.hpp"
 #include "MW_Remote_Worker.hpp"
 #include "MW_Random.hpp"
+#include "MW_Process.hpp"
 
 extern const double       CHECKPOINT_PERIOD;
 extern const std::string  WORK_CHECKPOINT_FILENAME;
 extern const std::string  RESULTS_CHECKPOINT_FILENAME;
 
-class MW_Master {
+class MW_Master : public MW_Process {
 public:
   MW_Master(int, int, const std::list<std::shared_ptr<Work>> &);
   MW_Master(int, int); // Restores from checkpoint
@@ -25,6 +26,7 @@ public:
   std::shared_ptr<std::list<std::shared_ptr<Result>>> getResults();
   ~MW_Master();
   static std::shared_ptr<MW_Master> restore(int, int);
+  virtual bool isMaster() {return true;};
 
 private:
   int id;
