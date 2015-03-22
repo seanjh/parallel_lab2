@@ -2,6 +2,7 @@
 #define __MW__RANDOM__
 
 #include <random>
+#include <chrono>
 #include <iostream>
 
 #define FAILURE_PROBABILITY 0.01
