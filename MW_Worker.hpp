@@ -22,10 +22,17 @@ public:
   bool worker_loop();
   ~MW_Worker();
   virtual bool isMaster() {return false;};
+  bool transitionMaster();
+  std::shared_ptr<std::list<std::shared_ptr<Result>>> getResults()
+  {
+    auto ptr (nullptr);
+    return ptr;
+  }
 
 private:
   int id;
   int master_id;
+  int next_master_id;
   int world_size;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
   std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
@@ -35,20 +42,28 @@ private:
   MW_Timer preemptionTimer;
   MW_Random random;
   double nextMasterCheckTime;
+  double lastHeartbeat;
   bool heardFromMaster;
+  bool waitingForNewMaster;
 
   MWTag receive();
+  void send(MW_ID result_id, std::shared_ptr<Result> result);
+  void process_work(char*, int, int);
+  void process_heartbeat(int);
+  void process_new_master(int);
   // void doWork();
   // void send();
   // void send(int) { send(); };
   bool hasWork() {return !workToDo.empty();};
-  void send(MW_ID result_id, std::shared_ptr<Result> result);
   bool shouldSendHeartbeat();
   void sendHeartbeat();
   void broadcastHeartbeat();
-  double lastHeartbeat;
-  // bool hasMaster();
   bool shouldCheckOnMaster();
+  int findNextMasterId();
+  bool isMasterAlive();
+  void updateMasterCheckTime();
+  void waitForNewMaster();
+  // bool hasMaster();
   bool checkOnMaster();
 };
 

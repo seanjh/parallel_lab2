@@ -61,11 +61,9 @@ std::shared_ptr<std::list<std::shared_ptr<Result>>> MW_Master::getResults()
   return retList;
 }
 
-void MW_Master::master_loop()
+bool MW_Master::master_loop()
 {
-// <<<<<<< HEAD
-//   // MW_Random random = MW_Random(id, world_size);
-// =======
+  bool done = false;
 //   MW_Random random = MW_Random(MASTER_FAILURE_PROBABILITY, id, world_size);
 //   std::cout << "P" << id << ": ";
 //   bool will_fail = random.random_fail();
@@ -74,7 +72,6 @@ void MW_Master::master_loop()
 //   }
 //   random = MW_Random(id, world_size);
 
-// >>>>>>> sean-lab3
   int worker_id;
   long long int iteration_count=0;
 
@@ -89,7 +86,7 @@ void MW_Master::master_loop()
 
     if(shouldSendHeartbeat()) sendHeartbeat();
     else if (shouldCheckpoint()) performCheckpoint();
-    
+
     else if (hasWorkers() && hasWorkToDistribute()) {
 
       // std::cout << "MASTER IS SENDING\n";
@@ -103,6 +100,7 @@ void MW_Master::master_loop()
 
     } else if (!hasPendingWork()) {
       send_done();
+      done = true;
       break;
       // std::cout << "No Work!!\n";
       // if (hasAllWorkers()) {
@@ -118,6 +116,8 @@ void MW_Master::master_loop()
       assert(0);
     }
   }
+
+  return done;
 }
 
 void MW_Master::checkOnWorkers()
@@ -157,7 +157,6 @@ void MW_Master::send_done()
     }
   }
 }
-
 
 
 void MW_Master::send(int worker_id)
@@ -246,11 +245,6 @@ void MW_Master::receive()
       break;
     }
 
-    case CHECKPOINT_DONE_TAG: {
-      process_checkpoint_done(worker_id);
-      break;
-    }
-
     default: {
       std::cout << "WTF Happened here\n";
       break;
@@ -318,19 +312,13 @@ void MW_Master::process_heartbeat(int worker_id)
     worker = workerMap.at(worker_id);
   }
   catch (const std::out_of_range& oor) {
-    
+
     std::cout << "Received first heartbeat from " << worker_id << ". Adding to monitor map\n";
     // worker = std::shared_ptr<MW_Remote_Worker>(new MW_Remote_Worker(worker_id, HEARTBEAT_PERIOD));
     worker = std::shared_ptr<MW_Remote_Worker> (new MW_Remote_Worker(worker_id));
     workerMap[worker_id] = worker;
   }
   worker->heartbeatMonitor.addHeartbeat();
-}
-
-void MW_Master::process_checkpoint_done(int worker_id)
-{
-  // TODO: implement
-  return;
 }
 
 bool MW_Master::shouldCheckpoint()
@@ -378,6 +366,7 @@ void MW_Master::sendHeartbeat()
   for(auto it=workerMap.begin(); it != workerMap.end(); it++)
   {
     // if (it->second->heartbeatMonitor.isAlive())
+    std::cout << "P:" << id << " Master heartbeat sent to "<< it->first << "\n";
     it->second->heartbeatMonitor.sendHeartbeat(true);
   }
   lastHeartbeat = MPI::Wtime();
@@ -461,17 +450,17 @@ void MW_Master::initializeResultFromCheckpoint()
   {
     while (getline (infile, line))
     {
-      std::cout << "line: " << line << '\n';
+      // std::cout << "line: " << line << '\n';
 
       std::istringstream iss (line);
       std::getline(iss, idString,',');
-      id = std::stoul(idString);
+      // id = std::stoul(idString);
       std::cout << "idString: " << idString << " (MW_ID=" << id << ")" << '\n';
       std::getline(iss, serializedObject);
-      std::cout << "serializedObject: " << serializedObject << '\n';
+      // std::cout << "serializedObject: " << serializedObject << '\n';
 
       message = std::make_shared<MPIMessage> (serializedObject);
-      std::cout << "MPIMessage: " << message->to_string() << '\n';
+      // std::cout << "MPIMessage: " << message->to_string() << '\n';
       results[id] = message->deserializeResult();
     }
     infile.close();
@@ -491,17 +480,17 @@ void MW_Master::initializeWorkFromCheckpoint()
   {
     while (getline (infile, line))
     {
-      std::cout << "line: " << line << '\n';
+      // std::cout << "line: " << line << '\n';
 
       std::istringstream iss (line);
       std::getline(iss, idString,',');
       id = std::stoul(idString);
-      std::cout << "idString: " << idString << " (MW_ID=" << id << ")" << '\n';
+      // std::cout << "idString: " << idString << " (MW_ID=" << id << ")" << '\n';
       std::getline(iss, serializedObject);
-      std::cout << "serializedObject: " << serializedObject << '\n';
+      // std::cout << "serializedObject: " << serializedObject << '\n';
 
       message = std::make_shared<MPIMessage> (serializedObject);
-      std::cout << "MPIMessage: " << message->to_string() << '\n';
+      // std::cout << "MPIMessage: " << message->to_string() << '\n';
       work[id] = message->deserializeWork();
     }
     infile.close();
@@ -534,8 +523,29 @@ MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size), random(MW
     }
   }
 
+  broadcastNewMasterSignal();
+
   broadcastHeartbeat();
 
+}
+
+void MW_Master::broadcastNewMasterSignal()
+{
+  std::cout << "P:" << id << " Bcast I AM MASTER\n";
+  for (int i=0; i<world_size; i++)
+  {
+    if (i != id)
+    {
+      MPI::COMM_WORLD.Send(
+        0,
+        0,
+        MPI::CHAR,
+        i,
+        NEW_MASTER_TAG
+      );
+    }
+  }
+  std::cout << "P:" << id << " Finished broadcast.\n";
 }
 
 void MW_Master::broadcastHeartbeat()
