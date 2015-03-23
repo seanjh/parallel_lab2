@@ -367,11 +367,15 @@ bool MW_Master::hasPendingWork()
 
   if (!pendingWork){
     std::cout << "P" << id << ": there is no more pending work" << std::endl;
-    printWorkStatus();
+    // printWorkStatus();
+    if (!(work.size() == results.size()))
+      printWorkStatus();
     assert(work.size() == results.size());
 
   }
   else {
+    if (!(work.size() != results.size()))
+      printWorkStatus();
     // std::cout << "P" << id << ": pending work" << std::endl;
     assert(work.size() != results.size());
   }
