@@ -482,7 +482,7 @@ void MW_Master::initializeWorkFromCheckpoint()
 
 
 MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size),
-  random(MW_Random(0.25, id, world_size))
+  random(MW_Random(0.10, myid, size))
 // MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
 {
   std::cout << "P" << myid << ": Creating NEW Master from checkpoint\n";
