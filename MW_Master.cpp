@@ -435,6 +435,8 @@ void MW_Master::initializeResultFromCheckpoint()
       message = std::make_shared<MPIMessage> (serializedObject);
       // std::cout << "MPIMessage: " << message->to_string() << '\n';
       results[work_id] = message->deserializeResult();
+      completedWork[work_id] = work[work_id];
+
       // std::cout << "serializedObject: " <<*(results[work_id]->testSerialize()) << std::endl;
     }
     infile.close();
