@@ -42,6 +42,14 @@ std::string *DivisorResult::serialize()
 	return new std::string(divisorsString);
 }
 
+std::string *DivisorResult::testSerialize()
+{
+	if (divisors.empty())
+		return new std::string("EMPTY");
+	else
+		return serialize();
+}
+
 const std::list<mpz_class> &DivisorResult::getDivisors()
 {
 	return const_cast<std::list<mpz_class> &>(divisors);

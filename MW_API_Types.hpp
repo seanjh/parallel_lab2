@@ -21,10 +21,10 @@ typedef enum MASC {
 
 typedef unsigned long MW_ID;
 const double  HEARTBEAT_PERIOD            = 1.0;
-const double  CHECKPOINT_PERIOD           = 60.0;
+const double  CHECKPOINT_PERIOD           = 20.0;
 const bool    WORKER_FAIL_TEST_ON         = true;
 const double  WORKER_FAILURE_PROBABILITY  = 0.001;
 const bool    MASTER_FAIL_TEST_ON         = true;
-const double  MASTER_FAILURE_PROBABILITY  = 0.001;
+const double  MASTER_FAILURE_PROBABILITY  = 0.01;
 
 #endif
