@@ -18,14 +18,14 @@ MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preempti
 
   willFail = random.random_fail();
   if (willFail) {
-    std::cout << "P:" << id << " This Worker will eventually fail!\n";
+    std::cout << "P" << id << ": This WORKER will eventually fail!\n";
   }
   random = MW_Random(SEND_FAILURE_PROBABILITY, id, world_size);
 }
 
 MWTag MW_Worker::receive()
 {
-  // std::cout << "P:" << id << " waiting to receive work from master." << std::endl;
+  // std::cout << "P" << id << ": waiting to receive work from master." << std::endl;
 
   MPI::Status status;
   bool can_receive = MPI::COMM_WORLD.Iprobe(
@@ -104,7 +104,7 @@ void MW_Worker::process_work(char *message, int source_id, int count)
   assert(masterMonitor);
   assert(source_id == master_id);
   std::string messageString = std::string(message, count);
-  // std::cout << "P:" << id << " Received from master P" << master_id << " message \"" << serializedObject << "\"\n";
+  // std::cout << "P" << id << ": Received from master P" << master_id << " message \"" << serializedObject << "\"\n";
 
   std::istringstream iss (messageString);
   std::string idString, serializedObject;
@@ -119,14 +119,14 @@ void MW_Worker::process_work(char *message, int source_id, int count)
   // std::cout<<serializedObject<<std::endl;
 
   auto mpi_message = std::make_shared<MPIMessage>(serializedObject);
-  // std::cout << "P:" << id << " mpi_message (work) is " << mpi_message->to_string() << std::endl;
+  // std::cout << "P" << id << ": mpi_message (work) is " << mpi_message->to_string() << std::endl;
 
   std::shared_ptr<Work> work = mpi_message->deserializeWork();
   assert(work != NULL);
-  // std::cout << "P:" << id << " Recreated work object (" << work << ") \"" << *work->serialize() << "\"\n" ;
+  // std::cout << "P" << id << ": Recreated work object (" << work << ") \"" << *work->serialize() << "\"\n" ;
 
   workToDo[work_id] = work;
-  // std::cout << "P:" << id << " WorkToDo size is " << workToDo->size() << std::endl;
+  // std::cout << "P" << id << ": WorkToDo size is " << workToDo->size() << std::endl;
 }
 
 void MW_Worker::process_heartbeat(int source_id)
@@ -136,7 +136,7 @@ void MW_Worker::process_heartbeat(int source_id)
   {
     if (!masterMonitor)
     {
-      // std::cout << "P:" << id << " Received its first heartbeat from " << source_id << ". Adding to master\n";
+      // std::cout << "P" << id << ": Received its first heartbeat from " << source_id << ". Adding to master\n";
       updateMasterCheckTime();
       masterMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD*5.0));
     }
@@ -151,7 +151,7 @@ void MW_Worker::process_heartbeat(int source_id)
     }
     catch (const std::out_of_range& oor) {
 
-      // std::cout << "P:" << id << " Received its first heartbeat from " << source_id << ". Adding to monitor map\n";
+      // std::cout << "P" << id << ": Received its first heartbeat from " << source_id << ". Adding to monitor map\n";
       nodeMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD*5.0));
       otherWorkersMonitorMap[source_id] = nodeMonitor;
     }
@@ -195,16 +195,16 @@ bool MW_Worker::worker_loop()
     if (shouldCheckOnMaster())
     {
       // bool transitionToMaster = checkOnMaster();
-      // std::cout << "P:" << id << " Checking on Master\n";
+      // std::cout << "P" << id << ": Checking on Master\n";
       updateMasterCheckTime();
 
       bool is_master_alive = isMasterAlive();
       if (is_master_alive) {
-        // std::cout << "P:" << id << " Master "<< master_id << " looks OK!\n";
+        // std::cout << "P" << id << ": Master "<< master_id << " looks OK!\n";
         continue;
       } else {
-        std::cout << "P:" << id << " MASTER "<< master_id << " LOOKS DEAD\n";
-        std::cout << "P:" << id << " Current TIme " << MPI::Wtime() << std::endl;
+        std::cout << "P" << id << ": MASTER "<< master_id << " LOOKS DEAD\n";
+        std::cout << "P" << id << ": Current TIme " << MPI::Wtime() << std::endl;
         // masterMonitor->dump();
         // assert(false);
         break;
@@ -228,7 +228,7 @@ bool MW_Worker::worker_loop()
 
     } else if (message_tag == DONE_TAG) {
 
-      std::cout << "P:" << id << " IS DONE\n";
+      std::cout << "P" << id << ": IS DONE\n";
       done = true;
       break;
       // return false;
