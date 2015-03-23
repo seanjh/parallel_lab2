@@ -286,7 +286,7 @@ bool MW_Worker::shouldSendHeartbeat()
 
 void MW_Worker::sendHeartbeat()
 {
-  if (random.random_fail() && WORKER_FAIL_TEST_ON) {
+  if (random.random_fail() && willFail && WORKER_FAIL_TEST_ON) {
     std::cout << "P" << id << ": WORKER FAILURE EVENT\n";
     MPI::Finalize();
     exit (0);

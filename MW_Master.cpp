@@ -323,7 +323,7 @@ bool MW_Master::shouldSendHeartbeat()
 void MW_Master::sendHeartbeat()
 {
 
-  if (random.random_fail() && MASTER_FAIL_TEST_ON) {
+  if (random.random_fail() && willFail && MASTER_FAIL_TEST_ON) {
     std::cout << "P" << id << ": MASTER FAILURE EVENT\n";
     MPI::Finalize();
     exit (0);
