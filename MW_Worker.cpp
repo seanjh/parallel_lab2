@@ -357,10 +357,13 @@ int MW_Worker::findNextMasterId()
   int lowest_other_worker_id = world_size - 1;
   // std::unordered_map<int, std::shared_ptr<MW_Monitor>> otherWorkersMonitorMap;
   for ( auto& it: otherWorkersMonitorMap ) {
-    if (!it.second->isAlive()) {
-      std::cout << "\tP" << id << ": I think P" << it.first << " is dead.\n";
-    } else if (it.first < lowest_other_worker_id) {
-      lowest_other_worker_id = it.first;
+    if (it.second->isAlive()) {
+      std::cout << "\tP" << id << ": I think P" << it.first << " is ALIVE.\n";
+      if (it.first < lowest_other_worker_id) {
+        lowest_other_worker_id = it.first;
+      }
+    } else {
+      std::cout << "\tP" << id << ": I think P" << it.first << " is DEAD.\n";
     }
   }
 
@@ -397,9 +400,6 @@ void MW_Worker::waitForNewMaster()
 
   otherWorkersMonitorMap.erase(next_master_id);
   std::cout << "P" << id << ": Monitoring " << otherWorkersMonitorMap.size() <<  " remaining workers: ";
-  // for ( auto& x: otherWorkersMonitorMap )
-  //   std::cout << "\t" << x.first << " ";
-  //   std::cout << "\n";
 
   std::cout << "P" << id << ": Waiting to hear from the new Master\n";
   waitingForNewMaster = true;
