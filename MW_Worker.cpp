@@ -183,10 +183,12 @@ bool MW_Worker::worker_loop()
     if (shouldCheckOnMaster())
     {
       // bool transitionToMaster = checkOnMaster();
-      updateMasterCheckTime();
-      
+      std::cout << "P:" << id << " Checking on Master\n";
+      // updateMasterCheckTime();
+
       bool is_master_alive = isMasterAlive();
       if (is_master_alive) {
+        std::cout << "P:" << id << " Master looks OK!\n";
         continue;
       } else {
         std::cout << "P:" << id << " MASTER LOOKS DEAD\n";
@@ -333,36 +335,34 @@ bool MW_Worker::shouldCheckOnMaster()
 
 int MW_Worker::findNextMasterId()
 {
-  int lowest_id = world_size - 1;
+  int lowest_other_worker_id = world_size - 1;
   // std::unordered_map<int, std::shared_ptr<MW_Monitor>> otherWorkersMonitorMap;
   for ( auto& it: otherWorkersMonitorMap ) {
-    if (it.first < lowest_id && it.second->isAlive()) {
-      lowest_id = it.first;
+    if (it.first < lowest_other_worker_id && it.second->isAlive()) {
+      lowest_other_worker_id = it.first;
     }
   }
 
-  return lowest_id;
+  return id < lowest_other_worker_id ? id : lowest_other_worker_id;
 }
 
 void MW_Worker::updateMasterCheckTime()
 {
-  if (!heardFromMaster) {
-    heardFromMaster = true;
-  }
+  heardFromMaster = true;
 
   if (!nextMasterCheckTime) {
     std::cout << "P" << id << ": initializing nextMasterCheckTime\n";
     nextMasterCheckTime = MPI::Wtime();
   }
 
-  nextMasterCheckTime += (HEARTBEAT_PERIOD * 10);
+  nextMasterCheckTime += (HEARTBEAT_PERIOD * 5);
+  // nextMasterCheckTime = MPI::Wtime() + (HEARTBEAT_PERIOD * 5);
 }
 
 bool MW_Worker::isMasterAlive()
 {
   assert(masterMonitor);
-  bool alive = masterMonitor->isAlive();
-  if(!masterMonitor->isAlive()) {
+  if(masterMonitor->isAlive()) {
     return true;
   }
   return false;
@@ -386,6 +386,7 @@ void MW_Worker::waitForNewMaster()
 
 bool MW_Worker::transitionMaster()
 {
+  std::cout << "P" << id << ": Beginning transitions to next Master\n";
   next_master_id = findNextMasterId();
   bool is_next_master = next_master_id == id;
 

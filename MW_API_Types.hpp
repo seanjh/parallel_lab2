@@ -23,8 +23,8 @@ typedef unsigned long MW_ID;
 const double  HEARTBEAT_PERIOD            = .2;
 const double  CHECKPOINT_PERIOD           = 60.0;
 const bool    WORKER_FAIL_TEST_ON         = true;
-const double  WORKER_FAILURE_PROBABILITY  = 0.25;
-const bool    MASTER_FAIL_TEST_ON         = false;
-const double  MASTER_FAILURE_PROBABILITY  = 0.000001;
+const double  WORKER_FAILURE_PROBABILITY  = 0.10;
+const bool    MASTER_FAIL_TEST_ON         = true;
+const double  MASTER_FAILURE_PROBABILITY  = 0.25;
 
 #endif

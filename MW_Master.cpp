@@ -17,7 +17,8 @@ const std::string WORK_CHECKPOINT_FILENAME    = "checkpoint_work.csv";
 const std::string RESULTS_CHECKPOINT_FILENAME = "checkpoint_result.csv";
 
 MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &work_p) :
-  id(myid), world_size(sz), random(MW_Random(myid, sz))
+  id(myid), world_size(sz), random(MW_Random(0.33, myid, sz))
+  // id(myid), world_size(sz)
 {
 
   MW_ID nextWorkID = 0;
@@ -26,6 +27,14 @@ MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &w
 
   workToDo = work;
   std::cout << "Total work in master is " << workToDo.size() << std::endl;
+
+  // MW_Random random = MW_Random(WORKER_FAILURE_PROBABILITY, id, world_size);
+  // std::cout << "P" << id << ": ";
+  // bool will_fail = random.random_fail();
+  //
+  // if (will_fail && MASTER_FAIL_TEST_ON) {
+  //   std::cout << "P:" << id << " MASTER WILL EVENTUALLY FAIL\n";
+  // }
 
   // initializeWorkerMap();
 
@@ -64,13 +73,8 @@ std::shared_ptr<std::list<std::shared_ptr<Result>>> MW_Master::getResults()
 bool MW_Master::master_loop()
 {
   bool done = false;
-//   MW_Random random = MW_Random(MASTER_FAILURE_PROBABILITY, id, world_size);
-//   std::cout << "P" << id << ": ";
-//   bool will_fail = random.random_fail();
-//   if (will_fail && MASTER_FAIL_TEST_ON) {
-//     std::cout << "P:" << id << " MASTER WILL EVENTUALLY FAIL\n";
-//   }
-//   random = MW_Random(id, world_size);
+
+  // MW_Random random = MW_Random(id, world_size);
 
   int worker_id;
   long long int iteration_count=0;
@@ -313,7 +317,7 @@ void MW_Master::process_heartbeat(int worker_id)
   }
   catch (const std::out_of_range& oor) {
 
-    std::cout << "Received first heartbeat from " << worker_id << ". Adding to monitor map\n";
+    std::cout << "P:" << id << " Received its first heartbeat from " << worker_id << ". Adding to monitor map\n";
     // worker = std::shared_ptr<MW_Remote_Worker>(new MW_Remote_Worker(worker_id, HEARTBEAT_PERIOD));
     worker = std::shared_ptr<MW_Remote_Worker> (new MW_Remote_Worker(worker_id));
     workerMap[worker_id] = worker;
@@ -357,16 +361,17 @@ bool MW_Master::shouldSendHeartbeat()
 
 void MW_Master::sendHeartbeat()
 {
-  // if (random.random_fail()) {
-  //   std::cout << "P:" << id << " MASTER FAILURE EVENT\n";
-  //   MPI::Finalize();
-  //   exit (0);
-  // }
+
+  if (random.random_fail()) {
+    std::cout << "P:" << id << " MASTER FAILURE EVENT\n";
+    MPI::Finalize();
+    exit (0);
+  }
 
   for(auto it=workerMap.begin(); it != workerMap.end(); it++)
   {
     // if (it->second->heartbeatMonitor.isAlive())
-    std::cout << "P:" << id << " Master heartbeat sent to "<< it->first << "\n";
+    // std::cout << "P:" << id << " Master heartbeat sent to "<< it->first << "\n";
     it->second->heartbeatMonitor.sendHeartbeat(true);
   }
   lastHeartbeat = MPI::Wtime();
@@ -393,26 +398,6 @@ bool MW_Master::hasWorkers()
 {
   return (nextWorker() != -1);
 }
-
-// bool MW_Master::hasWorkersHasWork()
-// {
-//   return (nextWorker() != -1) && hasWork();
-// }
-
-// bool MW_Master::hasWorkersNoWork()
-// {
-//   return (nextWorker() != -1) && !hasWork();
-// }
-
-// bool MW_Master::noWorkersHasWork()
-// {
-//   return (nextWorker() == -1) && hasWork();
-// }
-
-// bool MW_Master::noWorkersNoWork()
-// {
-//   return (nextWorker() == -1) && !hasWork();
-// }
 
 bool MW_Master::hasAllWorkers()
 {
@@ -500,8 +485,17 @@ void MW_Master::initializeWorkFromCheckpoint()
 
 
 MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size), random(MW_Random(myid, size))
+// MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
 {
   std::cout << "P" << myid << ": Creating NEW Master from checkpoint\n";
+
+  // MW_Random random = MW_Random(MASTER_FAILURE_PROBABILITY, id, world_size);
+  // std::cout << "P" << id << ": ";
+  // bool will_fail = random.random_fail();
+
+  // if (will_fail && MASTER_FAIL_TEST_ON) {
+  //   std::cout << "P:" << id << " MASTER WILL EVENTUALLY FAIL\n";
+  // }
 
   // initializeWorkerMap();
 
@@ -517,10 +511,11 @@ MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size), random(MW
       result = results.at(it->first);
     }
     catch (const std::out_of_range& oor) {
-      std::cerr << "WORK is not in RESULTS. Out of Range error: " << oor.what() << '\n';
+      // std::cerr << "WORK is not in RESULTS. Out of Range error: " << oor.what() << '\n';
       workToDo[it->first] = it->second;
-      std::cout << "workToDo is size " << workToDo.size() << "\n";
+      // std::cout << "workToDo is size " << workToDo.size() << "\n";
     }
+    std::cout << "workToDo is size " << workToDo.size() << "\n";
   }
 
   broadcastNewMasterSignal();

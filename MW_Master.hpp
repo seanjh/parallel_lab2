@@ -43,6 +43,7 @@ private:
 
   double lastCheckpoint;
   double lastHeartbeat;
+  bool will_fail;
   MW_Random random;
 
   void initializeWorkerMap();

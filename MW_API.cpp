@@ -26,6 +26,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
   starttime = MPI::Wtime();
 
   bool done;
+  // int master_id = MASTER_PROCESS_ID;
 
   if (myid == MASTER_PROCESS_ID) {
     auto proc = std::make_shared<MW_Master>(myid, sz, app->work());
@@ -48,14 +49,24 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
     while (!done) {
       done = proc->worker_loop();
+      p = proc;
 
       if (!done && proc->transitionMaster()) {
         // The Master died :(
+        std::cout << "P" << myid << ": Make me master!\n";
         std::shared_ptr<MW_Master> proc = MW_Master::restore(myid, sz);
         done = proc->master_loop();
+
+        std::cout << "P" << myid << ": total results: " << proc->getResults()->size() << "\n";
+        p = proc;
+
+      } else if (!done) {
+        std::cout << "P" << myid << ": Master failed. Not done yet!\n";
       }
 
-      p = proc;
+      std::cout << "P" << myid << ": finishing\n";
+
+      // p = proc;
       endtime = MPI::Wtime();
     }
   }
