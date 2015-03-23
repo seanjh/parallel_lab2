@@ -1,10 +1,10 @@
 #include <assert.h>
 #include <iostream>
+#include <sstream>
 #include <mpi.h>
 
 #include "MW_Worker.hpp"
 #include "MPIMessage.hpp"
-#include <sstream>
 
 MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preemptionTimer(.1), random(MW_Random(WORKER_FAILURE_PROBABILITY, myid, w_size))
 {
@@ -134,7 +134,7 @@ void MW_Worker::process_heartbeat(int source_id)
       masterMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD*5.0));
     }
     masterMonitor->addHeartbeat();
-    
+
   }
   else
   {
@@ -280,7 +280,7 @@ bool MW_Worker::shouldSendHeartbeat()
 void MW_Worker::sendHeartbeat()
 {
   if (random.random_fail()) {
-    std::cout << "P:" << id << " WORKER FAILURE EVENT\n";
+    std::cout << "P" << id << ": WORKER FAILURE EVENT\n";
     MPI::Finalize();
     exit (0);
   }
@@ -357,7 +357,7 @@ int MW_Worker::findNextMasterId()
 
 void MW_Worker::updateMasterCheckTime()
 {
-  
+
   if (!heardFromMaster) {
     heardFromMaster = true;
     // std::cout << "P" << id << ": initializing nextMasterCheckTime\n";

@@ -7,7 +7,6 @@
 #include "MW_Worker.hpp"
 #include "MW_Process.hpp"
 
-// #define MASTER_PROCESS_ID 0
 const int MASTER_PROCESS_ID = 0;
 
 void MW_Run(int argc, char* argv[], MW_API *app)
@@ -30,6 +29,8 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
   if (myid == MASTER_PROCESS_ID) {
     auto proc = std::make_shared<MW_Master>(myid, sz, app->work());
+    p = proc;
+
     while (!done) {
       done = proc->master_loop();
     }
@@ -39,7 +40,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
     // app->results(proc->getResults());
 
-    p = proc;
+    // p = proc;
 
   } else {
     auto proc = std::make_shared<MW_Worker>(myid, MASTER_PROCESS_ID, sz);
