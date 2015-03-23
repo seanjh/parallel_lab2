@@ -24,7 +24,13 @@ MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &w
     work[nextWorkID++] = *iter;
 
   workToDo = work;
-  std::cout << "Total work in master is " << workToDo.size() << std::endl;
+  std::cout << "P:" << id << " Total work in master is " << workToDo.size() << std::endl;
+
+  willFail = random.random_fail();
+  if (willFail) {
+    std::cout << "P:" << id << " This Master will eventually fail!\n";
+  }
+  random = MW_Random(SEND_FAILURE_PROBABILITY, id, world_size);
 
   // initializeWorkerMap();
 
@@ -317,7 +323,7 @@ bool MW_Master::shouldSendHeartbeat()
 void MW_Master::sendHeartbeat()
 {
 
-  if (random.random_fail()) {
+  if (random.random_fail() && MASTER_FAIL_TEST_ON) {
     std::cout << "P:" << id << " MASTER FAILURE EVENT\n";
     MPI::Finalize();
     exit (0);
@@ -450,10 +456,17 @@ void MW_Master::initializeWorkFromCheckpoint()
 }
 
 
-MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size), random(MW_Random(MASTER_FAILURE_PROBABILITY, id, world_size))
+MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size),
+  random(MW_Random(MASTER_FAILURE_PROBABILITY, id, world_size))
 // MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
 {
   std::cout << "P" << myid << ": Creating NEW Master from checkpoint\n";
+
+  willFail = random.random_fail();
+  if (willFail) {
+    std::cout << "P:" << id << " This Master will eventually fail!\n";
+  }
+  random = MW_Random(SEND_FAILURE_PROBABILITY, id, world_size);
 
   // initializeWorkerMap();
 

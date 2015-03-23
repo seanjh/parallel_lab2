@@ -22,28 +22,25 @@ class MW_Master : public MW_Process {
 public:
   MW_Master(int, int, const std::list<std::shared_ptr<Work>> &);
   MW_Master(int, int); // Restores from checkpoint
-  bool master_loop();
-  std::shared_ptr<std::list<std::shared_ptr<Result>>> getResults();
   ~MW_Master();
   static std::shared_ptr<MW_Master> restore(int, int);
+  bool master_loop();
   virtual bool isMaster() {return true;};
+  std::shared_ptr<std::list<std::shared_ptr<Result>>> getResults();
 
 private:
   int id;
   int world_size;
-  //const std::list<std::shared_ptr<Work>> &work;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> work;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> completedWork;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
   std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
-  // std::list<MW_Monitor *> *workers;
-  // std::list<int> *workers;
   std::unordered_map<int, std::shared_ptr<MW_Remote_Worker>> workerMap;
   // std::list<int> freeWorkers;
 
   double lastCheckpoint;
   double lastHeartbeat;
-  bool will_fail;
+  bool willFail;
   MW_Random random;
 
   void initializeWorkerMap();
@@ -56,10 +53,6 @@ private:
   void receive();
   void process_result(int, int, char *);
   void process_heartbeat(int);
-  // bool hasWorkersHasWork();
-  // bool hasWorkersNoWork();
-  // bool noWorkersHasWork();
-  // bool noWorkersNoWork();
   bool hasAllWorkers();
   void performCheckpoint();
   bool shouldCheckpoint();
@@ -67,7 +60,6 @@ private:
   void sendHeartbeat();
   void broadcastHeartbeat();
   void broadcastNewMasterSignal();
-  // bool hasWork();
   bool hasWorkers();
   bool hasPendingWork();
   bool hasWorkToDistribute();

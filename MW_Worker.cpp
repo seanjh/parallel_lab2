@@ -6,7 +6,8 @@
 #include "MW_Worker.hpp"
 #include "MPIMessage.hpp"
 
-MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preemptionTimer(.1), random(MW_Random(WORKER_FAILURE_PROBABILITY, myid, w_size))
+MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preemptionTimer(.1),
+  random(MW_Random(WORKER_FAILURE_PROBABILITY, myid, w_size))
 {
   id = myid;
   master_id = m_id;
@@ -14,6 +15,12 @@ MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preempti
   heardFromMaster = false;
   waitingForNewMaster = false;
   masterMonitor = nullptr;
+
+  willFail = random.random_fail();
+  if (willFail) {
+    std::cout << "P:" << id << " This Worker will eventually fail!\n";
+  }
+  random = MW_Random(SEND_FAILURE_PROBABILITY, id, world_size);
 }
 
 MWTag MW_Worker::receive()
@@ -279,7 +286,7 @@ bool MW_Worker::shouldSendHeartbeat()
 
 void MW_Worker::sendHeartbeat()
 {
-  if (random.random_fail()) {
+  if (random.random_fail() && WORKER_FAIL_TEST_ON) {
     std::cout << "P" << id << ": WORKER FAILURE EVENT\n";
     MPI::Finalize();
     exit (0);
