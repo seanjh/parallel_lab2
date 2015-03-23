@@ -32,8 +32,8 @@ private:
   int id;
   int world_size;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> work;
-  std::unordered_map<MW_ID, std::shared_ptr<Work>> completedWork;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
+  std::unordered_map<MW_ID, std::shared_ptr<Work>> completedWork;
   std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
   std::unordered_map<int, std::shared_ptr<MW_Remote_Worker>> workerMap;
   // std::list<int> freeWorkers;
@@ -44,6 +44,7 @@ private:
   MW_Random random;
 
   void initializeWorkerMap();
+  void initializeRandomFailure();
   void initializeWorkFromCheckpoint();
   void initializeResultFromCheckpoint();
   int nextWorker();
@@ -62,6 +63,7 @@ private:
   void broadcastNewMasterSignal();
   bool hasWorkers();
   bool hasPendingWork();
+  void printWorkStatus();
   bool hasWorkToDistribute();
 
 };

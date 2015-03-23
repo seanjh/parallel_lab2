@@ -15,7 +15,7 @@ const std::string WORK_CHECKPOINT_FILENAME    = "checkpoint_work.csv";
 const std::string RESULTS_CHECKPOINT_FILENAME = "checkpoint_result.csv";
 
 MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &work_p) :
-  id(myid), world_size(sz), random(MW_Random(MASTER_FAILURE_PROBABILITY, id, world_size))
+  id(myid), world_size(sz), random(MW_Random(SEND_FAILURE_PROBABILITY, myid, sz))
   // id(myid), world_size(sz)
 {
 
@@ -26,16 +26,23 @@ MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &w
   workToDo = work;
   std::cout << "P" << id << ": Total work in master is " << workToDo.size() << std::endl;
 
-  willFail = random.random_fail();
-  if (willFail) {
-    std::cout << "P" << id << ": This MASTER will eventually fail!\n";
-  }
-  random = MW_Random(SEND_FAILURE_PROBABILITY, id, world_size);
-
+  initializeRandomFailure();
   // initializeWorkerMap();
 
   performCheckpoint();
   broadcastHeartbeat();
+}
+
+void MW_Master::initializeRandomFailure()
+{
+  MW_Random meta_random = MW_Random(MASTER_FAILURE_PROBABILITY, id, world_size);
+  if (MASTER_FAIL_TEST_ON && meta_random.random_fail()) {
+    willFail = true;
+    std::cout << "P" << id << ": This MASTER will eventually fail!\n";
+  } else {
+    std::cout << "P" << id << ": This MASTER should not fail.\n";
+    willFail = false;
+  }
 }
 
 void MW_Master::initializeWorkerMap()
@@ -323,7 +330,7 @@ bool MW_Master::shouldSendHeartbeat()
 void MW_Master::sendHeartbeat()
 {
 
-  if (random.random_fail() && willFail && MASTER_FAIL_TEST_ON) {
+  if (willFail && random.random_fail()) {
     std::cout << "P" << id << ": MASTER FAILURE EVENT\n";
     MPI::Finalize();
     exit (0);
@@ -343,19 +350,33 @@ bool MW_Master::hasWorkToDistribute()
   return val;
 }
 
+void MW_Master::printWorkStatus()
+{
+  int work_results_diff = work.size() - results.size();
+  std::cout << "P" << id << ": work " << work.size() <<
+    ", workToDo " << workToDo.size() <<
+    ", completedWork " << completedWork.size() <<
+    ", results " << results.size() <<
+    ", work-results " << work_results_diff <<
+    "\n";
+}
+
 bool MW_Master::hasPendingWork()
 {
-  bool val = !(completedWork.size() == work.size());
+  bool pendingWork = !(completedWork.size() == work.size());
 
-  if (!val){
+  if (!pendingWork){
+    std::cout << "P" << id << ": there is no more pending work" << std::endl;
+    printWorkStatus();
     assert(work.size() == results.size());
-    std::cout << "there is no more pending work" << std::endl;
+
   }
-  else
+  else {
+    // std::cout << "P" << id << ": pending work" << std::endl;
     assert(work.size() != results.size());
+  }
 
-
-  return val;
+  return pendingWork;
 }
 
 bool MW_Master::hasWorkers()
@@ -462,11 +483,7 @@ MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size),
 {
   std::cout << "P" << myid << ": Creating NEW Master from checkpoint\n";
 
-  willFail = random.random_fail();
-  if (willFail) {
-    std::cout << "P" << id << ": This Master will eventually fail!\n";
-  }
-  random = MW_Random(SEND_FAILURE_PROBABILITY, id, world_size);
+  initializeRandomFailure();
 
   // initializeWorkerMap();
 
