@@ -18,9 +18,9 @@ MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preempti
   MW_Random meta_random = MW_Random(WORKER_FAILURE_PROBABILITY, id, world_size);
   if (WORKER_FAIL_TEST_ON && meta_random.random_fail()) {
     willFail = true;
-    std::cout << "P" << id << ": This WORKER will eventually fail!\n";
+    std::cout << "P" << id << ": This WORKER will eventually FAIL!\n";
   } else {
-    std::cout << "P" << id << ": This WORKER should not fail.\n";
+    std::cout << "P" << id << ": This WORKER should survive.\n";
     willFail = false;
   }
 
