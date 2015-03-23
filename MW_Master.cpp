@@ -38,9 +38,9 @@ void MW_Master::initializeRandomFailure()
   MW_Random meta_random = MW_Random(MASTER_FAILURE_PROBABILITY, id, world_size);
   if (MASTER_FAIL_TEST_ON && meta_random.random_fail()) {
     willFail = true;
-    std::cout << "P" << id << ": This MASTER will eventually fail!\n";
+    std::cout << "P" << id << ": This MASTER can FAIL!\n";
   } else {
-    std::cout << "P" << id << ": This MASTER should not fail.\n";
+    std::cout << "P" << id << ": This MASTER should survive.\n";
     willFail = false;
   }
 }
@@ -482,7 +482,7 @@ void MW_Master::initializeWorkFromCheckpoint()
 
 
 MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size),
-  random(MW_Random(0.0001, id, world_size))
+  random(MW_Random(0.25, id, world_size))
 // MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
 {
   std::cout << "P" << myid << ": Creating NEW Master from checkpoint\n";

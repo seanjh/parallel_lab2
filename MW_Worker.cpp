@@ -18,9 +18,9 @@ MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preempti
   MW_Random meta_random = MW_Random(WORKER_FAILURE_PROBABILITY, id, world_size);
   if (WORKER_FAIL_TEST_ON && meta_random.random_fail()) {
     willFail = true;
-    std::cout << "P" << id << ": This WORKER will eventually FAIL!\n";
+    std::cout << "P" << id << ": This WORKER can FAIL!\n";
   } else {
-    std::cout << "P" << id << ": This WORKER should survive.\n";
+    std::cout << "P" << id << ": This WORKER will survive.\n";
     willFail = false;
   }
 
@@ -357,7 +357,9 @@ int MW_Worker::findNextMasterId()
   int lowest_other_worker_id = world_size - 1;
   // std::unordered_map<int, std::shared_ptr<MW_Monitor>> otherWorkersMonitorMap;
   for ( auto& it: otherWorkersMonitorMap ) {
-    if (it.first < lowest_other_worker_id && it.second->isAlive()) {
+    if (!it.second->isAlive()) {
+      std::cout << "\tP" << id << ": I think P" << it.first << " is dead.\n";
+    } else if (it.first < lowest_other_worker_id) {
       lowest_other_worker_id = it.first;
     }
   }
@@ -422,40 +424,3 @@ bool MW_Worker::transitionMaster()
 
   return is_next_master;
 }
-
-// bool MW_Worker::checkOnMaster()
-// {
-//
-//
-//   assert(masterMonitor);
-//   if(!masterMonitor->isAlive())
-//   {
-//
-//     //flush current work
-//
-//     //determine which worker is next master by which workers are still alive
-//     int next_master = findNextMasterId();
-//
-//     //if I am the new master, return true
-//     if (next_master == id) {
-//
-//       return true;
-//     }
-//
-//     //if I am not the new master, move the new master off the worker monitor
-//     //map into the master slot, set next master check for some long time in the future
-//     //return false
-//     // std::cout << "P" << id << ": P" << next_master << " is the next MASTER\n";
-//     // auto next_master_monitor = otherWorkersMonitorMap[next_master];
-//     // masterMonitor = next_master_monitor;
-//     // otherWorkersMonitorMap.erase(next_master);
-//     // std::cout << "P" << id << ": Monitoring these remaining workers: ";
-//     // for ( auto& x: otherWorkersMonitorMap )
-//     //   std::cout << "\t" << x.first << ": " << x.second << std::endl;
-//
-//     return false;
-//
-//   }
-//   else
-//     return false;
-// }
