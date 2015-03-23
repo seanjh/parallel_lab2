@@ -19,6 +19,7 @@ public:
 public:
 
   virtual std::string *serialize() = 0;
+  virtual std::string *testSerialize() = 0;
   static std::shared_ptr<Result> deserialize(const std::string &){return nullptr;}
     // You could add more to the public interface, if you wanted to.
 private:

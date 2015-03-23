@@ -284,7 +284,6 @@ bool MW_Master::shouldCheckpoint()
 
 void MW_Master::performCheckpoint()
 {
-
   std::cout << "P:" << id << " Starting Checkpoint" << std::endl;
 
   std::ofstream checkpointWorkFile, checkpointResultsFile;
@@ -341,8 +340,15 @@ bool MW_Master::hasWorkToDistribute()
 bool MW_Master::hasPendingWork()
 {
   bool val = !(completedWork.size() == work.size());
-  if (!val)
+
+  if (!val){
+    assert(work.size() == results.size());
     std::cout << "there is no more pending work" << std::endl;
+  }
+  else
+    assert(work.size() != results.size());
+
+
   return val;
 }
 
@@ -379,7 +385,7 @@ void MW_Master::initializeResultFromCheckpoint()
 {
   std::cout << "P" << id << ": RESTORING RESULTS\n";
   std::string line, idString, serializedObject;
-  MW_ID id;
+  MW_ID work_id;
   std::shared_ptr<MPIMessage> message;
   std::ifstream infile (RESULTS_CHECKPOINT_FILENAME);
 
@@ -390,19 +396,23 @@ void MW_Master::initializeResultFromCheckpoint()
       // std::cout << "line: " << line << '\n';
       std::istringstream iss (line);
       std::getline(iss, idString,',');
-      id = std::stoul(idString);
+      work_id = std::stoul(idString);
       // std::cout << "idString: " << idString << " (MW_ID=" << id << ")" << '\n';
       std::getline(iss, serializedObject);
       // std::cout << "serializedObject: " << serializedObject << '\n';
 
       message = std::make_shared<MPIMessage> (serializedObject);
       // std::cout << "MPIMessage: " << message->to_string() << '\n';
-      results[id] = message->deserializeResult();
-      // std::cout << "serializedObject: " <<results[id]->serialize() << std::endl;
+      results[work_id] = message->deserializeResult();
+      // std::cout << "serializedObject: " <<*(results[work_id]->testSerialize()) << std::endl;
     }
     infile.close();
+
+    std::cout << "Restored " << results.size() << " results." <<std::endl;
   }
-  else std::cerr << "Unable to open file";
+  else {
+    std::cerr << "Unable to open file";
+  }
 
   std::cout << "P:" << id << " Restored " << results.size() << " total results" << std::endl;
 }

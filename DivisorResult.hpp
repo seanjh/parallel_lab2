@@ -29,6 +29,7 @@ public:
     // You could add more to the public interface, if you wanted to.
 	//const std::string &getDivisorsCSV();
     virtual std::string *serialize();
+    virtual std::string *testSerialize();
     static std::shared_ptr<Result> deserialize(const std::string &serialObject){return std::shared_ptr<Result>(new DivisorResult(serialObject));}
     const std::list<mpz_class> &getDivisors();
 private:
