@@ -35,3 +35,7 @@ divisors_app
 
 # NetBeans
 nbproject*
+
+checkpoint_result.csv
+
+checkpoint_work.csv

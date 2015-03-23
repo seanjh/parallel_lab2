@@ -6,13 +6,14 @@
 #include "MPIMessage.hpp"
 #include <sstream>
 
-MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preemptionTimer(.1), random(MW_Random(myid, w_size))
+MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preemptionTimer(.1), random(MW_Random(WORKER_FAILURE_PROBABILITY, myid, w_size))
 {
   id = myid;
   master_id = m_id;
   world_size = w_size;
   heardFromMaster = false;
   waitingForNewMaster = false;
+  masterMonitor = nullptr;
 }
 
 MWTag MW_Worker::receive()
@@ -127,9 +128,13 @@ void MW_Worker::process_heartbeat(int source_id)
   if (source_id == master_id)
   {
     if (!masterMonitor)
-      masterMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD));
+    {
+      // std::cout << "P:" << id << " Received its first heartbeat from " << source_id << ". Adding to master\n";
+      updateMasterCheckTime();
+      masterMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD*5.0));
+    }
     masterMonitor->addHeartbeat();
-    updateMasterCheckTime();
+    
   }
   else
   {
@@ -139,8 +144,8 @@ void MW_Worker::process_heartbeat(int source_id)
     }
     catch (const std::out_of_range& oor) {
 
-      std::cout << "P:" << id << " Received its first heartbeat from " << source_id << ". Adding to monitor map\n";
-      nodeMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD));
+      // std::cout << "P:" << id << " Received its first heartbeat from " << source_id << ". Adding to monitor map\n";
+      nodeMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD*5.0));
       otherWorkersMonitorMap[source_id] = nodeMonitor;
     }
     nodeMonitor->addHeartbeat();
@@ -183,15 +188,18 @@ bool MW_Worker::worker_loop()
     if (shouldCheckOnMaster())
     {
       // bool transitionToMaster = checkOnMaster();
-      std::cout << "P:" << id << " Checking on Master\n";
-      // updateMasterCheckTime();
+      // std::cout << "P:" << id << " Checking on Master\n";
+      updateMasterCheckTime();
 
       bool is_master_alive = isMasterAlive();
       if (is_master_alive) {
-        std::cout << "P:" << id << " Master looks OK!\n";
+        // std::cout << "P:" << id << " Master "<< master_id << " looks OK!\n";
         continue;
       } else {
-        std::cout << "P:" << id << " MASTER LOOKS DEAD\n";
+        std::cout << "P:" << id << " MASTER "<< master_id << " LOOKS DEAD\n";
+        std::cout << "P:" << id << " Current TIme " << MPI::Wtime() << std::endl;
+        // masterMonitor->dump();
+        // assert(false);
         break;
       }
     }
@@ -281,15 +289,16 @@ void MW_Worker::sendHeartbeat()
     broadcastHeartbeat();
   else
   {
+    broadcastHeartbeat();
     // std::cout << "worker sending heartbeat" <<std::endl;
     // if(masterMonitor->isAlive())
-    masterMonitor->sendHeartbeat(false);
-    // std::cout << "worker sent heartbeat to master" <<std::endl;
-    for(auto it=otherWorkersMonitorMap.begin(); it != otherWorkersMonitorMap.end(); it++)
-    {
-      // if (it->second->isAlive())
-      it->second->sendHeartbeat(false);
-    }
+    // masterMonitor->sendHeartbeat(false);
+    // // std::cout << "worker sent heartbeat to master" <<std::endl;
+    // for(auto it=otherWorkersMonitorMap.begin(); it != otherWorkersMonitorMap.end(); it++)
+    // {
+    //   // if (it->second->isAlive())
+    //   it->second->sendHeartbeat(false);
+    // }
     lastHeartbeat = MPI::Wtime();
     // std::cout << "worker finished sending heartbeat" <<std::endl;
   }
@@ -348,14 +357,14 @@ int MW_Worker::findNextMasterId()
 
 void MW_Worker::updateMasterCheckTime()
 {
-  heardFromMaster = true;
-
-  if (!nextMasterCheckTime) {
-    std::cout << "P" << id << ": initializing nextMasterCheckTime\n";
+  
+  if (!heardFromMaster) {
+    heardFromMaster = true;
+    // std::cout << "P" << id << ": initializing nextMasterCheckTime\n";
     nextMasterCheckTime = MPI::Wtime();
   }
-
-  nextMasterCheckTime += (HEARTBEAT_PERIOD * 5);
+  // std::cout << "P" << id << ": updating nextMasterCheckTime\n";
+  nextMasterCheckTime += (HEARTBEAT_PERIOD*2.0);
   // nextMasterCheckTime = MPI::Wtime() + (HEARTBEAT_PERIOD * 5);
 }
 

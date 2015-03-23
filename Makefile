@@ -111,4 +111,4 @@ divisors_app: $(DIVISORS_APP_OBJ)
 .PHONY: clean
 
 clean:
-	rm -f $(ODIR)/*.o serial
+	rm -f $(ODIR)/*.o serial divisors_app

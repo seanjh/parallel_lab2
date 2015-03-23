@@ -11,6 +11,7 @@ public:
   bool isAlive();
   void addHeartbeat();
   void sendHeartbeat(bool masterFlag);
+  void dump();
 
 private:
   const int id;

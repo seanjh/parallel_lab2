@@ -36,6 +36,12 @@ void MW_Monitor::addHeartbeat()
   heartbeats.push_back(heartbeat);
 }
 
+void MW_Monitor::dump()
+{
+  for(auto it=heartbeats.begin(); it!=heartbeats.end(); it++)
+    std::cout<<*it<<std::endl;
+}
+
 void MW_Monitor::sendHeartbeat(bool masterFlag)
 {
   // std::cout<<"Sending heartbeat to " << id <<std::endl;

@@ -17,7 +17,7 @@ const std::string WORK_CHECKPOINT_FILENAME    = "checkpoint_work.csv";
 const std::string RESULTS_CHECKPOINT_FILENAME = "checkpoint_result.csv";
 
 MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &work_p) :
-  id(myid), world_size(sz), random(MW_Random(0.33, myid, sz))
+  id(myid), world_size(sz), random(MW_Random(MASTER_FAILURE_PROBABILITY, id, world_size))
   // id(myid), world_size(sz)
 {
 
@@ -89,7 +89,10 @@ bool MW_Master::master_loop()
     checkOnWorkers();
 
     if(shouldSendHeartbeat()) sendHeartbeat();
-    else if (shouldCheckpoint()) performCheckpoint();
+    else if (shouldCheckpoint()) {
+      performCheckpoint();
+      // assert(false);
+    }
 
     else if (hasWorkers() && hasWorkToDistribute()) {
 
@@ -317,7 +320,7 @@ void MW_Master::process_heartbeat(int worker_id)
   }
   catch (const std::out_of_range& oor) {
 
-    std::cout << "P:" << id << " Received its first heartbeat from " << worker_id << ". Adding to monitor map\n";
+    // std::cout << "P:" << id << " Received its first heartbeat from " << worker_id << ". Adding to monitor map\n";
     // worker = std::shared_ptr<MW_Remote_Worker>(new MW_Remote_Worker(worker_id, HEARTBEAT_PERIOD));
     worker = std::shared_ptr<MW_Remote_Worker> (new MW_Remote_Worker(worker_id));
     workerMap[worker_id] = worker;
@@ -344,7 +347,10 @@ void MW_Master::performCheckpoint()
 
   checkpointResultsFile.open(RESULTS_CHECKPOINT_FILENAME);
   for(auto it=results.begin(); it!=results.end(); it++)
-      checkpointResultsFile << it->first <<","<<*(it->second->serialize())<<std::endl;
+  {
+    // std::cout<<it->first <<","<<*(it->second->serialize())<<std::endl;
+    checkpointResultsFile << it->first <<","<<*(it->second->serialize())<<std::endl;
+  }
 
   checkpointResultsFile.close();
 
@@ -368,12 +374,13 @@ void MW_Master::sendHeartbeat()
     exit (0);
   }
 
-  for(auto it=workerMap.begin(); it != workerMap.end(); it++)
-  {
-    // if (it->second->heartbeatMonitor.isAlive())
-    // std::cout << "P:" << id << " Master heartbeat sent to "<< it->first << "\n";
-    it->second->heartbeatMonitor.sendHeartbeat(true);
-  }
+  broadcastHeartbeat();
+  // for(auto it=workerMap.begin(); it != workerMap.end(); it++)
+  // {
+  //   // if (it->second->heartbeatMonitor.isAlive())
+  //   // std::cout << "P:" << id << " Master heartbeat sent to "<< it->first << "\n";
+  //   it->second->heartbeatMonitor.sendHeartbeat(true);
+  // }
   lastHeartbeat = MPI::Wtime();
 }
 
@@ -447,6 +454,7 @@ void MW_Master::initializeResultFromCheckpoint()
       message = std::make_shared<MPIMessage> (serializedObject);
       // std::cout << "MPIMessage: " << message->to_string() << '\n';
       results[id] = message->deserializeResult();
+      std::cout << "serializedObject: " <<results[id]->serialize() << std::endl;
     }
     infile.close();
   }
@@ -484,7 +492,7 @@ void MW_Master::initializeWorkFromCheckpoint()
 }
 
 
-MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size), random(MW_Random(myid, size))
+MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size), random(MW_Random(MASTER_FAILURE_PROBABILITY, id, world_size))
 // MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
 {
   std::cout << "P" << myid << ": Creating NEW Master from checkpoint\n";
@@ -515,8 +523,9 @@ MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size), random(MW
       workToDo[it->first] = it->second;
       // std::cout << "workToDo is size " << workToDo.size() << "\n";
     }
-    std::cout << "workToDo is size " << workToDo.size() << "\n";
+    // std::cout << "workToDo is size " << workToDo.size() << "\n";
   }
+  std::cout << "workToDo is size " << workToDo.size() << "\n";
 
   broadcastNewMasterSignal();
 
