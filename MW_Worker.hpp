@@ -41,7 +41,7 @@ private:
 
   MW_Timer preemptionTimer;
   MW_Random random;
-  bool willFail;
+  // bool willFail;
   double nextMasterCheckTime;
   double lastHeartbeat;
   bool heardFromMaster;

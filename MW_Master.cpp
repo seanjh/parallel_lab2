@@ -14,8 +14,9 @@
 const std::string WORK_CHECKPOINT_FILENAME    = "checkpoint_work.csv";
 const std::string RESULTS_CHECKPOINT_FILENAME = "checkpoint_result.csv";
 
+
 MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &work_p) :
-  id(myid), world_size(sz), random(MW_Random(SEND_FAILURE_PROBABILITY, myid, sz))
+  id(myid), world_size(sz), random(MW_Random(MASTER_FAILURE_PROBABILITY, myid, sz))
   // id(myid), world_size(sz)
 {
 
@@ -26,24 +27,26 @@ MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &w
   workToDo = work;
   std::cout << "P" << id << ": Total work in master is " << workToDo.size() << std::endl;
 
-  initializeRandomFailure();
+  // initializeRandomFailure();
   // initializeWorkerMap();
+
+  delayUntil = MPI::Wtime() + STARTUP_DELAY_TIME;
 
   performCheckpoint();
   broadcastHeartbeat();
 }
 
-void MW_Master::initializeRandomFailure()
-{
-  MW_Random meta_random = MW_Random(MASTER_FAILURE_PROBABILITY, id, world_size);
-  if (MASTER_FAIL_TEST_ON && meta_random.random_fail()) {
-    willFail = true;
-    std::cout << "P" << id << ": This MASTER can FAIL!\n";
-  } else {
-    std::cout << "P" << id << ": This MASTER should survive.\n";
-    willFail = false;
-  }
-}
+// void MW_Master::initializeRandomFailure()
+// {
+//   MW_Random meta_random = MW_Random(MASTER_FAILURE_PROBABILITY, id, world_size);
+//   if (MASTER_FAIL_TEST_ON && meta_random.random_fail()) {
+//     willFail = true;
+//     std::cout << "P" << id << ": This MASTER can FAIL!\n";
+//   } else {
+//     std::cout << "P" << id << ": This MASTER should survive.\n";
+//     willFail = false;
+//   }
+// }
 
 void MW_Master::initializeWorkerMap()
 {
@@ -79,6 +82,16 @@ bool MW_Master::master_loop()
   int worker_id;
   long long int iteration_count=0;
 
+  // std::cout<<"entering startup loop"<<std::endl;
+  while (delayUntil > MPI::Wtime())
+  {
+    if(shouldSendHeartbeat())
+      sendHeartbeat();
+
+    receive();
+  }
+     
+  // std::cout<<"entering main loop"<<std::endl; 
   while (1) {
 
     checkOnWorkers();
@@ -119,8 +132,12 @@ bool MW_Master::master_loop()
 
 void MW_Master::checkOnWorkers()
 {
+  bool foundAWorker = false;
   for(auto it=workerMap.begin(); it != workerMap.end(); it++)
   {
+    if (it->second->heartbeatMonitor.isAlive())
+      foundAWorker = true;
+
     if (!it->second->heartbeatMonitor.isAlive() && (it->second->workPendingCount() > 0))
     {
       std::list<MW_ID> &pendingWorkList = it->second->getPendingWork();
@@ -134,6 +151,14 @@ void MW_Master::checkOnWorkers()
       }
     }
   }
+
+  if(!foundAWorker)
+  {
+    std::cout << "P" << id << ": THERE ARE NO MORE WORKERS!\n";
+    MPI::Finalize();
+    exit (1);
+  }
+
 }
 
 void MW_Master::send_done()
@@ -330,7 +355,13 @@ bool MW_Master::shouldSendHeartbeat()
 void MW_Master::sendHeartbeat()
 {
 
-  if (willFail && random.random_fail()) {
+  // if (willFail && random.random_fail()) {
+  //   std::cout << "P" << id << ": MASTER FAILURE EVENT\n";
+  //   MPI::Finalize();
+  //   exit (0);
+  // }
+
+  if (random.random_fail()) {
     std::cout << "P" << id << ": MASTER FAILURE EVENT\n";
     MPI::Finalize();
     exit (0);
@@ -338,7 +369,7 @@ void MW_Master::sendHeartbeat()
 
   broadcastHeartbeat();
 
-  lastHeartbeat = MPI::Wtime();
+  // lastHeartbeat = MPI::Wtime();
 }
 
 bool MW_Master::hasWorkToDistribute()
@@ -484,18 +515,23 @@ void MW_Master::initializeWorkFromCheckpoint()
 
 
 MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size),
-  random(MW_Random(0.10, myid, size))
+  random(MW_Random(MASTER_FAILURE_PROBABILITY, myid, size))
 // MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
 {
   std::cout << "P" << myid << ": Creating NEW Master from checkpoint\n";
 
-  initializeRandomFailure();
+  broadcastHeartbeat();
+
+  // initializeRandomFailure();
 
   // initializeWorkerMap();
 
   initializeWorkFromCheckpoint();
 
   initializeResultFromCheckpoint();
+  lastCheckpoint = MPI::Wtime();
+
+  broadcastHeartbeat();
 
   std::cout << "workToDo is size " << workToDo.size() << "\n";
   std::shared_ptr<Result> result;
@@ -516,6 +552,8 @@ MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size),
   broadcastNewMasterSignal();
 
   broadcastHeartbeat();
+
+  delayUntil = MPI::Wtime() + STARTUP_DELAY_TIME;
 
 }
 

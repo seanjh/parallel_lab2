@@ -6,7 +6,7 @@
 #include "MW_Worker.hpp"
 #include "MPIMessage.hpp"
 
-MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preemptionTimer(.1), random(MW_Random(SEND_FAILURE_PROBABILITY, myid, w_size))
+MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preemptionTimer(.1), random(MW_Random(WORKER_FAILURE_PROBABILITY, myid, w_size))
 {
   id = myid;
   master_id = m_id;
@@ -15,15 +15,16 @@ MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preempti
   waitingForNewMaster = false;
   masterMonitor = nullptr;
 
-  MW_Random meta_random = MW_Random(WORKER_FAILURE_PROBABILITY, id, world_size);
-  if (WORKER_FAIL_TEST_ON && meta_random.random_fail()) {
-    willFail = true;
-    std::cout << "P" << id << ": This WORKER can FAIL!\n";
-  } else {
-    std::cout << "P" << id << ": This WORKER will survive.\n";
-    willFail = false;
-  }
+  // MW_Random meta_random = MW_Random(WORKER_FAILURE_PROBABILITY, id, world_size);
+  // if (WORKER_FAIL_TEST_ON && meta_random.random_fail()) {
+  //   willFail = true;
+  //   std::cout << "P" << id << ": This WORKER can FAIL!\n";
+  // } else {
+  //   std::cout << "P" << id << ": This WORKER will survive.\n";
+  //   willFail = false;
+  // }
 
+  sendHeartbeat();
 }
 
 MWTag MW_Worker::receive()
@@ -89,6 +90,7 @@ void MW_Worker::process_new_master(int source_id)
   if (source_id != next_master_id) {
 
     std::cout << "P" << id << ": UH-OH! Wrong MASTER P" << source_id << " sent NEW_MASTER_TAG!\n";
+    assert(false);
     MPI::Finalize();
     exit (1);
 
@@ -289,29 +291,37 @@ bool MW_Worker::shouldSendHeartbeat()
 
 void MW_Worker::sendHeartbeat()
 {
-  if (willFail && random.random_fail()) {
+  // if (willFail && random.random_fail()) {
+  //   std::cout << "P" << id << ": WORKER FAILURE EVENT\n";
+  //   MPI::Finalize();
+  //   exit (0);
+  // }
+
+  if (random.random_fail()) {
     std::cout << "P" << id << ": WORKER FAILURE EVENT\n";
     MPI::Finalize();
     exit (0);
   }
 
-  if (!masterMonitor)
-    broadcastHeartbeat();
-  else
-  {
-    broadcastHeartbeat();
-    // std::cout << "worker sending heartbeat" <<std::endl;
-    // if(masterMonitor->isAlive())
-    // masterMonitor->sendHeartbeat(false);
-    // // std::cout << "worker sent heartbeat to master" <<std::endl;
-    // for(auto it=otherWorkersMonitorMap.begin(); it != otherWorkersMonitorMap.end(); it++)
-    // {
-    //   // if (it->second->isAlive())
-    //   it->second->sendHeartbeat(false);
-    // }
-    lastHeartbeat = MPI::Wtime();
-    // std::cout << "worker finished sending heartbeat" <<std::endl;
-  }
+  broadcastHeartbeat();
+
+  // if (!masterMonitor)
+  //   broadcastHeartbeat();
+  // else
+  // {
+  //   broadcastHeartbeat();
+  //   // std::cout << "worker sending heartbeat" <<std::endl;
+  //   // if(masterMonitor->isAlive())
+  //   // masterMonitor->sendHeartbeat(false);
+  //   // // std::cout << "worker sent heartbeat to master" <<std::endl;
+  //   // for(auto it=otherWorkersMonitorMap.begin(); it != otherWorkersMonitorMap.end(); it++)
+  //   // {
+  //   //   // if (it->second->isAlive())
+  //   //   it->second->sendHeartbeat(false);
+  //   // }
+  //   // lastHeartbeat = MPI::Wtime();
+  //   // std::cout << "worker finished sending heartbeat" <<std::endl;
+  // }
 
 }
 

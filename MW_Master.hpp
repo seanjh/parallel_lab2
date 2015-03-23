@@ -40,11 +40,12 @@ private:
 
   double lastCheckpoint;
   double lastHeartbeat;
-  bool willFail;
+  double delayUntil;
+  // bool willFail;
   MW_Random random;
 
   void initializeWorkerMap();
-  void initializeRandomFailure();
+  // void initializeRandomFailure();
   void initializeWorkFromCheckpoint();
   void initializeResultFromCheckpoint();
   int nextWorker();
