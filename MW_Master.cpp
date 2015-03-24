@@ -34,6 +34,7 @@ MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &w
 
   performCheckpoint();
   broadcastHeartbeat();
+  broadcastNewMasterSignal();
 }
 
 // void MW_Master::initializeRandomFailure()
@@ -82,7 +83,7 @@ bool MW_Master::master_loop()
   int worker_id;
   long long int iteration_count=0;
 
-  // std::cout<<"entering startup loop"<<std::endl;
+  std::cout<<"P" <<id<<" entering startup loop"<<std::endl;
   while (delayUntil > MPI::Wtime())
   {
     if(shouldSendHeartbeat())
@@ -91,7 +92,7 @@ bool MW_Master::master_loop()
     receive();
   }
      
-  // std::cout<<"entering main loop"<<std::endl; 
+  std::cout<<"P" <<id<<" entering main loop"<<std::endl; 
   while (1) {
 
     checkOnWorkers();
@@ -198,6 +199,7 @@ void MW_Master::send(int worker_id)
 
   int count = (int) work_string->length();
 
+  // std::cout << "P:" << this->id << " work message " << *work_string << std::endl;
   MPI::COMM_WORLD.Send(
     (void *) work_string->data(),
     count,
@@ -361,11 +363,11 @@ void MW_Master::sendHeartbeat()
   //   exit (0);
   // }
 
-  if (random.random_fail()) {
-    std::cout << "P" << id << ": MASTER FAILURE EVENT\n";
-    MPI::Finalize();
-    exit (0);
-  }
+  // if (random.random_fail()) {
+  //   std::cout << "P" << id << ": MASTER FAILURE EVENT\n";
+  //   MPI::Finalize();
+  //   exit (0);
+  // }
 
   broadcastHeartbeat();
 

@@ -14,6 +14,7 @@ MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preempti
   heardFromMaster = false;
   waitingForNewMaster = false;
   masterMonitor = nullptr;
+  nextMasterId = 0;
 
   // MW_Random meta_random = MW_Random(WORKER_FAILURE_PROBABILITY, id, world_size);
   // if (WORKER_FAIL_TEST_ON && meta_random.random_fail()) {
@@ -27,69 +28,225 @@ MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preempti
   sendHeartbeat();
 }
 
-MWTag MW_Worker::receive()
+MWTag MW_Worker::receiveWork()
 {
-  // std::cout << "P" << id << ": waiting to receive work from master." << std::endl;
 
+  char *message = (char*)malloc(MAX_MESSAGE_SIZE);
+  memset(message, 0, MAX_MESSAGE_SIZE);
+  int source_id=-1;
+  int count=0;
+
+  MWTag message_tag = receive(MPI::ANY_SOURCE,
+                              WORK_TAG,
+                              (void*)message,
+                              MAX_MESSAGE_SIZE,
+                              source_id,
+                              count);
+  if(message_tag == WORK_TAG)
+  {
+    // std::cout << "P" << id<< " Received work message: \"" << std::string(message) << "\"" << std::endl;
+    process_work(message, source_id, count);
+  }
+  else
+  {
+    assert(message_tag == NOTHING_TAG);
+  }
+
+  free(message);
+  return message_tag;
+}
+
+MWTag MW_Worker::receiveHeartbeat()
+{
+
+  char *message = (char*)malloc(MAX_MESSAGE_SIZE);
+  memset(message, 0, MAX_MESSAGE_SIZE);
+  int source_id=-1;
+  int count=0;
+
+  MWTag message_tag = receive(MPI::ANY_SOURCE,
+                              HEARTBEAT_TAG,
+                              (void*)message,
+                              MAX_MESSAGE_SIZE,
+                              source_id,
+                              count);
+  if(message_tag == HEARTBEAT_TAG)
+  {
+    process_heartbeat(source_id);
+  }
+  else
+  {
+    assert(message_tag == NOTHING_TAG);
+  }
+
+  free(message);
+  return message_tag;
+}
+
+MWTag MW_Worker::receiveNewMaster()
+{
+
+  char *message = (char*)malloc(MAX_MESSAGE_SIZE);
+  memset(message, 0, MAX_MESSAGE_SIZE);
+  int source_id=-1;
+  int count=0;
+
+  MWTag message_tag = receive(MPI::ANY_SOURCE,
+                              NEW_MASTER_TAG,
+                              (void*)message,
+                              MAX_MESSAGE_SIZE,
+                              source_id,
+                              count);
+  if(message_tag == NEW_MASTER_TAG)
+  {
+    // std::cout<<"Received new master from " << source_id <<std::endl;
+    process_new_master(source_id);
+  }
+  else
+  {
+    assert(message_tag == NOTHING_TAG);
+  }
+
+  free(message);
+  return message_tag;
+}
+
+MWTag MW_Worker::receiveDone()
+{
+
+  char *message = (char*)malloc(MAX_MESSAGE_SIZE);
+  memset(message, 0, MAX_MESSAGE_SIZE);
+  int source_id=-1;
+  int count=0;
+
+  MWTag message_tag = receive(MPI::ANY_SOURCE,
+                              DONE_TAG,
+                              (void*)message,
+                              MAX_MESSAGE_SIZE,
+                              source_id,
+                              count);
+  // if(message_tag == NEW_MASTER_TAG)
+  // {
+  //   // std::cout<<"Received new master from " << source_id <<std::endl;
+  //   process_new_master(source_id);
+  // }
+  // else
+  // {
+  //   assert(message_tag == NOTHING_TAG);
+  // }
+
+  free(message);
+  return message_tag;
+}
+
+
+MWTag MW_Worker::receive( int source,
+                          int tag,
+                          void *message, 
+                          int maxMessageSize, 
+                          int &source_id, 
+                          int &count)
+{
   MPI::Status status;
   bool can_receive = MPI::COMM_WORLD.Iprobe(
-    MPI::ANY_SOURCE,
-    MPI::ANY_TAG,
+    source,
+    tag,
     status
   );
 
   if (can_receive) {
     //std::cout << "IProbe did not find a message. No receive possible\n";
     // MPI::Status status;
-    char *message = (char*)malloc(MAX_MESSAGE_SIZE);
-    memset(message, 0, MAX_MESSAGE_SIZE);
+    // char *message = (char*)malloc(MAX_MESSAGE_SIZE);
+    // memset(message, 0, MAX_MESSAGE_SIZE);
     // std::string message(1000, 0);
 
     MPI::COMM_WORLD.Recv(
-      (void *) message,
-      MAX_MESSAGE_SIZE,
+      message,
+      maxMessageSize,
       MPI::CHAR,
-      MPI::ANY_SOURCE,
-      MPI::ANY_TAG,
+      source,
+      tag,
       status
     );
 
-    MWTag message_tag = static_cast<MWTag>(status.Get_tag());
-    int source_id = status.Get_source();
-    int count = status.Get_count(MPI::CHAR);
-    // std::cout<< "received message" <<std::endl;
+    MWTag message_tag = (MWTag)status.Get_tag();
+    source_id = status.Get_source();
+    count = status.Get_count(MPI::CHAR);
 
-    if (message_tag == WORK_TAG && !waitingForNewMaster) {
-
-      process_work(message, source_id, count);
-
-    } else if (message_tag == HEARTBEAT_TAG) {
-
-      process_heartbeat(source_id);
-
-    } else if (message_tag == NEW_MASTER_TAG) {
-
-      process_new_master(source_id);
-
-    }
-    // else
-    // {
-    //   // Do nothing
-    //   //std::cout << "Received unknown message" << std::endl;
-    // }
-
-    free(message);
     return message_tag;
+
   }
 
   return NOTHING_TAG;
+
 }
+
+// MWTag MW_Worker::receive()
+// {
+//   // std::cout << "P" << id << ": waiting to receive work from master." << std::endl;
+
+//   MPI::Status status;
+//   bool can_receive = MPI::COMM_WORLD.Iprobe(
+//     MPI::ANY_SOURCE,
+//     MPI::ANY_TAG,
+//     status
+//   );
+
+//   if (can_receive) {
+//     //std::cout << "IProbe did not find a message. No receive possible\n";
+//     // MPI::Status status;
+//     char *message = (char*)malloc(MAX_MESSAGE_SIZE);
+//     memset(message, 0, MAX_MESSAGE_SIZE);
+//     // std::string message(1000, 0);
+
+//     MPI::COMM_WORLD.Recv(
+//       (void *) message,
+//       MAX_MESSAGE_SIZE,
+//       MPI::CHAR,
+//       MPI::ANY_SOURCE,
+//       MPI::ANY_TAG,
+//       status
+//     );
+
+//     MWTag message_tag = static_cast<MWTag>(status.Get_tag());
+//     int source_id = status.Get_source();
+//     int count = status.Get_count(MPI::CHAR);
+//     // std::cout<< "received message" <<std::endl;
+
+//     if (message_tag == WORK_TAG && !waitingForNewMaster) {
+
+//       process_work(message, source_id, count);
+
+//     } else if (message_tag == HEARTBEAT_TAG) {
+
+//       process_heartbeat(source_id);
+
+//     } else if (message_tag == NEW_MASTER_TAG) {
+
+//       process_new_master(source_id);
+
+//     }
+//     // else
+//     // {
+//     //   // Do nothing
+//     //   //std::cout << "Received unknown message" << std::endl;
+//     // }
+
+//     free(message);
+//     return message_tag;
+//   }
+
+//   return NOTHING_TAG;
+// }
 
 void MW_Worker::process_new_master(int source_id)
 {
-  if (source_id != next_master_id) {
+  if (source_id != nextMasterId) {
 
     std::cout << "P" << id << ": UH-OH! Wrong MASTER P" << source_id << " sent NEW_MASTER_TAG!\n";
+    std::cout << "P" << id << ": Next master should be P" << nextMasterId <<std::endl;
+
     assert(false);
     MPI::Finalize();
     exit (1);
@@ -97,7 +254,7 @@ void MW_Worker::process_new_master(int source_id)
   } else {
 
     std::cout << "P" << id << ": HUZZAH! Received welcome from new Master P" << source_id << std::endl;
-    master_id = next_master_id;
+    master_id = source_id;
 
   }
 
@@ -109,7 +266,7 @@ void MW_Worker::process_work(char *message, int source_id, int count)
   assert(masterMonitor);
   assert(source_id == master_id);
   std::string messageString = std::string(message, count);
-  // std::cout << "P" << id << ": Received from master P" << master_id << " message \"" << serializedObject << "\"\n";
+  // std::cout << "P" << id << ": Received from master P" << master_id << " message \"" << messageString << "\"\n";
 
   std::istringstream iss (messageString);
   std::string idString, serializedObject;
@@ -189,6 +346,21 @@ bool MW_Worker::worker_loop()
   MWTag message_tag;
   bool done = false;
 
+  std::cout << "starting to wait for master" <<std::endl;
+
+  while(receiveNewMaster() == NOTHING_TAG)
+  {
+    if(shouldSendHeartbeat())
+    {
+      sendHeartbeat();
+      continue;
+    }
+
+    receiveHeartbeat();
+  }
+
+  std::cout << "starting master loop" <<std::endl;
+
   while (1) {
 
     if(shouldSendHeartbeat())
@@ -212,43 +384,36 @@ bool MW_Worker::worker_loop()
         std::cout << "P" << id << ": Current TIme " << MPI::Wtime() << std::endl;
         // masterMonitor->dump();
         // assert(false);
-        break;
+
+        //add delay 
+
+
+        return false;
       }
     }
 
-    message_tag = receive();
+    //process receives
 
-    preemptionTimer.reset();
-
-    if (message_tag == NEW_MASTER_TAG) {
-
+      //receive heartbeats
+    if(receiveHeartbeat() != NOTHING_TAG)
       continue;
 
-    } else if (message_tag == WORK_TAG) {
-
-      // std::cout<<"Received WorkTag"<<std::endl;
-      // doWork();
-      // send();
+      //receive new work
+    if(receiveWork() != NOTHING_TAG)
       continue;
 
-    } else if (message_tag == DONE_TAG) {
+    //process work
 
-      std::cout << "P" << id << ": IS DONE\n";
-      done = true;
-      break;
-      // return false;
 
-    } else if (message_tag == HEARTBEAT_TAG) {
-
-      continue;
-
-    } else if (hasWork()) {
+    if (hasWork()) {
       auto workPair = *(workToDo.begin());
       MW_ID work_id = workPair.first;
 
       std::shared_ptr<Work> work = workPair.second;
 
       MW_API_STATUS_CODE status;
+
+      preemptionTimer.reset();
       status = work->compute(preemptionTimer);
 
       if (status != Preempted)
@@ -266,19 +431,87 @@ bool MW_Worker::worker_loop()
         //send results back to master
         send(work_id, new_result);
 
+        continue;
+
       }
       else
       {
         // std::cout <<"Worker returning preempted"<<std::endl;
         continue;
       }
+    }
+    else
+    {
+      if(receiveDone() != NOTHING_TAG)
+        return true;
+    }
 
-    }
-    else {
-      // std::cout << "WTF happened here\n";
-      // assert(0);
-      continue;
-    }
+
+    // message_tag = receive();
+
+    
+
+
+
+    // if (message_tag == NEW_MASTER_TAG) {
+
+    //   continue;
+
+    // } else if (message_tag == WORK_TAG) {
+
+    //   // std::cout<<"Received WorkTag"<<std::endl;
+    //   // doWork();
+    //   // send();
+    //   continue;
+
+    // } else if (message_tag == DONE_TAG) {
+
+    //   std::cout << "P" << id << ": IS DONE\n";
+    //   done = true;
+    //   break;
+    //   // return false;
+
+    // } else if (message_tag == HEARTBEAT_TAG) {
+
+    //   continue;
+
+    // } else if (hasWork()) {
+    //   auto workPair = *(workToDo.begin());
+    //   MW_ID work_id = workPair.first;
+
+    //   std::shared_ptr<Work> work = workPair.second;
+
+    //   MW_API_STATUS_CODE status;
+    //   status = work->compute(preemptionTimer);
+
+    //   if (status != Preempted)
+    //   {
+    //     // std::cout <<"Worker returning Success"<<std::endl;
+    //     assert(status == Success);
+
+    //     //remove from work to do map
+    //     workToDo.erase(work_id);
+    //     std::shared_ptr<Result> new_result = work->result();
+
+    //     assert(new_result);
+    //     results[work_id] = new_result;
+
+    //     //send results back to master
+    //     send(work_id, new_result);
+
+    //   }
+    //   else
+    //   {
+    //     // std::cout <<"Worker returning preempted"<<std::endl;
+    //     continue;
+    //   }
+
+    // }
+    // else {
+    //   // std::cout << "WTF happened here\n";
+    //   // assert(0);
+    //   continue;
+    // }
   }
 
   return done;
@@ -297,11 +530,11 @@ void MW_Worker::sendHeartbeat()
   //   exit (0);
   // }
 
-  if (random.random_fail()) {
-    std::cout << "P" << id << ": WORKER FAILURE EVENT\n";
-    MPI::Finalize();
-    exit (0);
-  }
+  // if (random.random_fail()) {
+  //   std::cout << "P" << id << ": WORKER FAILURE EVENT\n";
+  //   MPI::Finalize();
+  //   exit (0);
+  // }
 
   broadcastHeartbeat();
 
@@ -408,7 +641,7 @@ void MW_Worker::waitForNewMaster()
   masterMonitor = nullptr;
   heardFromMaster = false;
 
-  otherWorkersMonitorMap.erase(next_master_id);
+  otherWorkersMonitorMap.erase(nextMasterId);
   std::cout << "P" << id << ": Monitoring " << otherWorkersMonitorMap.size() <<  " remaining workers: ";
 
   std::cout << "P" << id << ": Waiting to hear from the new Master\n";
@@ -418,8 +651,8 @@ void MW_Worker::waitForNewMaster()
 bool MW_Worker::transitionMaster()
 {
   std::cout << "P" << id << ": Beginning transitions to next Master\n";
-  next_master_id = findNextMasterId();
-  bool is_next_master = next_master_id == id;
+  nextMasterId = findNextMasterId();
+  bool is_next_master = nextMasterId == id;
 
   if (is_next_master) {
 
@@ -427,7 +660,7 @@ bool MW_Worker::transitionMaster()
 
   } else {
 
-    std::cout << "P" << id << ": P" << next_master_id << " is the next MASTER\n";
+    std::cout << "P" << id << ": P" << nextMasterId << " is the next MASTER\n";
     waitForNewMaster();
 
   }

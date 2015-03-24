@@ -32,7 +32,7 @@ public:
 private:
   int id;
   int master_id;
-  int next_master_id;
+  int nextMasterId;
   int world_size;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
   std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
@@ -47,7 +47,19 @@ private:
   bool heardFromMaster;
   bool waitingForNewMaster;
 
-  MWTag receive();
+  // MWTag receive();
+  MWTag receive( int source,
+                          int tag,
+                          void *message, 
+                          int maxMessageSize, 
+                          int &source_id, 
+                          int &count);
+
+  MWTag receiveWork();
+  MWTag receiveNewMaster();
+  MWTag receiveHeartbeat();
+  MWTag receiveDone();
+
   void send(MW_ID result_id, std::shared_ptr<Result> result);
   void process_work(char*, int, int);
   void process_heartbeat(int);
