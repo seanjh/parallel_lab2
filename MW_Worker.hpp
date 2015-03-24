@@ -32,7 +32,7 @@ public:
 private:
   int id;
   int master_id;
-  int nextMasterId;
+  // int nextMasterId;
   int world_size;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
   std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
@@ -44,8 +44,8 @@ private:
   // bool willFail;
   double nextMasterCheckTime;
   double lastHeartbeat;
-  bool heardFromMaster;
-  bool waitingForNewMaster;
+  // bool heardFromMaster;
+  // bool waitingForNewMaster;
 
   // MWTag receive();
   MWTag receive( int source,
@@ -56,7 +56,7 @@ private:
                           int &count);
 
   MWTag receiveWork();
-  MWTag receiveNewMaster();
+  MWTag receiveNewMaster(int &);
   MWTag receiveHeartbeat();
   MWTag receiveDone();
 
@@ -78,6 +78,7 @@ private:
   void waitForNewMaster();
   // bool hasMaster();
   bool checkOnMaster();
+  std::shared_ptr<MW_Monitor> getMasterMonitor();
 };
 
 #endif /* defined(__MW__WORKER__) */

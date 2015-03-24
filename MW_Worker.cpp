@@ -9,12 +9,12 @@
 MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size): preemptionTimer(.1), random(MW_Random(WORKER_FAILURE_PROBABILITY, myid, w_size))
 {
   id = myid;
-  master_id = m_id;
+  // master_id = m_id;
   world_size = w_size;
-  heardFromMaster = false;
-  waitingForNewMaster = false;
-  masterMonitor = nullptr;
-  nextMasterId = 0;
+  // heardFromMaster = false;
+  // waitingForNewMaster = false;
+  // masterMonitor = nullptr;
+  // nextMasterId = 0;
 
   // MW_Random meta_random = MW_Random(WORKER_FAILURE_PROBABILITY, id, world_size);
   // if (WORKER_FAIL_TEST_ON && meta_random.random_fail()) {
@@ -72,6 +72,7 @@ MWTag MW_Worker::receiveHeartbeat()
                               count);
   if(message_tag == HEARTBEAT_TAG)
   {
+    // std::cout << "P" << id<< " Received heartbeat from "<<source_id<<std::endl;
     process_heartbeat(source_id);
   }
   else
@@ -83,7 +84,7 @@ MWTag MW_Worker::receiveHeartbeat()
   return message_tag;
 }
 
-MWTag MW_Worker::receiveNewMaster()
+MWTag MW_Worker::receiveNewMaster(int &newMaster)
 {
 
   char *message = (char*)malloc(MAX_MESSAGE_SIZE);
@@ -99,8 +100,9 @@ MWTag MW_Worker::receiveNewMaster()
                               count);
   if(message_tag == NEW_MASTER_TAG)
   {
-    // std::cout<<"Received new master from " << source_id <<std::endl;
-    process_new_master(source_id);
+    std::cout<< "P" << id <<" :Received new master from " << source_id <<std::endl;
+    // process_new_master(source_id);
+    newMaster = source_id;
   }
   else
   {
@@ -240,30 +242,30 @@ MWTag MW_Worker::receive( int source,
 //   return NOTHING_TAG;
 // }
 
-void MW_Worker::process_new_master(int source_id)
-{
-  if (source_id != nextMasterId) {
+// void MW_Worker::process_new_master(int source_id)
+// {
+//   if (source_id != nextMasterId) {
 
-    std::cout << "P" << id << ": UH-OH! Wrong MASTER P" << source_id << " sent NEW_MASTER_TAG!\n";
-    std::cout << "P" << id << ": Next master should be P" << nextMasterId <<std::endl;
+//     std::cout << "P" << id << ": UH-OH! Wrong MASTER P" << source_id << " sent NEW_MASTER_TAG!\n";
+//     std::cout << "P" << id << ": Next master should be P" << nextMasterId <<std::endl;
 
-    assert(false);
-    MPI::Finalize();
-    exit (1);
+//     assert(false);
+//     MPI::Finalize();
+//     exit (1);
 
-  } else {
+//   } else {
 
-    std::cout << "P" << id << ": HUZZAH! Received welcome from new Master P" << source_id << std::endl;
-    master_id = source_id;
+//     std::cout << "P" << id << ": HUZZAH! Received welcome from new Master P" << source_id << std::endl;
+//     master_id = source_id;
 
-  }
+//   }
 
-  waitingForNewMaster = false;
-}
+//   waitingForNewMaster = false;
+// }
 
 void MW_Worker::process_work(char *message, int source_id, int count)
 {
-  assert(masterMonitor);
+  // assert(masterMonitor);
   assert(source_id == master_id);
   std::string messageString = std::string(message, count);
   // std::cout << "P" << id << ": Received from master P" << master_id << " message \"" << messageString << "\"\n";
@@ -294,31 +296,43 @@ void MW_Worker::process_work(char *message, int source_id, int count)
 void MW_Worker::process_heartbeat(int source_id)
 {
   // std::cout << "Received heartbeat from " << source_id << std::endl;
-  if (source_id == master_id)
-  {
-    if (!masterMonitor)
-    {
-      // std::cout << "P" << id << ": Received its first heartbeat from " << source_id << ". Adding to master\n";
-      updateMasterCheckTime();
-      masterMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD*5.0));
-    }
-    masterMonitor->addHeartbeat();
+  // if (source_id == master_id)
+  // {
+  //   if (!masterMonitor)
+  //   {
+  //     // std::cout << "P" << id << ": Received its first heartbeat from " << source_id << ". Adding to master\n";
+  //     updateMasterCheckTime();
+  //     masterMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD*5.0));
+  //   }
+  //   masterMonitor->addHeartbeat();
 
-  }
-  else
-  {
-    std::shared_ptr<MW_Monitor> nodeMonitor;
-    try {
-      nodeMonitor = otherWorkersMonitorMap.at(source_id);
-    }
-    catch (const std::out_of_range& oor) {
+  // }
+  // else
+  // {
+  //   std::shared_ptr<MW_Monitor> nodeMonitor;
+  //   try {
+  //     nodeMonitor = otherWorkersMonitorMap.at(source_id);
+  //   }
+  //   catch (const std::out_of_range& oor) {
 
-      // std::cout << "P" << id << ": Received its first heartbeat from " << source_id << ". Adding to monitor map\n";
-      nodeMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD*5.0));
-      otherWorkersMonitorMap[source_id] = nodeMonitor;
-    }
-    nodeMonitor->addHeartbeat();
+  //     // std::cout << "P" << id << ": Received its first heartbeat from " << source_id << ". Adding to monitor map\n";
+  //     nodeMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD*5.0));
+  //     otherWorkersMonitorMap[source_id] = nodeMonitor;
+  //   }
+  //   nodeMonitor->addHeartbeat();
+  // }
+
+  std::shared_ptr<MW_Monitor> nodeMonitor;
+  try {
+    nodeMonitor = otherWorkersMonitorMap.at(source_id);
   }
+  catch (const std::out_of_range& oor) {
+
+    // std::cout << "P" << id << ": Received its first heartbeat from " << source_id << ". Adding to monitor map\n";
+    nodeMonitor = std::shared_ptr<MW_Monitor>(new MW_Monitor(source_id, HEARTBEAT_PERIOD*5.0));
+    otherWorkersMonitorMap[source_id] = nodeMonitor;
+  }
+  nodeMonitor->addHeartbeat();
 }
 
 
@@ -346,12 +360,16 @@ bool MW_Worker::worker_loop()
   MWTag message_tag;
   bool done = false;
 
-  std::cout << "starting to wait for master" <<std::endl;
+  std::cout << "P"<<id<< " starting initial delay" <<std::endl;
 
-  while(receiveNewMaster() == NOTHING_TAG)
+
+  //wait for some time for the master to come on line
+  double delayTime = MPI::Wtime() + STARTUP_DELAY_TIME;
+  while(delayTime > MPI::Wtime())
   {
     if(shouldSendHeartbeat())
     {
+      // std::cout << "P"<<id << " worker sending heartbeat from delay loop" <<std::endl;
       sendHeartbeat();
       continue;
     }
@@ -359,12 +377,52 @@ bool MW_Worker::worker_loop()
     receiveHeartbeat();
   }
 
-  std::cout << "starting master loop" <<std::endl;
+  //wait for the next master
+  std::cout << "P"<<id<< " starting to wait for master" <<std::endl;
+  while(1)
+  {
+    int newMasterId = -1;
+    MWTag masterTag = receiveNewMaster(newMasterId);
+    if(masterTag == NEW_MASTER_TAG)
+    {
+
+      int projectedMaster = findNextMasterId();
+      // std::cout << "P"<<id <<": Waiting for master "<<projectedMaster << " received " << newMasterId << std::endl;
+      assert(newMasterId == projectedMaster);
+      master_id = projectedMaster;
+      nextMasterCheckTime = MPI::Wtime();
+      masterMonitor = getMasterMonitor();
+      break;
+    }
+
+    if(shouldSendHeartbeat())
+    {
+      // std::cout << "P"<<id << " worker sending heartbeat from master waiting loop" <<std::endl;
+      int projectedMaster = findNextMasterId();
+      // std::cout << "P"<<id <<": Waiting for master "<<projectedMaster<<std::endl;
+      
+      //while waiting for new master, new master died.
+      //I should be the new master
+      if(id == projectedMaster)
+      {
+        std::cout << "P"<<id <<": In waiting for master loop, realized I should be next master"<<std::endl;
+        return false;
+      }
+        
+      sendHeartbeat();
+      continue;
+    }
+
+    receiveHeartbeat();
+  }
+
+  std::cout << "P"<<id<< " starting master loop" <<std::endl;
 
   while (1) {
 
     if(shouldSendHeartbeat())
     {
+      // std::cout << "P"<<id << " worker sending heartbeat from main loop" <<std::endl;
       sendHeartbeat();
       continue;
     }
@@ -530,11 +588,12 @@ void MW_Worker::sendHeartbeat()
   //   exit (0);
   // }
 
-  // if (random.random_fail()) {
-  //   std::cout << "P" << id << ": WORKER FAILURE EVENT\n";
-  //   MPI::Finalize();
-  //   exit (0);
-  // }
+  if (random.random_fail()) {
+    std::cout << "P" << id << ": WORKER FAILURE EVENT\n";
+    MPI::Finalize();
+    exit (0);
+  }
+  // std::cout << "P" << id << " worker sending heartbeat" <<std::endl;
 
   broadcastHeartbeat();
 
@@ -592,7 +651,8 @@ bool MW_Worker::shouldCheckOnMaster()
   // return false;
   // return (masterMonitor != NULL && MPI::Wtime() < masterMonitor->nextHeartbeat());
   // return (masterMonitor != NULL && MPI::Wtime() > nextMasterCheckTime);
-  return heardFromMaster && MPI::Wtime() > nextMasterCheckTime;
+  // return heardFromMaster && MPI::Wtime() > nextMasterCheckTime;
+  return MPI::Wtime() > nextMasterCheckTime;
 }
 
 int MW_Worker::findNextMasterId()
@@ -601,12 +661,12 @@ int MW_Worker::findNextMasterId()
   // std::unordered_map<int, std::shared_ptr<MW_Monitor>> otherWorkersMonitorMap;
   for ( auto& it: otherWorkersMonitorMap ) {
     if (it.second->isAlive()) {
-      std::cout << "\tP" << id << ": I think P" << it.first << " is ALIVE.\n";
+      // std::cout << "\tP" << id << ": I think P" << it.first << " is ALIVE.\n";
       if (it.first < lowest_other_worker_id) {
         lowest_other_worker_id = it.first;
       }
     } else {
-      std::cout << "\tP" << id << ": I think P" << it.first << " is DEAD.\n";
+      // std::cout << "\tP" << id << ": I think P" << it.first << " is DEAD.\n";
     }
   }
 
@@ -616,11 +676,11 @@ int MW_Worker::findNextMasterId()
 void MW_Worker::updateMasterCheckTime()
 {
 
-  if (!heardFromMaster) {
-    heardFromMaster = true;
-    // std::cout << "P" << id << ": initializing nextMasterCheckTime\n";
-    nextMasterCheckTime = MPI::Wtime();
-  }
+  // if (!heardFromMaster) {
+  //   heardFromMaster = true;
+  //   // std::cout << "P" << id << ": initializing nextMasterCheckTime\n";
+  //   nextMasterCheckTime = MPI::Wtime();
+  // }
   // std::cout << "P" << id << ": updating nextMasterCheckTime\n";
   nextMasterCheckTime += (HEARTBEAT_PERIOD*2.0);
   // nextMasterCheckTime = MPI::Wtime() + (HEARTBEAT_PERIOD * 5);
@@ -629,30 +689,39 @@ void MW_Worker::updateMasterCheckTime()
 bool MW_Worker::isMasterAlive()
 {
   assert(masterMonitor);
+  
   if(masterMonitor->isAlive()) {
     return true;
   }
   return false;
 }
 
-void MW_Worker::waitForNewMaster()
+std::shared_ptr<MW_Monitor> MW_Worker::getMasterMonitor()
 {
-  // auto next_master_monitor = otherWorkersMonitorMap[next_master_id];
-  masterMonitor = nullptr;
-  heardFromMaster = false;
-
-  otherWorkersMonitorMap.erase(nextMasterId);
-  std::cout << "P" << id << ": Monitoring " << otherWorkersMonitorMap.size() <<  " remaining workers: ";
-
-  std::cout << "P" << id << ": Waiting to hear from the new Master\n";
-  waitingForNewMaster = true;
+  int masterId = findNextMasterId();
+  // std::cout << maste
+  assert(masterId != id);
+  return otherWorkersMonitorMap[masterId];
 }
+
+// void MW_Worker::waitForNewMaster()
+// {
+//   // auto next_master_monitor = otherWorkersMonitorMap[next_master_id];
+//   masterMonitor = nullptr;
+//   heardFromMaster = false;
+
+//   otherWorkersMonitorMap.erase(nextMasterId);
+//   std::cout << "P" << id << ": Monitoring " << otherWorkersMonitorMap.size() <<  " remaining workers: ";
+
+//   std::cout << "P" << id << ": Waiting to hear from the new Master\n";
+//   waitingForNewMaster = true;
+// }
 
 bool MW_Worker::transitionMaster()
 {
   std::cout << "P" << id << ": Beginning transitions to next Master\n";
-  nextMasterId = findNextMasterId();
-  bool is_next_master = nextMasterId == id;
+  int nextMasterId = findNextMasterId();
+  bool is_next_master = (nextMasterId == id);
 
   if (is_next_master) {
 
@@ -661,7 +730,7 @@ bool MW_Worker::transitionMaster()
   } else {
 
     std::cout << "P" << id << ": P" << nextMasterId << " is the next MASTER\n";
-    waitForNewMaster();
+    // waitForNewMaster();
 
   }
 

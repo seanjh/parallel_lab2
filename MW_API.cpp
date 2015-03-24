@@ -51,8 +51,9 @@ void MW_Run(int argc, char* argv[], MW_API *app)
     while (!done) {
       done = proc->worker_loop();
       p = proc;
+      bool shouldTransitionToMaster = proc->transitionMaster();
 
-      if (!done && proc->transitionMaster()) {
+      if (!done && shouldTransitionToMaster) {
         // The Master died :(
         std::cout << "P" << myid << ": Make me master!\n";
         std::shared_ptr<MW_Master> proc = MW_Master::restore(myid, sz);

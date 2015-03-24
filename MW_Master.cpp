@@ -34,7 +34,7 @@ MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &w
 
   performCheckpoint();
   broadcastHeartbeat();
-  broadcastNewMasterSignal();
+  // broadcastNewMasterSignal();
 }
 
 // void MW_Master::initializeRandomFailure()
@@ -92,6 +92,8 @@ bool MW_Master::master_loop()
     receive();
   }
      
+  broadcastNewMasterSignal();
+
   std::cout<<"P" <<id<<" entering main loop"<<std::endl; 
   while (1) {
 
@@ -363,11 +365,11 @@ void MW_Master::sendHeartbeat()
   //   exit (0);
   // }
 
-  // if (random.random_fail()) {
-  //   std::cout << "P" << id << ": MASTER FAILURE EVENT\n";
-  //   MPI::Finalize();
-  //   exit (0);
-  // }
+  if (random.random_fail()) {
+    std::cout << "P" << id << ": MASTER FAILURE EVENT\n";
+    MPI::Finalize();
+    exit (0);
+  }
 
   broadcastHeartbeat();
 
@@ -551,7 +553,7 @@ MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size),
   }
   std::cout << "P" << myid << ": workToDo is size " << workToDo.size() << "\n";
 
-  broadcastNewMasterSignal();
+  // broadcastNewMasterSignal();
 
   broadcastHeartbeat();
 
