@@ -41,11 +41,6 @@ The LD_LIBRARY_PATH environment variable must include a reference to the custom 
 
     export LD_LIBRARY_PATH=$HOME/gmplib/lib:$LD_LIBRARY_PATH
 
-### Compile the executable
-This command links the objects to the custom GMP installation.
-
-    mpic++ -std=c++11 -o divisors_app obj/gmp_factors_API.o obj/DivisorApplication.o obj/DivisorResult.o obj/DivisorWork.o obj/MW_API.o obj/MW_Master.o obj/MW_Worker.o -I/home/cluster/gmplib/include -L/home/cluster/gmplib/lib -lgmpxx -lgmp
-
 ### Execute the program
 
     bash ./tests/mw_test.sh
