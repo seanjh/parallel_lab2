@@ -45,13 +45,9 @@ MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size),
   initializeResultFromCheckpoint();
   initializeWorkToDoFromCheckpoint();
 
-  std::cout << "P" << id << ": Completed RESTORE (work: " <<
-    work.size() << ", results: " << results.size() << ")" <<
-    work.size() << ", workToDo: " << workToDo.size() << ")\n";
-
-  // std::cout << "P" << id << ": Restored " << work.size() << " total work\n";
-  // std::cout << "P" << id << ": Restored " << results.size() << " total results\n";
-  // std::cout << "P" << myid << ": " << workToDo.size() << " remaining units of work TODO.\n";
+  std::cout << "P" << id << ": Completed RESTORE (work: " << work.size() <<
+    ", results: " << results.size() <<
+    ", workToDo: " << workToDo.size() << ")\n";
 
   lastCheckpoint = MPI::Wtime();
 
@@ -161,11 +157,11 @@ void MW_Master::checkOnWorkers()
 
     workerAlive = it->second->heartbeatMonitor.isAlive();
     if (!workerAlive) {
-      // std::cout << "P" << id << ": Worker (P" << it->second->id << ")  looks DEAD" << std::endl;
+      // std::cout << "P" << id << ": Worker (P" << it->second->id << ") looks DEAD" << std::endl;
 
       if (it->second->workPendingCount() > 0) {
         // Move dead Worker's pending work back on workToDo queue
-        std::cout << "P" << id << ": Worker (P" << it->second->id << ")  looks DEAD" << std::endl;
+        std::cout << "P" << id << ": Worker (P" << it->second->id << ") looks DEAD" << std::endl;
         std::list<MW_ID> &pendingWorkList = it->second->getPendingWork();
         while(!pendingWorkList.empty())
         {
@@ -475,7 +471,6 @@ int MW_Master::nextWorker()
 
 void MW_Master::initializeResultFromCheckpoint()
 {
-  std::cout << "P" << id << ": RESTORING RESULTS\n";
   std::string line, idString, serializedObject;
   MW_ID work_id;
   std::shared_ptr<MPIMessage> message;
@@ -497,8 +492,6 @@ void MW_Master::initializeResultFromCheckpoint()
       keepInTouch();
     }
     infile.close();
-
-    std::cout << "Restored " << results.size() << " results." <<std::endl;
   }
   else {
     std::cerr << "Unable to open file";
@@ -507,7 +500,6 @@ void MW_Master::initializeResultFromCheckpoint()
 
 void MW_Master::initializeWorkFromCheckpoint()
 {
-  std::cout << "P" << id << ": RESTORING WORK\n";
   std::string line, idString, serializedObject;
   MW_ID id;
   std::shared_ptr<MPIMessage> message;
@@ -535,7 +527,6 @@ void MW_Master::initializeWorkFromCheckpoint()
 
 void MW_Master::initializeWorkToDoFromCheckpoint()
 {
-  std::cout << "workToDo is size " << workToDo.size() << "\n";
   std::shared_ptr<Result> result;
   for ( auto it = work.begin(); it != work.end(); ++it )
   {
