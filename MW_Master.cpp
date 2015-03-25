@@ -332,7 +332,10 @@ void MW_Master::performCheckpoint()
   checkpointWorkFile.open(WORK_CHECKPOINT_FILENAME);
 
   for(auto it=work.begin(); it!=work.end(); it++)
-      checkpointWorkFile << it->first <<","<<*(it->second->serialize())<<std::endl;
+  {
+    std::string serializedObject = std::string(*(it->second->serialize()));
+    checkpointWorkFile << it->first <<","<<serializedObject<<std::endl;
+  }
 
   checkpointWorkFile.close();
 
@@ -340,7 +343,8 @@ void MW_Master::performCheckpoint()
   for(auto it=results.begin(); it!=results.end(); it++)
   {
     // std::cout<<it->first <<","<<*(it->second->serialize())<<std::endl;
-    checkpointResultsFile << it->first <<","<<*(it->second->serialize())<<std::endl;
+    std::string serializedObject = std::string(*(it->second->serialize()));
+    checkpointResultsFile << it->first <<","<<serializedObject<<std::endl;
   }
 
   checkpointResultsFile.close();
