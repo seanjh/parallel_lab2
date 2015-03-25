@@ -17,17 +17,17 @@ The version of GMP available through yum is not recent enough. Download and extr
     ./configure --enable-cxx --prefix=$HOME/gmplib
 
     make install
-    
+
 ## Execution instructions on cofigured cluster
 
-### Activate devtoolset-2 
-    
+### Activate devtoolset-2
+
     scl enable devtoolset-2 bash
 
 ### Compile as root
 
-cd /home/cluster/parallel_lab2
-make divisors_app
+    cd /home/cluster/parallel_lab2
+    make divisors_app_aws
 
 ### Switch to the cluster user
 
@@ -48,4 +48,4 @@ This command links the objects to the custom GMP installation.
 
 ### Execute the program
 
-    bash ./mw_test.sh
+    bash ./tests/mw_test.sh
