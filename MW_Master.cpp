@@ -45,9 +45,13 @@ MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size),
   initializeResultFromCheckpoint();
   initializeWorkToDoFromCheckpoint();
 
-  std::cout << "P" << id << ": Restored " << work.size() << " total work\n";
-  std::cout << "P" << id << ": Restored " << results.size() << " total results\n";
-  std::cout << "P" << myid << ": " << workToDo.size() << " remaining units of work TODO.\n";
+  std::cout << "P" << id << ": Completed RESTORE (work: " <<
+    work.size() << ", results: " << results.size() << ")" <<
+    work.size() << ", workToDo: " << workToDo.size() << ")\n";
+
+  // std::cout << "P" << id << ": Restored " << work.size() << " total work\n";
+  // std::cout << "P" << id << ": Restored " << results.size() << " total results\n";
+  // std::cout << "P" << myid << ": " << workToDo.size() << " remaining units of work TODO.\n";
 
   lastCheckpoint = MPI::Wtime();
 
