@@ -96,6 +96,10 @@ divisors_app: $(DIVISORS_APP_OBJ)
 	# $(CXX) -std=c++11 -o $@ $^ -L../gmplib/lib $(LIBS)
 	$(CXX) -std=c++11 -o $@ $^ $(LIBS)
 
+
+divisors_prod: $(DIVISORS_APP_OBJ)
+	$(CXX) -std=c++11 -o $@ $^ -L../gmplib/lib $(LIBS)
+
 # profile: $(PROFILE_OBJ)
 # 	$(CXX) -o $@ $^
 
