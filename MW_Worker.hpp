@@ -19,6 +19,7 @@ class MW_Worker : public MW_Process {
 
 public:
   MW_Worker(const int, const int, const int);
+  MW_Worker(const int, const int, const int, const double);
   bool worker_loop();
   ~MW_Worker();
   virtual bool isMaster() {return false;};

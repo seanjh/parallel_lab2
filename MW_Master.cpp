@@ -40,8 +40,61 @@ MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &w
   broadcastHeartbeat();
 }
 
+MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &work_p, double prob) :
+  id(myid), world_size(sz), random(MW_Random(prob, myid, sz))
+  // id(myid), world_size(sz)
+{
+
+  MW_ID nextWorkID = 0;
+  for(auto iter = work_p.begin();iter != work_p.end(); iter++)
+    work[nextWorkID++] = *iter;
+
+  workToDo = work;
+  std::cout << "P" << id << ": Total work in master is " << workToDo.size() << std::endl;
+
+  // Touch the checkpoint files to make sure they exist
+  std::ifstream work_infile (WORK_CHECKPOINT_FILENAME);
+  work_infile.close();
+  std::ifstream results_infile (RESULTS_CHECKPOINT_FILENAME);
+  results_infile.close();
+
+
+  delayUntil = MPI::Wtime() + STARTUP_DELAY_TIME;
+
+  performCheckpoint();
+  broadcastHeartbeat();
+}
+
 MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size),
   random(MW_Random(MASTER_FAILURE_PROBABILITY, myid, size))
+// MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
+{
+  std::cout << "P" << myid << ": Creating NEW Master from checkpoint\n";
+
+  broadcastHeartbeat();
+
+  initializeWorkFromCheckpoint();
+  initializeResultFromCheckpoint();
+  initializeWorkToDoFromCheckpoint();
+
+  std::cout << "P" << id << ": Completed RESTORE (work: " << work.size() <<
+    ", results: " << results.size() <<
+    ", workToDo: " << workToDo.size() << ")\n";
+
+  lastCheckpoint = MPI::Wtime();
+
+  broadcastHeartbeat();
+
+
+
+  broadcastHeartbeat();
+
+  delayUntil = MPI::Wtime() + STARTUP_DELAY_TIME;
+
+}
+
+MW_Master::MW_Master(int myid, int size, double prob) : id(myid), world_size(size),
+  random(MW_Random(prob, myid, size))
 // MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size)
 {
   std::cout << "P" << myid << ": Creating NEW Master from checkpoint\n";
@@ -75,6 +128,10 @@ std::shared_ptr<MW_Master> MW_Master::restore(int myid, int size)
   return std::make_shared<MW_Master> (myid, size);
 }
 
+std::shared_ptr<MW_Master> MW_Master::restore(int myid, int size, double prob)
+{
+  return std::make_shared<MW_Master> (myid, size, prob);
+}
 
 std::shared_ptr<std::list<std::shared_ptr<Result>>> MW_Master::getResults()
 {

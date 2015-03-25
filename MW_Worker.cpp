@@ -13,6 +13,13 @@ MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size) :
   sendHeartbeat();
 }
 
+MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size, const double prob) :
+  id(myid), world_size(w_size), preemptionTimer(PREEMPTION_TIMER_PERIOD),
+  random(MW_Random(prob, myid, w_size))
+{
+  sendHeartbeat();
+}
+
 MW_Worker::~MW_Worker() { }
 
 MWTag MW_Worker::receiveWork()

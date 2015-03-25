@@ -23,9 +23,14 @@ void MW_Run(int argc, char* argv[], MW_API *app)
   MPI::COMM_WORLD.Barrier();
   starttime = MPI::Wtime();
 
+
+  double prob = SEND_FAILURE_PROBABILITY;
+  if(argc > 3)
+    prob = std::stod(std::string(argv[3]));
+
   if (myid == INITIAL_MASTER_PROCESS_ID) {
     // MASTER
-    auto proc = std::make_shared<MW_Master>(myid, sz, app->work());
+    auto proc = std::make_shared<MW_Master>(myid, sz, app->work(), prob);
     p = proc;
 
     while (!done) {
@@ -36,7 +41,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
   } else {
     // WORKERS
-    auto proc = std::make_shared<MW_Worker>(myid, INITIAL_MASTER_PROCESS_ID, sz);
+    auto proc = std::make_shared<MW_Worker>(myid, INITIAL_MASTER_PROCESS_ID, sz, prob);
     p = proc;
 
     while (!done) {
@@ -46,7 +51,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
       if (!done && shouldTransitionToMaster) {
         // The next Master gets in here.
-        std::shared_ptr<MW_Master> proc = MW_Master::restore(myid, sz);
+        std::shared_ptr<MW_Master> proc = MW_Master::restore(myid, sz, prob);
         done = proc->master_loop();
         p = proc;
       } else if (!done) {

@@ -21,9 +21,12 @@ extern const std::string  RESULTS_CHECKPOINT_FILENAME;
 class MW_Master : public MW_Process {
 public:
   MW_Master(int, int, const std::list<std::shared_ptr<Work>> &);
+  MW_Master(int, int, const std::list<std::shared_ptr<Work>> &, double);
   MW_Master(int, int); // Restores from checkpoint
+  MW_Master(int, int, double);
   ~MW_Master();
   static std::shared_ptr<MW_Master> restore(int, int);
+  static std::shared_ptr<MW_Master> restore(int, int, double);
   bool master_loop();
   virtual bool isMaster() {return true;};
   std::shared_ptr<std::list<std::shared_ptr<Result>>> getResults();
