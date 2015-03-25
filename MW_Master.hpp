@@ -5,7 +5,7 @@
 #include <list>
 #include <unordered_map>
 
-#include "MW_API_Types.hpp"
+#include "MW_API_Constants.hpp"
 #include "Work.hpp"
 #include "Result.hpp"
 #include "MPIMessage.hpp"
@@ -31,21 +31,19 @@ public:
 private:
   int id;
   int world_size;
+  
   std::unordered_map<MW_ID, std::shared_ptr<Work>> work;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> completedWork;
   std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
   std::unordered_map<int, std::shared_ptr<MW_Remote_Worker>> workerMap;
-  // std::list<int> freeWorkers;
 
   double lastCheckpoint;
   double lastHeartbeat;
   double delayUntil;
-  // bool willFail;
   MW_Random random;
 
   void initializeWorkerMap();
-  // void initializeRandomFailure();
   void initializeWorkFromCheckpoint();
   void initializeResultFromCheckpoint();
   int nextWorker();

@@ -4,7 +4,7 @@
 #include <string>
 #include "Result.hpp"
 #include "MW_Object.hpp"
-#include "MW_API_Types.hpp"
+#include "MW_API_Constants.hpp"
 #include <memory>
 
 

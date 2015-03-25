@@ -47,15 +47,6 @@ MW_Timer.o
 
 DIVISORS_APP_OBJ = $(patsubst %,$(ODIR)/%,$(_DIVISORS_APP_OBJ))
 
-# _TEST_OBJ = test.o
-# TEST_OBJ = $(patsubst %,$(ODIR)/%,$(_TEST_OBJ))
-
-# _TEST_COMM_OBJ = test_comm.o
-# TEST_COMM_OBJ = $(patsubst %,$(ODIR)/%,$(_TEST_COMM_OBJ))
-
-# _MAX_LEN_TEST_OBJ = maxLenTest.o
-# MAX_LEN_TEST_OBJ = $(patsubst %,$(ODIR)/%,$(_MAX_LEN_TEST_OBJ))
-
 obj:
 	mkdir -p $@
 
@@ -93,22 +84,12 @@ working_api: $(WORKING_API_OBJ)
 	$(CXX) -std=c++11 -o $@ $^ $(LIBS)
 
 divisors_app: $(DIVISORS_APP_OBJ)
-	# $(CXX) -std=c++11 -o $@ $^ -L../gmplib/lib $(LIBS)
 	$(CXX) -std=c++11 -o $@ $^ $(LIBS)
 
-# profile: $(PROFILE_OBJ)
-# 	$(CXX) -o $@ $^
-
-# test: $(TEST_OBJ)
-# 	$(CXX) -o $@ $^
-
-# test_comm: $(TEST_COMM_OBJ)
-# 	$(CXX) -o $@ $^
-
-# maxLenTest: $(MAX_LEN_TEST_OBJ)
-# 	$(CXX) -o $@ $^
+divisors_app_aws: $(DIVISORS_APP_OBJ)
+	$(CXX) -std=c++11 -o $@ $^ -L../gmplib/lib $(LIBS)
 
 .PHONY: clean
 
 clean:
-	rm -f $(ODIR)/*.o serial divisors_app
+	rm -f $(ODIR)/*.o serial divisors_app divisors_app_aws working_api

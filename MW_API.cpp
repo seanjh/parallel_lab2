@@ -7,72 +7,57 @@
 #include "MW_Worker.hpp"
 #include "MW_Process.hpp"
 
-const int MASTER_PROCESS_ID = 0;
+const int INITIAL_MASTER_PROCESS_ID = 0;
 
 void MW_Run(int argc, char* argv[], MW_API *app)
 {
   int sz, myid;
-
   MPI::Init(argc, argv);
   sz = MPI::COMM_WORLD.Get_size();
   myid = MPI::COMM_WORLD.Get_rank();
 
   double starttime, endtime;
-
-  MPI::COMM_WORLD.Barrier();
+  bool done;
   std::shared_ptr<MW_Process> p;
 
+  MPI::COMM_WORLD.Barrier();
   starttime = MPI::Wtime();
 
-  bool done;
-  // int master_id = MASTER_PROCESS_ID;
-
-  if (myid == MASTER_PROCESS_ID) {
+  if (myid == INITIAL_MASTER_PROCESS_ID) {
+    // MASTER
     auto proc = std::make_shared<MW_Master>(myid, sz, app->work());
     p = proc;
 
     while (!done) {
       done = proc->master_loop();
     }
-    // auto proc = MW_Master::restore(myid, sz);
 
     endtime = MPI::Wtime();
 
-    // app->results(proc->getResults());
-
-    // p = proc;
-
   } else {
-    auto proc = std::make_shared<MW_Worker>(myid, MASTER_PROCESS_ID, sz);
-
-    // std::shared_ptr<MW_Worker> proc = std::shared_ptr<MW_Worker>(new MW_Worker(myid, MASTER_PROCESS_ID, sz));
-    // bool transitionToMaster = proc->worker_loop();
+    // WORKERS
+    auto proc = std::make_shared<MW_Worker>(myid, INITIAL_MASTER_PROCESS_ID, sz);
+    p = proc;
 
     while (!done) {
+      // The Master died :(
       done = proc->worker_loop();
-      p = proc;
       bool shouldTransitionToMaster = proc->transitionMaster();
 
       if (!done && shouldTransitionToMaster) {
-        // The Master died :(
-        std::cout << "P" << myid << ": Make me master!\n";
+        // The next Master gets in here.
         std::shared_ptr<MW_Master> proc = MW_Master::restore(myid, sz);
         done = proc->master_loop();
-
-        std::cout << "P" << myid << ": total results: " << proc->getResults()->size() << "\n";
         p = proc;
-
       } else if (!done) {
-        std::cout << "P" << myid << ": Master failed. Not done yet!\n";
+        // Remaining Workers just re-enter worker_loop. Nothing to do.
       }
 
-      std::cout << "P" << myid << ": finishing\n";
-
-      // p = proc;
       endtime = MPI::Wtime();
     }
   }
 
+  std::cout << "P" << myid << ": finished\n";
   assert(p != nullptr);
   assert(p->isMaster() || !p->isMaster());
   if (p->isMaster()) {

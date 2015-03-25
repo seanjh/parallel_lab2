@@ -3,7 +3,7 @@
 
 #include <list>
 
-#include "MW_API_Types.hpp"
+#include "MW_API_Constants.hpp"
 #include "Work.hpp"
 #include "Result.hpp"
 #include "MW_Timer.hpp"
@@ -32,29 +32,19 @@ public:
 private:
   int id;
   int master_id;
-  // int nextMasterId;
   int world_size;
+
   std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
   std::unordered_map<MW_ID, std::shared_ptr<Result>> results;
   std::shared_ptr<MW_Monitor> masterMonitor;
   std::unordered_map<int, std::shared_ptr<MW_Monitor>> otherWorkersMonitorMap;
 
   MW_Timer preemptionTimer;
-  MW_Random random;
-  // bool willFail;
   double nextMasterCheckTime;
   double lastHeartbeat;
-  // bool heardFromMaster;
-  // bool waitingForNewMaster;
+  MW_Random random;
 
-  // MWTag receive();
-  MWTag receive( int source,
-                          int tag,
-                          void *message, 
-                          int maxMessageSize, 
-                          int &source_id, 
-                          int &count);
-
+  MWTag receive( int, int, void *, int, int &, int &);
   MWTag receiveWork();
   MWTag receiveNewMaster(int &);
   MWTag receiveHeartbeat();
@@ -64,9 +54,6 @@ private:
   void process_work(char*, int, int);
   void process_heartbeat(int);
   void process_new_master(int);
-  // void doWork();
-  // void send();
-  // void send(int) { send(); };
   bool hasWork() {return !workToDo.empty();};
   bool shouldSendHeartbeat();
   void sendHeartbeat();
@@ -76,7 +63,6 @@ private:
   bool isMasterAlive();
   void updateMasterCheckTime();
   void waitForNewMaster();
-  // bool hasMaster();
   bool checkOnMaster();
   std::shared_ptr<MW_Monitor> getMasterMonitor();
 };

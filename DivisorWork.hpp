@@ -8,7 +8,7 @@
 #include <gmpxx.h>
 #include "Work.hpp"
 #include "MW_Object.hpp"
-#include "MW_API_Types.hpp"
+#include "MW_API_Constants.hpp"
 
 class DivisorResult;
 
