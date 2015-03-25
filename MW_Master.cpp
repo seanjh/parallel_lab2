@@ -27,6 +27,13 @@ MW_Master::MW_Master(int myid, int sz, const std::list<std::shared_ptr<Work>> &w
   workToDo = work;
   std::cout << "P" << id << ": Total work in master is " << workToDo.size() << std::endl;
 
+  // Touch the checkpoint files to make sure they exist
+  std::ifstream work_infile (WORK_CHECKPOINT_FILENAME);
+  work_infile.close();
+  std::ifstream results_infile (RESULTS_CHECKPOINT_FILENAME);
+  results_infile.close();
+
+
   delayUntil = MPI::Wtime() + STARTUP_DELAY_TIME;
 
   performCheckpoint();
@@ -259,6 +266,8 @@ void MW_Master::receiveHeartbeat() {
   count = status.Get_count(MPI::CHAR);
 
   process_heartbeat(worker_id);
+
+  free (message);
 }
 
 void MW_Master::receive()
