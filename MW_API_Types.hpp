@@ -27,6 +27,6 @@ const double  WORKER_FAILURE_PROBABILITY  = 0.001;
 const bool    MASTER_FAIL_TEST_ON         = true;
 const double  MASTER_FAILURE_PROBABILITY  = 0.01;
 const double  SEND_FAILURE_PROBABILITY    = 0.01;
-const double STARTUP_DELAY_TIME = 10.0;
+const double STARTUP_DELAY_TIME = 30.0;
 
 #endif
