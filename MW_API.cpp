@@ -24,16 +24,20 @@ void MW_Run(int argc, char* argv[], MW_API *app)
 
   starttime = MPI::Wtime();
 
-  bool done;
+  
   // int master_id = MASTER_PROCESS_ID;
 
   if (myid == MASTER_PROCESS_ID) {
-    auto proc = std::make_shared<MW_Master>(myid, sz, app->work());
+    std::shared_ptr<MW_Master> proc = std::shared_ptr<MW_Master>(new MW_Master(myid, sz, app->work()));
+   
     p = proc;
 
-    while (!done) {
-      done = proc->master_loop();
-    }
+    proc->master_loop();
+
+    // bool done;
+    // while (!done) {
+    //   done = 
+    // }
     // auto proc = MW_Master::restore(myid, sz);
 
     endtime = MPI::Wtime();
@@ -48,6 +52,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
     // std::shared_ptr<MW_Worker> proc = std::shared_ptr<MW_Worker>(new MW_Worker(myid, MASTER_PROCESS_ID, sz));
     // bool transitionToMaster = proc->worker_loop();
 
+    bool done = false;
     while (!done) {
       done = proc->worker_loop();
       p = proc;
