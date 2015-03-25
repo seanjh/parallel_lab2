@@ -22,7 +22,7 @@ public:
   bool worker_loop();
   ~MW_Worker();
   virtual bool isMaster() {return false;};
-  bool transitionMaster();
+  bool transitionMaster(bool);
   std::shared_ptr<std::list<std::shared_ptr<Result>>> getResults()
   {
     auto ptr (nullptr);

@@ -42,7 +42,7 @@ void MW_Run(int argc, char* argv[], MW_API *app)
     while (!done) {
       // The Master died :(
       done = proc->worker_loop();
-      bool shouldTransitionToMaster = proc->transitionMaster();
+      bool shouldTransitionToMaster = proc->transitionMaster(done);
 
       if (!done && shouldTransitionToMaster) {
         // The next Master gets in here.

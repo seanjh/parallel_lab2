@@ -20,6 +20,7 @@ typedef enum MASC {
 } MW_API_STATUS_CODE;
 
 typedef unsigned long MW_ID;
+const double  PREEMPTION_TIMER_PERIOD     = 0.1;
 const double  HEARTBEAT_PERIOD            = 1.0;
 const double  CHECKPOINT_PERIOD           = 20.0;
 const bool    WORKER_FAIL_TEST_ON         = true;

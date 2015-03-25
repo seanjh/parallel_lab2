@@ -31,7 +31,7 @@ public:
 private:
   int id;
   int world_size;
-  
+
   std::unordered_map<MW_ID, std::shared_ptr<Work>> work;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> workToDo;
   std::unordered_map<MW_ID, std::shared_ptr<Work>> completedWork;
@@ -46,11 +46,14 @@ private:
   void initializeWorkerMap();
   void initializeWorkFromCheckpoint();
   void initializeResultFromCheckpoint();
+  void initializeWorkToDoFromCheckpoint();
+  void keepInTouch();
   int nextWorker();
   void checkOnWorkers();
   void send_done();
   void send(int);
   void receive();
+  void receiveHeartbeat();
   void process_result(int, int, char *);
   void process_heartbeat(int);
   bool hasAllWorkers();

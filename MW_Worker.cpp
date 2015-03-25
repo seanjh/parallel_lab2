@@ -7,7 +7,7 @@
 #include "MPIMessage.hpp"
 
 MW_Worker::MW_Worker(const int myid, const int m_id, const int w_size) :
-  id(myid), world_size(w_size), preemptionTimer(.1),
+  id(myid), world_size(w_size), preemptionTimer(PREEMPTION_TIMER_PERIOD),
   random(MW_Random(WORKER_FAILURE_PROBABILITY, myid, w_size))
 {
   sendHeartbeat();
@@ -17,11 +17,10 @@ MW_Worker::~MW_Worker() { }
 
 MWTag MW_Worker::receiveWork()
 {
-
   char *message = (char*)malloc(MAX_MESSAGE_SIZE);
   memset(message, 0, MAX_MESSAGE_SIZE);
-  int source_id=-1;
-  int count=0;
+  int source_id = -1;
+  int count = 0;
 
   MWTag message_tag = receive(MPI::ANY_SOURCE,
                               WORK_TAG,
@@ -86,7 +85,7 @@ MWTag MW_Worker::receiveNewMaster(int &newMaster)
                               count);
   if(message_tag == NEW_MASTER_TAG)
   {
-    std::cout<< "P" << id <<" :Received new master from " << source_id <<std::endl;
+    // std::cout<< "P" << id <<": P" << source_id << " sent New Master message\n";
     newMaster = source_id;
   }
   else
@@ -289,12 +288,9 @@ bool MW_Worker::worker_loop()
         // std::cout << "P" << id << ": Master "<< master_id << " looks OK!\n";
         continue;
       } else {
-        std::cout << "P" << id << ": MASTER "<< master_id << " LOOKS DEAD\n";
-        std::cout << "P" << id << ": Current TIme " << MPI::Wtime() << std::endl;
+        // std::cout << "P" << id << ": MASTER "<< master_id << " LOOKS DEAD as of " << MPI::Wtime() << "\n";
         // masterMonitor->dump();
-        // assert(false);
         //add delay
-
         return false; // NOT DONE
       }
     }
@@ -441,20 +437,16 @@ std::shared_ptr<MW_Monitor> MW_Worker::getMasterMonitor()
 }
 
 
-bool MW_Worker::transitionMaster()
+bool MW_Worker::transitionMaster(bool done)
 {
-  std::cout << "P" << id << ": Transition to next Master beginning\n";
+  // std::cout << "P" << id << ": Transition to next Master beginning\n";
   int nextMasterId = findNextMasterId();
   bool is_next_master = (nextMasterId == id);
 
-  if (is_next_master) {
-
+  if (is_next_master && !done) {
     std::cout << "P" << id << ": I AM THE NEXT MASTER\n";
-
-  } else {
-
-    std::cout << "P" << id << ": P" << nextMasterId << " looks like the next MASTER\n";
-
+  } else if (!done) {
+    // std::cout << "P" << id << ": P" << nextMasterId << " looks like the next MASTER\n";
   }
 
   return is_next_master;

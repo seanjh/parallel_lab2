@@ -42,25 +42,18 @@ MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size),
   broadcastHeartbeat();
 
   initializeWorkFromCheckpoint();
-
   initializeResultFromCheckpoint();
+  initializeWorkToDoFromCheckpoint();
+
+  std::cout << "P" << id << ": Restored " << work.size() << " total work\n";
+  std::cout << "P" << id << ": Restored " << results.size() << " total results\n";
+  std::cout << "P" << myid << ": " << workToDo.size() << " remaining units of work TODO.\n";
+
   lastCheckpoint = MPI::Wtime();
 
   broadcastHeartbeat();
 
-  std::cout << "workToDo is size " << workToDo.size() << "\n";
-  std::shared_ptr<Result> result;
-  for ( auto it = work.begin(); it != work.end(); ++it )
-  {
-    try {
-      result = results.at(it->first);
-    }
-    catch (const std::out_of_range& oor) {
-      // Work is not in Results. It belongs in workToDo
-      workToDo[it->first] = it->second;
-    }
-  }
-  std::cout << "P" << myid << ": workToDo is size " << workToDo.size() << "\n";
+
 
   broadcastHeartbeat();
 
@@ -69,15 +62,6 @@ MW_Master::MW_Master(int myid, int size) : id(myid), world_size(size),
 }
 
 MW_Master::~MW_Master() { }
-
-void MW_Master::initializeWorkerMap()
-{
-  for (int i=0; i<world_size; i++) {
-    if (i != id) {
-      workerMap[i] = std::shared_ptr<MW_Remote_Worker> (new MW_Remote_Worker(i));
-    }
-  }
-}
 
 std::shared_ptr<MW_Master> MW_Master::restore(int myid, int size)
 {
@@ -96,6 +80,13 @@ std::shared_ptr<std::list<std::shared_ptr<Result>>> MW_Master::getResults()
   return retList;
 }
 
+void MW_Master::keepInTouch()
+{
+  if(shouldSendHeartbeat())
+    sendHeartbeat();
+  receiveHeartbeat();
+}
+
 bool MW_Master::master_loop()
 {
   bool done = false;
@@ -106,10 +97,11 @@ bool MW_Master::master_loop()
   // Master receives heartbeats and send heartbeats with workers
   while (delayUntil > MPI::Wtime())
   {
-    if(shouldSendHeartbeat())
-      sendHeartbeat();
-
-    receive();
+    keepInTouch();
+    // if(shouldSendHeartbeat())
+    //   sendHeartbeat();
+    //
+    // receive();
   }
 
   // Then tell everyone we're Master
@@ -157,22 +149,29 @@ bool MW_Master::master_loop()
 void MW_Master::checkOnWorkers()
 {
   bool foundAWorker = false;
+  bool workerAlive;
   for(auto it=workerMap.begin(); it != workerMap.end(); it++)
   {
     if (it->second->heartbeatMonitor.isAlive())
       foundAWorker = true;
 
-    if (!it->second->heartbeatMonitor.isAlive() && (it->second->workPendingCount() > 0))
-    {
-      std::list<MW_ID> &pendingWorkList = it->second->getPendingWork();
-      std::cout << "P" << id << ": Worker (P" << it->second->id << ")  is DEAD" <<std::endl;
-      while(!pendingWorkList.empty())
-      {
-        auto work_id = pendingWorkList.front();
-        std::cout << "P" << id << ": Moving " << work_id << " back on to work list" <<std::endl;
-        pendingWorkList.pop_front();
-        workToDo[work_id] = work[work_id];
+    workerAlive = it->second->heartbeatMonitor.isAlive();
+    if (!workerAlive) {
+      // std::cout << "P" << id << ": Worker (P" << it->second->id << ")  looks DEAD" << std::endl;
+
+      if (it->second->workPendingCount() > 0) {
+        // Move dead Worker's pending work back on workToDo queue
+        std::cout << "P" << id << ": Worker (P" << it->second->id << ")  looks DEAD" << std::endl;
+        std::list<MW_ID> &pendingWorkList = it->second->getPendingWork();
+        while(!pendingWorkList.empty())
+        {
+          auto work_id = pendingWorkList.front();
+          std::cout << "P" << id << ": Moving " << work_id << " back on to work list" <<std::endl;
+          pendingWorkList.pop_front();
+          workToDo[work_id] = work[work_id];
+        }
       }
+
     }
   }
 
@@ -228,9 +227,43 @@ void MW_Master::send(int worker_id)
 
 }
 
+void MW_Master::receiveHeartbeat() {
+  MPI::Status status;
+  bool can_receive;
+  can_receive = MPI::COMM_WORLD.Iprobe(
+    MPI::ANY_SOURCE,
+    HEARTBEAT_TAG,
+    status
+  );
+
+  if (!can_receive) {
+    // std::cout << "P" << id << ": IProbe did not find heartbeat message. No receive possible\n";
+    return;
+  }
+
+  char *message = (char*)malloc(MAX_MESSAGE_SIZE);
+  memset(message, 0, MAX_MESSAGE_SIZE);
+
+  int worker_id, count;
+
+  MPI::COMM_WORLD.Recv(
+    (void *) message,
+    MAX_MESSAGE_SIZE,
+    MPI::CHAR,
+    MPI::ANY_SOURCE,
+    HEARTBEAT_TAG,
+    status
+  );
+
+  worker_id = status.Get_source();
+  count = status.Get_count(MPI::CHAR);
+
+  process_heartbeat(worker_id);
+}
+
 void MW_Master::receive()
 {
-  // std::cout << "P" << id << ": master waiting to receive" << std::endl;
+  // std::cout << "P" << id << ": Master is waiting to receive" << std::endl;
   MPI::Status status;
   bool can_receive = MPI::COMM_WORLD.Iprobe(
     MPI::ANY_SOURCE,
@@ -239,7 +272,7 @@ void MW_Master::receive()
   );
 
   if (!can_receive) {
-    //std::cout << "IProbe did not find a message. No receive possible\n";
+    // std::cout << "P" << id << ": IProbe did not find a message. No receive possible\n";
     return;
   }
 
@@ -335,15 +368,19 @@ void MW_Master::performCheckpoint()
   std::ofstream checkpointWorkFile, checkpointResultsFile;
   checkpointWorkFile.open(WORK_CHECKPOINT_FILENAME);
 
-  for(auto it=work.begin(); it!=work.end(); it++)
-      checkpointWorkFile << it->first <<","<<*(it->second->serialize())<<std::endl;
+  for(auto it=work.begin(); it!=work.end(); it++) {
+    checkpointWorkFile << it->first <<","<<*(it->second->serialize())<<std::endl;
+
+    keepInTouch();
+  }
 
   checkpointWorkFile.close();
 
   checkpointResultsFile.open(RESULTS_CHECKPOINT_FILENAME);
-  for(auto it=results.begin(); it!=results.end(); it++)
-  {
+  for(auto it=results.begin(); it!=results.end(); it++) {
     checkpointResultsFile << it->first <<","<<*(it->second->serialize())<<std::endl;
+
+    keepInTouch();
   }
 
   checkpointResultsFile.close();
@@ -452,6 +489,8 @@ void MW_Master::initializeResultFromCheckpoint()
       message = std::make_shared<MPIMessage> (serializedObject);
       results[work_id] = message->deserializeResult();
       completedWork[work_id] = work[work_id];
+
+      keepInTouch();
     }
     infile.close();
 
@@ -460,8 +499,6 @@ void MW_Master::initializeResultFromCheckpoint()
   else {
     std::cerr << "Unable to open file";
   }
-
-  std::cout << "P" << id << ": Restored " << results.size() << " total results" << std::endl;
 }
 
 void MW_Master::initializeWorkFromCheckpoint()
@@ -484,17 +521,36 @@ void MW_Master::initializeWorkFromCheckpoint()
 
       message = std::make_shared<MPIMessage> (serializedObject);
       work[id] = message->deserializeWork();
+
+      keepInTouch();
     }
     infile.close();
   }
   else std::cerr << "Unable to open file";
+}
 
-  std::cout << "P" << id << ": Restored " << work.size() << " total work" << std::endl;
+void MW_Master::initializeWorkToDoFromCheckpoint()
+{
+  std::cout << "workToDo is size " << workToDo.size() << "\n";
+  std::shared_ptr<Result> result;
+  for ( auto it = work.begin(); it != work.end(); ++it )
+  {
+    try {
+      result = results.at(it->first);
+    }
+    catch (const std::out_of_range& oor) {
+      // Work is not in Results. It belongs in workToDo
+      workToDo[it->first] = it->second;
+    }
+
+    keepInTouch();
+  }
+
 }
 
 void MW_Master::broadcastNewMasterSignal()
 {
-  std::cout << "P" << id << ": Bcast I AM MASTER\n";
+  std::cout << "P" << id << ": Broadcasting to Workers I AM MASTER\n";
   for (int i=0; i<world_size; i++)
   {
     if (i != id)
@@ -508,7 +564,7 @@ void MW_Master::broadcastNewMasterSignal()
       );
     }
   }
-  std::cout << "P" << id << ": Finished broadcast.\n";
+  // std::cout << "P" << id << ": Finished broadcast.\n";
 }
 
 void MW_Master::broadcastHeartbeat()
